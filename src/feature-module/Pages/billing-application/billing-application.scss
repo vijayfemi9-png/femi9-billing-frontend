@@ -23,6 +23,112 @@ $text-muted: #999;
   }
 }
 
+// ── Master-Detail Transitions ────────────────────────────
+.sidebar-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.detail-pane-wrapper {
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
+}
+
+// ── Composite Item – Mobile helpers ──────────────────────
+// ci-hide-xs: visible on ≥480px, hidden below
+.ci-hide-xs {
+  display: inline !important;
+}
+.ci-show-xs {
+  display: none !important;
+}
+
+@media (max-width: 479px) {
+  .ci-hide-xs {
+    display: none !important;
+  }
+  .ci-show-xs {
+    display: inline !important;
+  }
+}
+
+// ── Composite Item – Mobile layout ───────────────────────
+@media (max-width: 767px) {
+  // Detail-pane header wraps nicely on small screens
+  .detail-pane-wrapper .sticky-top {
+    position: relative !important;
+  }
+
+  // Tabs scroll horizontally instead of overflowing
+  .ci-tabs-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    flex-wrap: nowrap !important;
+  }
+
+  // Overview 2-col → 1-col on mobile
+  .ci-overview-row {
+    flex-direction: column !important;
+  }
+
+  .ci-overview-row .col-lg-8,
+  .ci-overview-row .col-lg-4 {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  // Toolbar: wrap filter/sort/column buttons
+  .ci-toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  // History/Transactions padding
+  .ci-tab-content {
+    padding: 16px !important;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.item-nav-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  background: #fff;
+  color: #6c757d;
+  transition: all 0.2s;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: #f8f9fa;
+    color: #e41f07;
+    border-color: #e41f07;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 
 .primary-radio {
   cursor: pointer;
@@ -100,13 +206,6 @@ $text-muted: #999;
   overflow: visible;
 }
 
-.loc-table {
-  thead {}
-
-  tbody {}
-
-  td::before {}
-}
 
 // Search
 .loc-search-wrapper {

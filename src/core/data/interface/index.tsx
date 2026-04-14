@@ -306,6 +306,8 @@ export interface DatatableProps {
   Selection?: boolean | undefined;
   searchText: string;
   expandable?: any;
+  onRow?: (record: any) => React.HTMLAttributes<HTMLElement>;
+  rowClassName?: (record: any) => string;
 }
 
 export interface CountriesData {

@@ -6,17 +6,23 @@ import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
 import PageHeader from "../../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../../routes/all_routes";
-import { productService } from "../../../../../api/productService";
 
 const route = all_routes;
 
-// Resolve backend image paths (handles "storage:path" and "image/path" prefixes)
-const resolveImageUrl = (path?: string): string | undefined => {
-    if (!path) return undefined;
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('storage:')) return '/storage/' + path.slice('storage:'.length);
-    return '/' + path;
-};
+
+type HistoryEntry = { date: string; details: string; user: string; };
+
+function getCurrentUser(): string {
+    try { return localStorage.getItem('product_current_user') || 'vijayfemi9-png'; } catch { return 'vijayfemi9-png'; }
+}
+function fmtDate(d: Date): string {
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    let hh = d.getHours(); const min = String(d.getMinutes()).padStart(2, '0');
+    const ampm = hh >= 12 ? 'PM' : 'AM'; hh = hh % 12 || 12;
+    return `${dd}/${mm}/${yyyy} ${String(hh).padStart(2, '0')}:${min} ${ampm}`;
+}
 
 type Item = {
     id: number;
@@ -25,6 +31,8 @@ type Item = {
     stockOnHand: number;
     reorderLevel: number;
     status: "active" | "inactive";
+    isDeleted?: boolean;
+    history?: HistoryEntry[];
     isSingle: boolean;
     isReturnable: boolean;
     hasSku: boolean;
@@ -74,6 +82,28 @@ const DEFAULT_SEARCH: SearchForm = {
     mpn: "", isbn: "", rate: "", purchaseRate: "",
     status: "All", taxExemptions: "",
 };
+
+const PRODUCT_STORAGE_KEY = 'product_list_data';
+
+const SEED_PRODUCTS: Item[] = [
+    { id: 1, name: 'sdfghj', sku: 'SKU-001', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '09/04/2026 04:04 PM', details: 'created by', user: 'gowthamfemi9' }] },
+    { id: 2, name: 'vijay', sku: 'SKU-002', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '09/04/2026 04:10 PM', details: 'created by', user: 'vijayfemi9-png' }] },
+    { id: 3, name: 'Test Product', sku: 'TP-001', stockOnHand: 30, reorderLevel: 5, status: 'active', isSingle: true, isReturnable: true, hasSku: true, unit: 'box', brand: 'General', category: 'General', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '10/04/2026 10:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
+    { id: 4, name: 'Test Product', sku: 'TP-002', stockOnHand: 30, reorderLevel: 5, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '10/04/2026 11:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
+    { id: 5, name: 'vasan', sku: 'VN-001', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '11/04/2026 09:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
+];
+
+function loadProducts(): Item[] {
+    try {
+        const stored = localStorage.getItem(PRODUCT_STORAGE_KEY);
+        if (stored) { const p = JSON.parse(stored) as Item[]; if (Array.isArray(p) && p.length) return p.filter(i => !i.isDeleted); }
+    } catch { /* ignore */ }
+    try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(SEED_PRODUCTS)); } catch { /* ignore */ }
+    return SEED_PRODUCTS.filter(i => !i.isDeleted);
+}
+function saveProducts(data: Item[]) {
+    try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+}
 
 const VIEWS = [
     { key: "all", label: "All Items" },
@@ -373,53 +403,10 @@ const SearchModal = ({
 const ProductList = () => {
     const navigate = useNavigate();
 
-    const [items, setItems] = useState<Item[]>([]);
+    const [items, setItems] = useState<Item[]>(() => loadProducts());
 
-    const fetchProducts = async () => {
-        try {
-            const resp = await productService.getProducts();
-            if (resp.data.success) {
-                const apiItems = resp.data.data.data.map((p: any) => {
-                    const addl = p.additional_data ? (typeof p.additional_data === 'string' ? JSON.parse(p.additional_data) : p.additional_data) : {};
-                    const images = p.product_image ? (typeof p.product_image === 'string' ? JSON.parse(p.product_image) : p.product_image) : {};
-
-                    return {
-                        id: p.id,
-                        name: p.name,
-                        sku: p.sku || '',
-                        stockOnHand: parseFloat(p.opening_stock || 0),
-                        reorderLevel: parseFloat(p.reorder_point || 0),
-                        status: p.deleted_at ? "inactive" : "active",
-                        isSingle: p.item_variant_type === 'single',
-                        isReturnable: !!p.is_returnable,
-                        hasSku: !!p.sku,
-                        image: images.front_image ? resolveImageUrl(images.front_image) : undefined,
-                        // view fields
-                        unit: p.unit || 'pcs',
-                        brand: p.brand || '--',
-                        category: addl.category?.name || '--',
-                        manufacturer: addl.manufacturer || '--',
-                        weight: addl.weight || '--',
-                        weightUnit: addl.weight_unit || 'kg',
-                        dimensions: addl.length ? `${addl.length} x ${addl.width} x ${addl.height}` : '--',
-                        dimensionUnit: addl.dimension_unit || 'cm',
-                        costPrice: parseFloat(p.cost_price || 0),
-                        selling_price: parseFloat(p.selling_price || 0),
-                        purchaseAccount: addl.account_details?.purchase_account || 'Cost of Goods Sold',
-                        salesAccount: addl.account_details?.sales_account || 'Sales',
-                        inventoryAccount: addl.account_details?.inventory_account || 'Inventory Asset',
-                        preferredVendor: addl.account_details?.preferred_vendor || '--',
-                        purchaseDescription: addl.description?.purchase_description || '--',
-                        salesDescription: addl.description?.sales_description || '--',
-                        itemType: p.type === 'goods' ? 'Inventory Items' : 'Service',
-                        openingStockRate: parseFloat(addl.opening_stock_rate || 0)
-                    };
-                });
-                setItems(apiItems);
-            }
-        } catch (err) {
-            console.error("Failed to fetch products", err);
-        }
+    const fetchProducts = () => {
+        setItems(loadProducts());
     };
 
     useEffect(() => {
@@ -429,9 +416,14 @@ const ProductList = () => {
     // ... (rest of the component)
 
     const [viewMode, setViewMode] = useState<ViewMode>("list");
-    const [activeItemId, setActiveItemId] = useState<number | null>(null);
-    const [isSplitView, setIsSplitView] = useState(false);
+    const [activeItemId, setActiveItemId] = useState<number | null>(() => loadProducts()[0]?.id ?? null);
+    const [isSplitView, setIsSplitView] = useState(true);
     const [activeTab, setActiveTab] = useState("Overview");
+    const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+    const [txFilterBy, setTxFilterBy] = useState('Sales Orders');
+    const [txStatus, setTxStatus] = useState('All');
+    const [showTxFilterMenu, setShowTxFilterMenu] = useState(false);
+    const [showTxStatusMenu, setShowTxStatusMenu] = useState(false);
     const [moreOpen, setMoreOpen] = useState(false);
     const [filterOpen, setFilterOpen] = useState(false);
     const [rowDensity, setRowDensity] = useState<"expanded" | "collapsed">("expanded");
@@ -505,21 +497,34 @@ const ProductList = () => {
     };
 
     // ── Handle Delete Product ─────────────────────────────────────────────────
-    const handleDeleteProduct = async (e: React.MouseEvent, productId: number) => {
-        e.stopPropagation();
-        e.preventDefault();
-
-        if (window.confirm('Are you sure you want to delete this product?')) {
-            try {
-                const resp = await productService.deleteProduct(productId);
-                if (resp.data.success) {
-                    setItems(prev => prev.filter(item => item.id !== productId));
-                }
-            } catch (err) {
-                console.error("Delete failed", err);
-                alert("Failed to delete product");
-            }
+    const handleDelete = () => {
+        if (!deleteTarget) return;
+        const nowStr = fmtDate(new Date());
+        const user = getCurrentUser();
+        const all: Item[] = JSON.parse(localStorage.getItem(PRODUCT_STORAGE_KEY) || '[]');
+        const updated = all.length
+            ? all.map(d => {
+                if (d.id !== deleteTarget.id) return d;
+                const prev = d.history || [];
+                return { ...d, isDeleted: true, history: [...prev, { date: nowStr, details: `"${d.name}" deleted by`, user }] };
+            })
+            : SEED_PRODUCTS.map(d => {
+                if (d.id !== deleteTarget.id) return d;
+                const prev = d.history || [];
+                return { ...d, isDeleted: true, history: [...prev, { date: nowStr, details: `"${d.name}" deleted by`, user }] };
+            });
+        saveProducts(updated);
+        setItems(updated.filter(d => !d.isDeleted));
+        // Keep panel open on the deleted item so user can see history
+        const deletedEntry = updated.find(d => d.id === deleteTarget.id);
+        if (deletedEntry && activeItemId === deleteTarget.id) {
+            setItems(prev => {
+                const withDeleted = [...prev.filter(d => d.id !== deleteTarget.id), deletedEntry];
+                return withDeleted;
+            });
         }
+        showToast(`"${deleteTarget.name}" has been deleted.`);
+        setDeleteTarget(null);
     };
 
     // ── Handle search apply ──────────────────────────────────────────────────
@@ -681,6 +686,50 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                 </div>
             )}
 
+            {/* ══ Delete Confirmation Modal ══ */}
+            {deleteTarget && (
+                <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 420 }}>
+                        <div className="modal-content border-0 shadow">
+                            <div className="modal-header border-0 pb-0 px-4 pt-4">
+                                <div className="d-flex align-items-center gap-3">
+                                    <div className="d-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-circle" style={{ width: 44, height: 44, flexShrink: 0 }}>
+                                        <i className="ti ti-trash text-danger" style={{ fontSize: 22 }} />
+                                    </div>
+                                    <div>
+                                        <h5 className="mb-0 fw-semibold fs-16">Delete Item?</h5>
+                                        <p className="text-muted fs-12 mb-0 mt-1">This action cannot be undone</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-body px-4 pt-3 pb-2">
+                                <div className="border rounded p-3 bg-light mb-3">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <i className="ti ti-box text-muted fs-16" />
+                                        <span className="fw-semibold text-dark fs-14">{deleteTarget.name}</span>
+                                        {deleteTarget.sku && <span className="text-muted fs-12 ms-auto">SKU: {deleteTarget.sku}</span>}
+                                    </div>
+                                </div>
+                                <div className="d-flex align-items-center gap-2 text-muted fs-13 mb-1">
+                                    <i className="ti ti-user fs-14" />
+                                    <span>Deleted by:</span>
+                                    <span className="fw-medium text-dark">{getCurrentUser()}</span>
+                                </div>
+                                <p className="text-muted fs-12 mt-2 mb-0">
+                                    <span className="fw-semibold text-dark">"{deleteTarget.name}"</span> will be marked as deleted. You can view this action in the History tab.
+                                </p>
+                            </div>
+                            <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex gap-2 justify-content-end">
+                                <button className="btn btn-light px-4 fs-13" onClick={() => setDeleteTarget(null)}>Cancel</button>
+                                <button className="btn btn-danger px-4 fs-13 d-flex align-items-center gap-2" onClick={handleDelete}>
+                                    <i className="ti ti-trash fs-14" />Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ══ Import Modal ══ */}
             {importModalOpen && (
                 <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.4)", zIndex: 1055 }}>
@@ -724,8 +773,8 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
             )}
 
 
-            <div className="page-wrapper">
-                <div className="content pb-0" style={{ display: "flex", flexDirection: "column" }}>
+            <div className="page-wrapper" style={{ overflow: 'hidden' }}>
+                <div className="content pb-0" style={{ display: "flex", flexDirection: "column", height: '100vh', overflow: 'hidden' }}>
 
                     <PageHeader
                         title="Products"
@@ -738,8 +787,8 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
 
                     {isSplitView ? (
                         /* ══ SPLIT VIEW ══ */
-                        <div className="card border-0 rounded-0" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-                            <div className="d-flex h-100" style={{ minHeight: 0 }}>
+                        <div className="card border-0 rounded-0 mb-0" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: 'flex', flexDirection: 'column' }}>
+                            <div className="d-flex" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 {/* Left sidebar */}
                                 <div style={{ width: 320, borderRight: "1px solid #e3e3e3", display: isMobile ? "none" : "flex", flexDirection: "column", background: "#fff", flexShrink: 0, overflow: "hidden" }}>
                                     <div className="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
@@ -791,6 +840,11 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                         </button>
                                                     )}
                                                     <h4 className="mb-0 fw-bold fs-15">{activeItem.name}</h4>
+                                                    {activeItem.isDeleted && (
+                                                        <span className="badge bg-danger bg-opacity-10 text-danger border border-danger fs-11 fw-semibold px-2 py-1 ms-1">
+                                                            <i className="ti ti-trash me-1" style={{ fontSize: 10 }} />Deleted
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="d-flex align-items-center gap-2">
                                                     <button
@@ -809,11 +863,24 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             </button>
                                                             <ul className="dropdown-menu dropdown-menu-end shadow-sm border py-2" style={{ minWidth: 160 }}>
                                                                 <li>
-                                                                    <a className="dropdown-item py-2 fs-13 d-flex align-items-center gap-2" href="#" onClick={(e) => handleDeleteProduct(e, activeItem.id)}>
-                                                                        <i className="ti ti-trash text-danger fs-16" />
-                                                                        <span className="text-danger">Delete</span>
+                                                                    <a className="dropdown-item py-2 fs-13 d-flex align-items-center gap-2" href="#"
+                                                                        onClick={(e) => { e.preventDefault(); handleEditProduct(e, activeItem.id); }}>
+                                                                        <i className="ti ti-edit text-primary fs-16" />
+                                                                        <span>Edit</span>
                                                                     </a>
                                                                 </li>
+                                                                {!activeItem.isDeleted && (
+                                                                    <>
+                                                                        <li><hr className="dropdown-divider my-1" /></li>
+                                                                        <li>
+                                                                            <a className="dropdown-item py-2 fs-13 d-flex align-items-center gap-2 text-danger" href="#"
+                                                                                onClick={(e) => { e.preventDefault(); setDeleteTarget(activeItem); }}>
+                                                                                <i className="ti ti-trash fs-16" />
+                                                                                <span>Delete</span>
+                                                                            </a>
+                                                                        </li>
+                                                                    </>
+                                                                )}
                                                             </ul>
                                                         </div>
 
@@ -992,12 +1059,79 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {activeTab !== "Overview" && (
-                                                        <div className="h-100 d-flex align-items-center justify-content-center text-muted fs-13">
-                                                            <div className="text-center">
-                                                                <i className="ti ti-database-off fs-40 mb-2 d-block opacity-25" />
-                                                                No data available in {activeTab}
+                                                    {activeTab === "Transactions" && (
+                                                        <div>
+                                                            <div className="d-flex align-items-center gap-2 mb-4">
+                                                                <div className="position-relative">
+                                                                    <button className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-13" style={{ height: 32 }}
+                                                                        onClick={() => { setShowTxFilterMenu(v => !v); setShowTxStatusMenu(false); }}>
+                                                                        <span className="text-muted">Filter By:</span>
+                                                                        <span className="fw-medium ms-1">{txFilterBy}</span>
+                                                                        <i className="ti ti-chevron-down ms-1" style={{ fontSize: 11 }} />
+                                                                    </button>
+                                                                    {showTxFilterMenu && (
+                                                                        <div className="dropdown-menu show" style={{ minWidth: 170, top: '100%', left: 0, zIndex: 100 }}>
+                                                                            {['Sales Orders', 'Purchase Orders', 'Invoices', 'Bills', 'Delivery Orders'].map(opt => (
+                                                                                <button key={opt} className={`dropdown-item fs-13 ${txFilterBy === opt ? 'active' : ''}`}
+                                                                                    onClick={() => { setTxFilterBy(opt); setShowTxFilterMenu(false); }}>{opt}</button>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="position-relative">
+                                                                    <button className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-13" style={{ height: 32 }}
+                                                                        onClick={() => { setShowTxStatusMenu(v => !v); setShowTxFilterMenu(false); }}>
+                                                                        <span className="text-muted">Status:</span>
+                                                                        <span className="fw-medium ms-1">{txStatus}</span>
+                                                                        <i className="ti ti-chevron-down ms-1" style={{ fontSize: 11 }} />
+                                                                    </button>
+                                                                    {showTxStatusMenu && (
+                                                                        <div className="dropdown-menu show" style={{ minWidth: 130, top: '100%', left: 0, zIndex: 100 }}>
+                                                                            {['All', 'Open', 'Closed', 'Cancelled'].map(opt => (
+                                                                                <button key={opt} className={`dropdown-item fs-13 ${txStatus === opt ? 'active' : ''}`}
+                                                                                    onClick={() => { setTxStatus(opt); setShowTxStatusMenu(false); }}>{opt}</button>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
+                                                            <div className="text-center py-5 text-muted">
+                                                                <p className="fs-14">No {txFilterBy} recorded yet.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {activeTab === "History" && (
+                                                        <div className="table-responsive">
+                                                            <table className="table table-borderless mb-0" style={{ tableLayout: 'fixed' }}>
+                                                                <thead>
+                                                                    <tr style={{ borderBottom: '1px solid #e9ecef' }}>
+                                                                        <th className="fs-12 fw-semibold text-muted py-2" style={{ width: '35%', letterSpacing: '0.05em' }}>DATE</th>
+                                                                        <th className="fs-12 fw-semibold text-muted py-2" style={{ letterSpacing: '0.05em' }}>DETAILS</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {(activeItem.history && activeItem.history.length > 0) ? (
+                                                                        activeItem.history.map((entry, idx) => (
+                                                                            <tr key={idx} style={{ borderBottom: '1px solid #f3f3f3' }}>
+                                                                                <td className="py-3 fs-13 text-muted align-top">{entry.date}</td>
+                                                                                <td className="py-3 fs-13 align-top">
+                                                                                    <span className="fw-medium text-dark">{entry.details}</span>
+                                                                                    {' - '}
+                                                                                    <span className="fst-italic text-muted">{entry.user}</span>
+                                                                                </td>
+                                                                            </tr>
+                                                                        ))
+                                                                    ) : (
+                                                                        <tr><td colSpan={2} className="py-5 text-center text-muted fs-13">No history available.</td></tr>
+                                                                    )}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
+                                                    {activeTab === "Locations" && (
+                                                        <div className="text-center py-5 text-muted">
+                                                            <i className="ti ti-map-pin fs-40 mb-2 d-block opacity-25" />
+                                                            <p className="fs-14">No locations assigned yet.</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1332,7 +1466,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             </button>
                                                             <ul className="dropdown-menu dropdown-menu-end shadow-sm border py-2" style={{ minWidth: 140 }}>
                                                                 <li><a className="dropdown-item py-2 fs-13" href="#" onClick={(e) => handleEditProduct(e, item.id)}><i className="ti ti-edit text-primary me-2" /> Edit</a></li>
-                                                                <li><a className="dropdown-item py-2 fs-13" href="#" onClick={(e) => handleDeleteProduct(e, item.id)}><i className="ti ti-trash text-danger me-2" /> <span className="text-danger">Delete</span></a></li>
+                                                                <li><a className="dropdown-item py-2 fs-13 text-danger" href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(item); }}><i className="ti ti-trash text-danger me-2" /> Delete</a></li>
                                                             </ul>
                                                         </div>
                                                     </div>

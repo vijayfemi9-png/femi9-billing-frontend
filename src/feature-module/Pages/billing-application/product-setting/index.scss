@@ -987,3 +987,14 @@ input.form-control:focus,
 textarea.form-control:focus {
   box-shadow: none !important;
 }
+
+// Composite item row highlight when selected
+tr.ant-table-row-selected-highlight > td {
+  background-color: #fff5f5 !important;
+  border-left: 2px solid #e41f07 !important;
+}
+
+tr.ant-table-row-selected-highlight:hover > td {
+  background-color: #fff0ef !important;
+}
+

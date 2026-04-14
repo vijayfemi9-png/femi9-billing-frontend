@@ -11,6 +11,8 @@ const Datatable: React.FC<DatatableProps> = ({
   Selection,
   searchText,
   expandable,
+  onRow,
+  rowClassName,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -20,7 +22,7 @@ const Datatable: React.FC<DatatableProps> = ({
 
   // Debounce searchText
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText);
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -73,6 +75,8 @@ const Datatable: React.FC<DatatableProps> = ({
         dataSource={filteredDataSource.slice((current - 1) * pageSize, current * pageSize)}
         pagination={false}
         expandable={expandable}
+        onRow={onRow}
+        rowClassName={rowClassName}
       />
       {/* Left side: show entries */}
       <div className="col-md-6">
