@@ -18,21 +18,21 @@ const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleT
   return (
     <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
       <div>
-        <h4 className="mb-1">
+        <h4 className="mb-1" style={{ fontSize: '18px', fontWeight: 600 }}>
           {title}
           <span className="badge badge-soft-primary ms-2">{badgeCount}</span>
         </h4>
         <nav aria-label="breadcrumb">
-          <ol className="breadcrumb mb-0 p-0">
-            <li className="breadcrumb-item">
-              <Link to={all_routes.dealsDashboard}>Home</Link>
+          <ol className="breadcrumb mb-0 p-0" style={{ fontSize: '14px' }}>
+            <li className="breadcrumb-item" style={{ fontSize: '14px' }}>
+              <Link to={all_routes.dealsDashboard} style={{ fontSize: '14px' }}>Home</Link>
             </li>
             {showModuleTile && (
-              <li className="breadcrumb-item" aria-current="page">
-                <Link to={moduleLink}>{moduleTitle}</Link>
+              <li className="breadcrumb-item" aria-current="page" style={{ fontSize: '14px' }}>
+                <Link to={moduleLink} style={{ fontSize: '14px' }}>{moduleTitle}</Link>
               </li>
             )}
-            <li className="breadcrumb-item active" aria-current="page">
+            <li className="breadcrumb-item active" aria-current="page" style={{ fontSize: '14px' }}>
               {title}
             </li>
           </ol>
@@ -71,17 +71,19 @@ const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleT
 
         {exportComponent && exportComponent}
 
-        <Link
-          to="#"
-          className="btn btn-icon btn-outline-light shadow"
-          data-bs-toggle="tooltip"
-          data-bs-placement="top"
-          data-bs-title="Refresh"
-          aria-label="Refresh"
-          onClick={(e) => { e.preventDefault(); onRefresh?.(); }}
-        >
-          <i className="ti ti-refresh" />
-        </Link>
+        {onRefresh && (
+          <Link
+            to="#"
+            className="btn btn-icon btn-outline-light shadow"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            data-bs-title="Refresh"
+            aria-label="Refresh"
+            onClick={(e) => { e.preventDefault(); onRefresh?.(); }}
+          >
+            <i className="ti ti-refresh" />
+          </Link>
+        )}
 
         {settingsLink && (
           <Link

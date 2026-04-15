@@ -181,8 +181,8 @@ const ActionMenu = ({ onEdit, onDelete, onSetPrimary, isPrimary }: { onEdit: () 
 
     return (
         <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
-            <button onClick={() => setOpen(!open)} style={{ background: "#fff", border: "1px solid #e3e3e3", borderRadius: 6, color: "#697586", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s ease", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#e41f07"; e.currentTarget.style.background = "#fff8f7"; }}
+            <button onClick={() => setOpen(!open)} style={{ background: "#fff", border: "1px solid #e3e3e3", borderRadius: 6, color: "#222", cursor: "pointer", padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s ease", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#222"; e.currentTarget.style.background = "#f8f9fb"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "#e3e3e3"; e.currentTarget.style.background = "#fff"; }}>
                 <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
             </button>
@@ -190,10 +190,10 @@ const ActionMenu = ({ onEdit, onDelete, onSetPrimary, isPrimary }: { onEdit: () 
                 <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "#fff", border: "1px solid #e3e3e3", borderRadius: 8, width: 170, boxShadow: "0 6px 20px rgba(0,0,0,0.1)", zIndex: 300, padding: "4px 0" }}>
                     {menuItems.map(item => (
                         <button key={item.label} title={item.label} onClick={() => { item.fn(); setOpen(false); }}
-                            className="dropdown-item d-flex align-items-center gap-2 px-3 py-2" style={{ fontSize: 13, color: "#555", border: "none" }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#fff8f7")}
+                            className="dropdown-item d-flex align-items-center gap-2 px-3 py-2" style={{ fontSize: 13, color: "#222", border: "none" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "#f8f9fb")}
                             onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                            <i className={`ti ${item.icon}`} style={{ color: item.icon === "ti-star" ? "#fcc419" : "#e41f07", fontSize: 15 }} />{item.label}
+                            <i className={`ti ${item.icon}`} style={{ color: item.icon === "ti-star" ? "#fcc419" : "#222", fontSize: 15 }} />{item.label}
                         </button>
                     ))}
                 </div>
@@ -1437,9 +1437,9 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                                                 setOpenCatDrop(false);
                                                 setSeriesCatSearch("");
                                             }}
-                                            style={{ cursor: "pointer", fontSize: 12, color: "#e41f07", fontWeight: 600 }}
+                                            style={{ cursor: "pointer", fontSize: 12, color: "#222", fontWeight: 600 }}
                                         >
-                                            ⚙ Manage Categories
+                                            <i className="ti ti-settings me-1" /> Manage Categories
                                         </div>
                                         <button onClick={() => setOpenCatDrop(false)} style={{ background: "#f4f4f4", color: "#555", border: "none", borderRadius: 4, padding: "4px 12px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Close</button>
                                     </div>
@@ -1459,7 +1459,7 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                                 <div style={{ padding: "20px 24px" }}>
                                     {/* Add / Edit form */}
                                     <div style={{ marginBottom: 20 }}>
-                                        <label style={{ fontSize: 13, fontWeight: 600, color: "#e41f07", display: "block", marginBottom: 8 }}>
+                                        <label style={{ fontSize: 13, fontWeight: 600, color: "#222", display: "block", marginBottom: 8 }}>
                                             Category Name*
                                         </label>
                                         <input
@@ -1508,7 +1508,7 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                                     {/* Categories list */}
                                     <div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                                            <span style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px" }}>Categories</span>
+                                            <span style={{ fontSize: 11, fontWeight: 700, color: "#222", textTransform: "uppercase", letterSpacing: "0.5px" }}>Categories</span>
                                             <i className="ti ti-refresh" style={{ fontSize: 13, color: "#aaa", cursor: "pointer" }} onClick={() => { setNewSeriesCatName(""); setEditingSeriesCatIdx(null); }} />
                                         </div>
                                         <div style={{ border: "1px solid #f0f0f0", borderRadius: 8, overflow: "hidden" }}>
@@ -1519,13 +1519,13 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                                                 <div key={cat} style={{ display: "flex", alignItems: "center", padding: "10px 14px", borderBottom: idx < seriesCategories.length - 1 ? "1px solid #f5f5f5" : "none", background: editingSeriesCatIdx === idx ? "#fff8f7" : "#fff" }}>
                                                     <span style={{ flex: 1, fontSize: 13, color: "#333", fontWeight: seriesCategory === cat ? 600 : 400 }}>{cat}</span>
                                                     {seriesCategory === cat && <span style={{ fontSize: 11, color: "#e41f07", marginRight: 10, fontWeight: 600 }}>Selected</span>}
-                                                    <button onClick={() => { setEditingSeriesCatIdx(idx); setNewSeriesCatName(cat); }} style={{ background: "none", border: "none", color: "#e41f07", cursor: "pointer", padding: "2px 6px", fontSize: 13 }} title="Edit"><i className="ti ti-edit" /></button>
+                                                    <button onClick={() => { setEditingSeriesCatIdx(idx); setNewSeriesCatName(cat); }} style={{ background: "none", border: "none", color: "#222", cursor: "pointer", padding: "2px 6px", fontSize: 13 }} title="Edit"><i className="ti ti-edit" /></button>
                                                     <button onClick={() => {
                                                         const updated = seriesCategories.filter((_, i) => i !== idx);
                                                         setSeriesCategories(updated);
                                                         if (seriesCategory === cat) setSeriesCategory("");
                                                         if (editingSeriesCatIdx === idx) { setEditingSeriesCatIdx(null); setNewSeriesCatName(""); }
-                                                    }} style={{ background: "none", border: "none", color: "#ff4d4f", cursor: "pointer", padding: "2px 6px", fontSize: 13 }} title="Delete"><i className="ti ti-trash" /></button>
+                                                    }} style={{ background: "none", border: "none", color: "#222", cursor: "pointer", padding: "2px 6px", fontSize: 13 }} title="Delete"><i className="ti ti-trash" /></button>
                                                 </div>
                                             ))}
                                         </div>
@@ -2128,12 +2128,10 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
             <div className="content">
 
                 {/* Page Header */}
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12, fontFamily: pageFontFamily }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12, fontFamily: pageFontFamily }}>
                     <div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <h4 style={{ margin: 0, fontWeight: 700, fontSize: 17, color: "#1a1a2e" }}>Locations</h4>
-                        </div>
-                        <nav style={{ fontSize: 14, color: "#aaa", marginTop: 4 }}>
+                        <h4 style={{ margin: 0, fontWeight: 700, fontSize: isMobile ? 18 : 20, color: "#1a1a2e" }}>Locations</h4>
+                        <nav style={{ fontSize: 13, color: "#aaa", marginTop: 4 }}>
                             <span>Home</span><span style={{ margin: "0 6px" }}>›</span>
                             <span style={{ color: "#0e0a0a", fontWeight: 500 }}>Locations</span>
                         </nav>
@@ -2143,11 +2141,12 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <div ref={exportRef} style={{ position: "relative" }}>
                             <button title="Export locations as PDF or Excel" onClick={() => setExportOpen(o => !o)}
-                                style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", color: "#4b5563" }}
+                                style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, padding: isMobile ? "6px 10px" : "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", color: "#4b5563" }}
                                 onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
-                                <i className="ti ti-package-export" style={{ fontSize: 16 }} />Export
-                                <i className="ti ti-chevron-down" style={{ fontSize: 13 }} />
+                                <i className="ti ti-package-export" style={{ fontSize: 16 }} />
+                                {!isMobile && "Export"}
+                                <i className="ti ti-chevron-down" style={{ fontSize: 12 }} />
                             </button>
                             {exportOpen && (
                                 <div style={{ position: "absolute", right: 0, top: "calc(100% + 6px)", background: "#fff", border: "1px solid #e3e3e3", borderRadius: 8, width: 190, boxShadow: "0 6px 20px rgba(0,0,0,0.1)", zIndex: 300, padding: "4px 0" }}>
@@ -2159,25 +2158,20 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                         onMouseEnter={e => (e.currentTarget.style.background = "#fff8f7")} onMouseLeave={e => (e.currentTarget.style.background = "")}>
                                         <i className="ti ti-file-spreadsheet" style={{ color: "#1d6f42", fontSize: 16 }} />Export as Excel
                                     </button>
-                                    {selected.length > 0 && (
-                                        <div style={{ padding: "6px 12px", borderTop: "1px solid #f5f5f5", fontSize: 11, color: "#e41f07", fontWeight: 600 }}>
-                                            {selected.length} selected row{selected.length > 1 ? "s" : ""} will be exported
-                                        </div>
-                                    )}
                                 </div>
                             )}
                         </div>
-                        <button title="Refresh — reset locations to original data" onClick={() => { setSearch(""); setLocations(INIT_LOCATIONS); setSeriesList(INIT_SERIES); setSelected([]); setCollapsed(new Set()); }}
-                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
+                        <button title="Refresh" onClick={() => { setSearch(""); setLocations(INIT_LOCATIONS); setSeriesList(INIT_SERIES); setSelected([]); setCollapsed(new Set()); }}
+                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
                             onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
-                            <i className="ti ti-refresh" style={{ fontSize: 16 }} />
+                            <i className="ti ti-refresh" style={{ fontSize: 15 }} />
                         </button>
-                        <button title="Import locations from CSV file" onClick={() => setShowImport(true)}
-                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
+                        <button title="Import" onClick={() => setShowImport(true)}
+                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
                             onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
                             onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
-                            <i className="ti ti-upload" style={{ fontSize: 16 }} />
+                            <i className="ti ti-upload" style={{ fontSize: 15 }} />
                         </button>
                     </div>
                 </div>
@@ -2208,7 +2202,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                     </div>
 
                     {/* Table */}
-                    <div className="loc-table-wrapper" style={{ overflowX: "visible", overflowY: "visible" }}>
+                    <div className="loc-table-wrapper" style={{ overflowX: "auto", overflowY: "visible", WebkitOverflowScrolling: "touch" }}>
                         <table className="loc-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: 13 }}>
                             <thead>
                                 <tr style={{ background: "#f8f9fb" }}>

@@ -12,7 +12,7 @@ import PredefinedDatePicker from "../../../../../components/common-dateRangePick
 import { all_routes } from "../../../../../routes/all_routes";
 import { productService } from "../../../../../api/productService";
 import Chart from 'react-apexcharts';
-import { ApexOptions } from 'apexcharts';
+import ApexOptions from 'apexcharts';
 
 const route = all_routes;
 
@@ -43,8 +43,12 @@ interface CompositeItemEntry {
     ean?: string;
     mpn?: string;
     isbn?: string;
+    manufacture?: string;
     manufacturer?: string;
     isReturnable?: boolean;
+    isSellable?: boolean;
+    isPurchasable?: boolean;
+    preferredVendor?: string;
     image?: string;
     isDeleted?: boolean;
     history?: HistoryEntry[];
@@ -217,13 +221,13 @@ function compressImage(file: File, maxDim: number = 1200): Promise<string> {
                 // Start with 0.7 quality
                 let quality = 0.7;
                 let dataUrl = canvas.toDataURL('image/jpeg', quality);
-                
+
                 // If still too large (unlikely for 1200px at 0.7), reduce quality
                 while (dataUrl.length > 500000 && quality > 0.1) {
                     quality -= 0.1;
                     dataUrl = canvas.toDataURL('image/jpeg', quality);
                 }
-                
+
                 resolve(dataUrl);
             };
             img.onerror = () => reject(new Error('Image failed to load'));
@@ -712,7 +716,7 @@ const CompositeItem = () => {
             }));
     }, [data, filterTypes, sortBy, searchText]);
 
-     // Auto-expansion on refresh removed as requested. Items will remain collapsed by default.
+    // Auto-expansion on refresh removed as requested. Items will remain collapsed by default.
 
 
     const handleDelete = () => {
@@ -791,8 +795,8 @@ const CompositeItem = () => {
         isExpanded?: boolean
     }) => {
         const LINE_COLOR = '#d1d5db';
-        const BLEED = 12; // Extra height to overlap rows and bridge gaps
-        const LEFT_OFFSET = 20;
+        const BLEED = 16;
+        const LEFT_OFFSET = 20; // Exactly 6px padding + 14px half-width of 28px folder icon
 
         return (
             <div style={{
@@ -800,7 +804,7 @@ const CompositeItem = () => {
                 left: 0,
                 top: 0,
                 bottom: 0,
-                width: 40,
+                width: 50,
                 pointerEvents: 'none',
                 zIndex: 1
             }}>
@@ -810,20 +814,20 @@ const CompositeItem = () => {
                         position: 'absolute',
                         left: LEFT_OFFSET,
                         top: -BLEED,
-                        bottom: '50%',
-                        width: '1.5px',
+                        bottom: isLastChild ? '50%' : -BLEED,
+                        width: '1px',
                         backgroundColor: LINE_COLOR,
                     }} />
                 )}
 
-                {/* Vertical line going to below (for children who aren't last, or expanded parents) */}
-                {((isChild && !isLastChild) || (hasChildren && isExpanded)) && (
+                {/* Vertical line going to below (for expanded parents) */}
+                {((!isChild && hasChildren && isExpanded)) && (
                     <div style={{
                         position: 'absolute',
                         left: LEFT_OFFSET,
                         top: '50%',
                         bottom: -BLEED,
-                        width: '1.5px',
+                        width: '1px',
                         backgroundColor: LINE_COLOR,
                     }} />
                 )}
@@ -834,8 +838,8 @@ const CompositeItem = () => {
                         position: 'absolute',
                         left: LEFT_OFFSET,
                         top: '50%',
-                        width: 14,
-                        height: '1.5px',
+                        width: 22,
+                        height: '1px',
                         backgroundColor: LINE_COLOR,
                     }} />
                 )}
@@ -853,7 +857,7 @@ const CompositeItem = () => {
                 const hasChildren = record._hasChildren;
 
                 return (
-                    <div className="d-flex align-items-center position-relative" style={{ minHeight: '44px', paddingLeft: record.isChild ? '44px' : '0' }}>
+                    <div className="d-flex align-items-center position-relative" style={{ minHeight: '40px', paddingLeft: record.isChild ? '38px' : '6px' }}>
                         <TreeConnector
                             isChild={record.isChild}
                             isLastChild={record.isLastChild}
@@ -863,10 +867,15 @@ const CompositeItem = () => {
 
                         <div className="d-flex align-items-center gap-2" style={{ position: 'relative', zIndex: 2 }}>
                             {record.isChild ? (
-                                <span className="text-dark fs-13">
-                                    {text} {record.quantity && <span className="text-muted">( {record.quantity} )</span>}
-                                    {record.sku && <span className="text-muted"> | SKU : {record.sku}</span>}
-                                </span>
+                                <>
+                                    <div className="d-flex align-items-center justify-content-center text-muted flex-shrink-0" style={{ width: 16, height: 16 }}>
+                                        <i className="ti ti-file" style={{ fontSize: '15px' }} />
+                                    </div>
+                                    <span className="text-dark fs-14">
+                                        {text} {record.quantity && <span className="text-muted">( {record.quantity} )</span>}
+                                        {record.sku && <span className="text-muted"> | SKU : {record.sku}</span>}
+                                    </span>
+                                </>
                             ) : (
                                 <>
                                     <div
@@ -878,6 +887,8 @@ const CompositeItem = () => {
                                             cursor: hasChildren ? 'pointer' : 'default',
                                             backgroundColor: isExpanded && hasChildren ? '#fff0ee' : 'transparent',
                                             transition: 'background-color 0.2s ease',
+                                            position: 'relative',
+                                            zIndex: 3
                                         }}
                                         onClick={(e) => {
                                             if (!hasChildren) return;
@@ -964,16 +975,16 @@ const CompositeItem = () => {
                         style={{ lineHeight: 1 }}
                     >
                         <MoreButton>
-                            <i className="ti ti-dots-vertical" style={{ fontSize: 12, color: '#6c757d' }} />
+                            <i className="ti ti-dots-vertical" style={{ fontSize: 13, color: '#222' }} />
                         </MoreButton>
                     </Link>
                     <div className="dropdown-menu dropdown-menu-right">
                         <Link className="dropdown-item" to="#"
                             onClick={(e) => { e.preventDefault(); navigate(route.compositeItemEdit?.replace(':id', String(record.id)) || '#'); }}>
-                            <i className="ti ti-edit text-blue" /> Edit
+                            <i className="ti ti-edit text-dark me-2" /> Edit
                         </Link>
                         <Link className="dropdown-item" to="#" onClick={() => setDeleteTarget(record)}>
-                            <i className="ti ti-trash text-danger" /> Delete
+                            <i className="ti ti-trash text-dark me-2" /> Delete
                         </Link>
                     </div>
 
@@ -1059,16 +1070,46 @@ const CompositeItem = () => {
     const [priceListTypeView, setPriceListTypeView] = useState<'Sales' | 'Purchase'>('Sales');
     const [associatedPriceLists, setAssociatedPriceLists] = useState<any[]>([]);
 
+    // ── Image select / compress handler ───────────────────────────────────────
+    const handleImageSelect = (file: File | undefined) => {
+        if (!file) return;
+        const maxSizeBytes = 2 * 1024 * 1024; // 2 MB guard
+        if (file.size > maxSizeBytes) {
+            setToast({ message: 'Image must be under 2 MB.', type: 'error' });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const src = ev.target?.result as string;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_W = 800;
+                const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                setPreviewUrl(dataUrl);
+                setImage(file);
+            };
+            img.src = src;
+        };
+        reader.readAsDataURL(file);
+    };
+
     useEffect(() => {
         const stored = localStorage.getItem("priceListData");
         if (stored) {
             try {
                 const allLists = JSON.parse(stored);
                 // Filter lists that include this item or apply to all items
-                const filtered = allLists.filter((pl: any) => 
-                    !pl.isDeleted && 
-                    (pl.priceListType === 'All Items' || 
-                     (pl.items && pl.items.some((it: any) => it.itemName === selectedItem?.name)))
+                const filtered = allLists.filter((pl: any) =>
+                    !pl.isDeleted &&
+                    (pl.priceListType === 'All Items' ||
+                        (pl.items && pl.items.some((it: any) => it.itemName === selectedItem?.name)))
                 );
                 setAssociatedPriceLists(filtered);
             } catch (e) { console.error(e); }
@@ -1100,11 +1141,11 @@ const CompositeItem = () => {
             try {
                 const allLists = JSON.parse(stored);
                 const plIndex = allLists.findIndex((pl: any) => String(pl.id) === String(selectedPriceListId));
-                
+
                 if (plIndex !== -1) {
                     const pl = allLists[plIndex];
                     if (!pl.items) pl.items = [];
-                    
+
                     // Check if already exists
                     if (pl.items.some((it: any) => it.itemName === selectedItem.name)) {
                         setToast({ message: 'This item is already associated with the selected price list.', type: 'error' });
@@ -1124,7 +1165,7 @@ const CompositeItem = () => {
 
                     allLists[plIndex] = pl;
                     localStorage.setItem("priceListData", JSON.stringify(allLists));
-                    
+
                     // Update local state to reflect changes instantly
                     setAssociatedPriceLists(prev => [...prev, pl]);
                     setToast({ message: 'Price list associated successfully.', type: 'success' });
@@ -1252,7 +1293,7 @@ const CompositeItem = () => {
                 setIsReturnable(!!found.isReturnable);
                 if (found.unit) setSelectedUnit({ value: found.unit, label: found.unit });
                 if (found.preferredVendor) setSelectedVendor({ value: found.preferredVendor, label: found.preferredVendor });
-                
+
                 if (found.dimensions) {
                     const parts = found.dimensions.split('x').map(s => s.trim());
                     setDimensionL(parts[0] || '');
@@ -1435,7 +1476,7 @@ const CompositeItem = () => {
 
     const handleSave = () => {
         if (!itemName.trim()) { alert('Please enter a name.'); return; }
-        
+
         setLoading(true);
         const all = loadData();
         const getNumericId = (value: string | number) => {
@@ -1453,15 +1494,14 @@ const CompositeItem = () => {
                 type: row.type,
                 sellingPrice: parseFloat(row.sellingPrice) || 0,
                 costPrice: parseFloat(row.costPrice) || 0,
-                productId: row.productId,
             }));
         const nowStr = formatHistoryDate(new Date());
         const user = getCurrentUser();
-        
+
         const commonData = {
             name: itemName,
             sku,
-            compositionType: itemType === 'assembly' ? 'Assembly' : 'Kit',
+            compositionType: (itemType === 'assembly' ? 'Assembly' : 'Kit') as 'Assembly' | 'Kit',
             reorderLevel: parseFloat(reorderPoint) || 0,
             category: selectedCategory?.label || '',
             brand: selectedBrand?.label || '',
@@ -1522,11 +1562,7 @@ const CompositeItem = () => {
                         moduleTitle="Composite Items"
                         moduleLink={route.compositeItems}
                         showExport={false}
-
-                        onRefresh={() => {
-                            const all = loadData();
-                            setData(all.filter(d => !d.isDeleted));
-                        }}
+                        settingsLink={route.productPreference}
                         exportComponent={
                             <div className="dropdown">
                                 <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
@@ -1555,14 +1591,14 @@ const CompositeItem = () => {
                     {/* ── Condition: Standard List vs Master-Detail ── */}
                     {!selectedItem ? (
                         <>
-                            <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ flexShrink: 0 }}>
-                                <div className="input-icon input-icon-start position-relative" style={{ width: '250px' }}>
+                            <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ flexShrink: 0, padding: isMobile ? '12px' : '1.25rem' }}>
+                                <div className="input-icon input-icon-start position-relative" style={{ width: isMobile ? '100%' : '250px' }}>
                                     <span className="input-icon-addon text-dark">
                                         <i className="ti ti-search" />
                                     </span>
                                     <SearchInput value={searchText} onChange={setSearchText} />
                                 </div>
-                                <Link to={route.compositeItemAdd} className="btn btn-primary d-flex align-items-center gap-1 flex-shrink-0">
+                                <Link to={route.compositeItemAdd} className="btn btn-primary d-flex align-items-center gap-1 flex-shrink-0" style={{ width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'center' : 'flex-start' }}>
                                     <i className="ti ti-square-rounded-plus-filled me-1" />
                                     Add New Item
                                 </Link>
@@ -1671,11 +1707,11 @@ const CompositeItem = () => {
 
                                     {/* Full Table */}
                                     {viewMode === 'list' && (
-                                        <div className="custom-table table-nowrap overflow-visible flex-grow-1">
+                                        <div className="custom-table table-nowrap overflow-auto flex-grow-1" style={{ WebkitOverflowScrolling: 'touch' }}>
                                             <Datatable
                                                 columns={columns.filter(c => c.title === 'Action' || visibleColumns[c.title as string])}
                                                 dataSource={tableData}
-                                                Selection={true}
+                                                Selection={false}
                                                 searchText={searchText}
                                                 expandable={{ expandIcon: () => null }}
                                                 onRow={(record) => ({
@@ -1694,7 +1730,7 @@ const CompositeItem = () => {
                                                 })}
 
                                                 rowClassName={(record) => {
-                                                    return !record.isChild && selectedItem !== null && String(record.id) === String(selectedItem?.id)
+                                                    return !record.isChild && selectedItem !== null && String(record.id) === String(selectedItem)
                                                         ? 'ant-table-row-selected-highlight'
                                                         : '';
                                                 }}
@@ -1739,41 +1775,41 @@ const CompositeItem = () => {
                                                                         </div>
                                                                         <div className="dropdown">
                                                                             <button className="btn btn-sm btn-white border bg-white shadow-none p-0 d-flex align-items-center justify-content-center rounded-2" style={{ width: 34, height: 34 }} data-bs-toggle="dropdown">
-                                                                                <i className="ti ti-dots-vertical fs-14 text-muted" />
+                                                                                <i className="ti ti-dots-vertical fs-14 text-dark" />
                                                                             </button>
                                                                             <div className="dropdown-menu dropdown-menu-right">
-                                                                                <Link className="dropdown-item fs-13" to="#" onClick={(e) => { e.preventDefault(); navigate(route.compositeItemEdit?.replace(':id', String(item.id)) || '#'); }}>
-                                                                                    <i className="ti ti-edit me-2" />Edit
+                                                                                <Link className="dropdown-item fs-14" to="#" onClick={(e) => { e.preventDefault(); navigate(route.compositeItemEdit?.replace(':id', String(item.id)) || '#'); }}>
+                                                                                    <i className="ti ti-edit text-dark me-2" />Edit
                                                                                 </Link>
                                                                                 <div className="dropdown-divider" />
-                                                                                <Link className="dropdown-item fs-13 text-danger" to="#" onClick={() => setDeleteTarget(item)}>
-                                                                                    <i className="ti ti-trash me-2" />Delete
+                                                                                <Link className="dropdown-item fs-14" to="#" onClick={() => setDeleteTarget(item)}>
+                                                                                    <i className="ti ti-trash text-dark me-2" />Delete
                                                                                 </Link>
                                                                             </div>
                                                                         </div>
                                                                     </div>
 
                                                                     {/* Description */}
-                                                                    <p className="text-muted fs-13 mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '38px' }}>
-                                                                        {item.description || 'Professional composite item management with hierarchical tracking and stock control system.'}
+                                                                    <p className="text-muted fs-14 mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '38px' }}>
+                                                                        {item.salesDescription || item.purchaseDescription || 'Professional composite item management with hierarchical tracking and stock control system.'}
                                                                     </p>
 
                                                                     {/* Body stats */}
                                                                     <div className="mb-3">
                                                                         <div className="d-flex align-items-center gap-2 mb-2">
-                                                                            <i className="ti ti-circle-check text-muted" style={{ fontSize: 13 }} />
-                                                                            <span className="text-muted fs-13">Project ID :</span>
-                                                                            <span className="text-dark fs-13 fw-medium">#{item.sku || '12145'}</span>
+                                                                            <i className="ti ti-circle-check text-muted" style={{ fontSize: 14 }} />
+                                                                            <span className="text-muted fs-14">Project ID :</span>
+                                                                            <span className="text-dark fs-14 fw-medium">#{item.sku || '12145'}</span>
                                                                         </div>
                                                                         <div className="d-flex align-items-center gap-2 mb-2">
-                                                                            <i className="ti ti-currency-dollar text-muted" style={{ fontSize: 13 }} />
-                                                                            <span className="text-muted fs-13">Value :</span>
-                                                                            <span className="text-dark fs-13 fw-medium">₹ {(item.stockOnHand ?? 0 * (item.costPrice ?? 0)).toLocaleString()}</span>
+                                                                            <i className="ti ti-currency-dollar text-muted" style={{ fontSize: 14 }} />
+                                                                            <span className="text-muted fs-14">Value :</span>
+                                                                            <span className="text-dark fs-14 fw-medium">₹ {(item.stockOnHand ?? 0 * (item.costPrice ?? 0)).toLocaleString()}</span>
                                                                         </div>
                                                                         <div className="d-flex align-items-center gap-2">
-                                                                            <i className="ti ti-calendar text-muted" style={{ fontSize: 13 }} />
-                                                                            <span className="text-muted fs-13">Due Date :</span>
-                                                                            <span className="text-dark fs-13 fw-medium">15 Oct 2023</span>
+                                                                            <i className="ti ti-calendar text-muted" style={{ fontSize: 14 }} />
+                                                                            <span className="text-muted fs-14">Due Date :</span>
+                                                                            <span className="text-dark fs-14 fw-medium">15 Oct 2023</span>
                                                                         </div>
                                                                     </div>
 
@@ -1792,7 +1828,7 @@ const CompositeItem = () => {
                                                                 </div>
                                                                 <div className="card-footer bg-white border-top p-3 d-flex align-items-center justify-content-between">
                                                                     <div className="badge badge-soft-indigo rounded-pill px-2 py-1 fs-12 d-flex align-items-center gap-2">
-                                                                        <i className="ti ti-packages fs-13" />
+                                                                        <i className="ti ti-packages fs-14" />
                                                                         <span>Total Stock : {(item.stockOnHand ?? 0).toFixed(0)}</span>
                                                                     </div>
                                                                     <div className="d-flex align-items-center gap-2 text-muted fs-12">
@@ -1826,9 +1862,9 @@ const CompositeItem = () => {
                                         </div>
                                         <div className="dropdown-menu shadow border" style={{ minWidth: 200 }}>
                                             {VIEWS.map(v => (
-                                                <button 
-                                                    key={v.key} 
-                                                    className={`dropdown-item fs-13 ${sidebarFilter === v.key ? 'active' : ''}`} 
+                                                <button
+                                                    key={v.key}
+                                                    className={`dropdown-item fs-14 ${sidebarFilter === v.key ? 'active' : ''}`}
                                                     style={{
                                                         backgroundColor: sidebarFilter === v.key ? '#e41f07' : 'transparent',
                                                         color: sidebarFilter === v.key ? '#fff' : '#44566c',
@@ -1854,30 +1890,30 @@ const CompositeItem = () => {
                                         </div>
                                     </div>
                                     <div className="d-flex align-items-center gap-1">
-                                        <button 
-                                            className="btn btn-primary d-flex align-items-center justify-content-center p-0 rounded" 
-                                            style={{ width: '28px', height: '28px', backgroundColor: '#e41f07', borderColor: '#e41f07' }} 
+                                        <button
+                                            className="btn btn-primary d-flex align-items-center justify-content-center p-0 rounded"
+                                            style={{ width: '28px', height: '28px', backgroundColor: '#e41f07', borderColor: '#e41f07' }}
                                             onClick={() => navigate(route.compositeItemAdd)}
                                         >
                                             <i className="ti ti-plus fs-14" />
                                         </button>
                                         <div className="dropdown">
-                                            <button 
-                                                className="btn btn-light border d-flex align-items-center justify-content-center p-0 rounded shadow-none" 
+                                            <button
+                                                className="btn btn-light border d-flex align-items-center justify-content-center p-0 rounded shadow-none"
                                                 style={{ width: '28px', height: '28px' }}
                                                 data-bs-toggle="dropdown"
                                             >
                                                 <i className="ti ti-dots-vertical fs-14 text-muted" />
                                             </button>
                                             <div className="dropdown-menu dropdown-menu-end shadow border p-0" style={{ minWidth: 160 }}>
-                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-13" onClick={() => { setData(loadData().filter(d => !d.isDeleted)); setSearchText(''); setSidebarSearchText(''); setToast({ message: 'List refreshed.', type: 'success' }); }}>
+                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-14" onClick={() => { setData(loadData().filter(d => !d.isDeleted)); setSearchText(''); setSidebarSearchText(''); setToast({ message: 'List refreshed.', type: 'success' }); }}>
                                                     <i className="ti ti-refresh text-muted" /> Refresh List
                                                 </button>
                                                 <div className="dropdown-divider m-0" />
-                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-13" onClick={handleExportPDF}>
+                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-14" onClick={handleExportPDF}>
                                                     <i className="ti ti-file-type-pdf text-muted" /> Export PDF
                                                 </button>
-                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-13" onClick={handleExportCSV}>
+                                                <button className="dropdown-item py-2 d-flex align-items-center gap-2 fs-14" onClick={handleExportCSV}>
                                                     <i className="ti ti-file-type-xls text-muted" /> Export Excel
                                                 </button>
                                             </div>
@@ -1908,7 +1944,7 @@ const CompositeItem = () => {
                                                     <div
                                                         className={`d-flex align-items-center px-4 py-2 border-bottom cursor-pointer position-relative ${isActive ? '' : 'hover-bg-light'}`}
                                                         onClick={() => { setSelectedItem(item); setDetailTab('overview'); }}
-                                                        style={{ 
+                                                        style={{
                                                             paddingLeft: `0px`,
                                                             backgroundColor: isActive ? '#fff5f5' : 'transparent',
                                                             borderLeft: isActive ? '3px solid #e41f07' : '3px solid transparent',
@@ -1916,82 +1952,71 @@ const CompositeItem = () => {
                                                             paddingRight: '12px'
                                                         }}
                                                     >
-                                                        {/* Tree Lines (Static Axis at 28px - Foolproof alignment) */}
+                                                        {/* Tree Lines (axis at 28px from left) */}
                                                         {level > 0 && (
                                                             <>
-                                                                <div className="position-absolute" style={{ 
-                                                                    left: 28, 
-                                                                    top: 0, 
-                                                                    bottom: isLast ? '50%' : '100%', 
-                                                                    width: 1, 
+                                                                {/* Vertical line: full height for non-last, half for last */}
+                                                                <div className="position-absolute" style={{
+                                                                    left: 12,
+                                                                    top: -16,
+                                                                    bottom: isLast ? '50%' : -16,
+                                                                    width: 1,
                                                                     background: '#bbbbbb',
                                                                     zIndex: 1
                                                                 }} />
-                                                                <div className="position-absolute" style={{ 
-                                                                    left: 28, 
-                                                                    top: '50%', 
-                                                                    width: 12, 
-                                                                    height: 1, 
+                                                                {/* Horizontal hook at row midpoint */}
+                                                                <div className="position-absolute" style={{
+                                                                    left: 12,
+                                                                    top: '50%',
+                                                                    width: 20,
+                                                                    height: 1,
                                                                     background: '#bbbbbb',
                                                                     zIndex: 1
                                                                 }} />
                                                             </>
                                                         )}
 
-                                                        <div className="d-flex align-items-center gap-0 min-width-0 flex-grow-1" style={{ position: 'relative', zIndex: 2 }}>
-                                                            {/* Checkbox Slot (Fixed Width 20px) */}
-                                                            <div className="d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 20 }}>
-                                                                {level === 0 && (
-                                                                    <div className="form-check mb-0">
-                                                                        <input
-                                                                            className="form-check-input m-0 rounded-1"
-                                                                            type="checkbox"
-                                                                            checked={selectedRows.includes(String(item.id))}
-                                                                            onChange={() => setSelectedRows(prev => prev.includes(String(item.id)) ? prev.filter(x => x !== String(item.id)) : [...prev, String(item.id)])}
-                                                                            onClick={e => e.stopPropagation()}
-                                                                            style={{ width: '13px', height: '13px' }}
-                                                                        />
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                        {/* Row-level parent connector: from icon midpoint down to row bottom, seamlessly joins child's top */}
+                                                        {level === 0 && isExpanded && hasChildren && (
+                                                            <div className="position-absolute" style={{
+                                                                left: 12,
+                                                                top: '50%',
+                                                                bottom: -16,
+                                                                width: 1,
+                                                                background: '#bbbbbb',
+                                                                zIndex: 1
+                                                            }} />
+                                                        )}
 
-                                                            {/* Folder Icon Slot - Centered exactly on 28px Axis (20 + 8) */}
-                                                            {level === 0 && (
-                                                                <div className="d-flex align-items-center justify-content-center flex-shrink-0 position-relative" style={{ width: 16 }}>
-                                                                    <div 
-                                                                        className="d-flex align-items-center justify-content-center cursor-pointer" 
-                                                                        style={{ width: 16, height: 16, position: 'relative', zIndex: 3 }}
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            if (hasChildren) {
-                                                                                setSidebarExpandedRows(prev => prev.includes(String(item.id)) ? prev.filter(x => x !== String(item.id)) : [...prev, String(item.id)]);
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        <i className={`ti ${isExpanded ? 'ti-folder-open text-primary' : 'ti-folder'} text-muted fs-14`} />
-                                                                    </div>
-                                                                    {/* Vertical segment connecting icon to children below */}
-                                                                    {isExpanded && hasChildren && (
-                                                                        <div className="position-absolute" style={{ 
-                                                                            left: '50%', 
-                                                                            top: '10px', 
-                                                                            bottom: '-16px', 
-                                                                            width: 1, 
-                                                                            background: '#bbbbbb',
-                                                                            zIndex: 1
-                                                                        }} />
-                                                                    )}
+                                                        <div className="d-flex align-items-center gap-0 min-width-0 flex-grow-1" style={{ position: 'relative', zIndex: 2 }}>
+                                                            {/* Folder Icon Slot - Centered exactly on 12px Axis */}
+                                                            {level === 0 ? (
+                                                                <div
+                                                                    className="d-flex align-items-center justify-content-center flex-shrink-0 cursor-pointer"
+                                                                    style={{ width: 24, height: 16, position: 'relative', zIndex: 3 }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (hasChildren) {
+                                                                            setSidebarExpandedRows(prev => prev.includes(String(item.id)) ? prev.filter(x => x !== String(item.id)) : [...prev, String(item.id)]);
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    <i className={`ti fs-14 ${isExpanded && hasChildren ? 'ti-folder-open' : 'ti-folder'}`} style={{ color: isExpanded && hasChildren ? '#e41f07' : '#6c757d' }} />
+                                                                </div>
+                                                            ) : (
+                                                                <div className="d-flex align-items-center justify-content-center flex-shrink-0 text-muted" style={{ width: 16, height: 16, marginLeft: '28px', position: 'relative', zIndex: 3 }}>
+                                                                    <i className="ti ti-file" style={{ fontSize: '14px' }} />
                                                                 </div>
                                                             )}
-                                                            
-                                                            <div className="min-width-0" style={{ marginLeft: level === 0 ? '6px' : '40px' }}>
-                                                                <p className={`mb-0 fs-13 text-truncate ${level === 0 ? 'text-primary fw-medium' : 'text-dark'}`}>
+
+                                                            <div className="min-width-0" style={{ marginLeft: '4px' }}>
+                                                                <p className={`mb-0 fs-14 text-truncate ${level === 0 ? 'text-primary fw-medium' : 'text-dark'}`}>
                                                                     {item.name}
                                                                 </p>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    {hasChildren && isExpanded && item.children!.map((child, idx) => 
+                                                    {hasChildren && isExpanded && item.children!.map((child, idx) =>
                                                         renderSidebarItem(child, level + 1, idx === item.children!.length - 1, isExpanded)
                                                     )}
                                                 </React.Fragment>
@@ -2006,12 +2031,12 @@ const CompositeItem = () => {
                             {/* 2. RIGHT PANE: Detail View */}
                             <div className="detail-pane-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff' }}>
                                 {/* Detail Header */}
-                                <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between sticky-top bg-white" style={{ minHeight: '64px', zIndex: 10 }}>
-                                    <div className="d-flex align-items-center gap-3">
+                                <div className="px-3 py-2 border-bottom d-flex align-items-center justify-content-between sticky-top bg-white" style={{ minHeight: '64px', zIndex: 10, gap: 8 }}>
+                                    <div className="d-flex align-items-center gap-2" style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                                         {/* Mobile: back button */}
                                         {isMobile ? (
                                             <button
-                                                className="item-nav-btn me-1"
+                                                className="item-nav-btn flex-shrink-0"
                                                 title="Back to list"
                                                 onClick={() => setSelectedItem(null)}
                                             >
@@ -2019,12 +2044,9 @@ const CompositeItem = () => {
                                             </button>
                                         ) : null}
 
-
-
-
-                                        <div>
+                                        <div style={{ minWidth: 0 }}>
                                             <div className="d-flex align-items-center gap-2 flex-wrap">
-                                                <h4 className="mb-0 fw-bold fs-18 text-dark">{selectedItem.name}</h4>
+                                                <h4 className="mb-0 fw-bold text-dark text-truncate" style={{ fontSize: isMobile ? '15px' : '18px' }}>{selectedItem.name}</h4>
                                                 {selectedItem.isDeleted && (
                                                     <span className="badge bg-danger bg-opacity-10 text-danger border border-danger fs-11 fw-semibold px-2 py-1">
                                                         <i className="ti ti-trash me-1" style={{ fontSize: 10 }} />Deleted
@@ -2041,35 +2063,38 @@ const CompositeItem = () => {
                                         </div>
                                     </div>
 
-                                    <div className="d-flex align-items-center gap-2">
+                                    <div className="d-flex align-items-center gap-2 flex-shrink-0">
                                         {!selectedItem.isDeleted && (
                                             <>
                                                 <button
                                                     className="btn btn-sm btn-white border shadow-none d-flex align-items-center justify-content-center rounded-2"
-                                                    style={{ width: '34px', height: '34px', padding: 0 }}
+                                                    style={{ width: '34px', height: '34px', padding: 0, flexShrink: 0 }}
                                                     onClick={() => navigate(route.compositeItemEdit.replace(':id', String(selectedItem.id)))}
                                                 >
                                                     <i className="ti ti-pencil fs-15 text-dark" />
                                                 </button>
-                                                <button
-                                                    className="btn btn-primary px-3 fs-13 fw-semibold d-flex align-items-center rounded-2"
-                                                    style={{ height: '34px', backgroundColor: '#e41f07', borderColor: '#e41f07' }}
-                                                    onClick={() => { setAssemblyQty('1'); setShowCreateAssemblyModal(true); }}
-                                                >
-                                                    Create Assemblies
-                                                </button>
+                                                {/* Hide on mobile — available via More dropdown */}
+                                                {!isMobile && (
+                                                    <button
+                                                        className="btn btn-primary px-3 fs-14 fw-semibold d-flex align-items-center rounded-2"
+                                                        style={{ height: '34px', backgroundColor: '#e41f07', borderColor: '#e41f07' }}
+                                                        onClick={() => { setAssemblyQty('1'); setShowCreateAssemblyModal(true); }}
+                                                    >
+                                                        Create Assemblies
+                                                    </button>
+                                                )}
 
                                                 <div className="dropdown">
-                                                    <button className="btn btn-sm btn-white border shadow-none dropdown-toggle px-3 fs-13 fw-semibold rounded-2" style={{ height: '34px' }} data-bs-toggle="dropdown">More</button>
+                                                    <button className="btn btn-sm btn-white border shadow-none dropdown-toggle px-3 fs-14 fw-semibold rounded-2" style={{ height: '34px' }} data-bs-toggle="dropdown">More</button>
                                                     <div className="dropdown-menu dropdown-menu-right">
-                                                        <Link to="#" className="dropdown-item fs-13" onClick={() => navigate(route.compositeItemEdit.replace(':id', String(selectedItem.id)))}>
+                                                        <Link to="#" className="dropdown-item fs-14" onClick={() => navigate(route.compositeItemEdit.replace(':id', String(selectedItem.id)))}>
                                                             <i className="ti ti-edit me-2" />Edit
                                                         </Link>
-                                                        <Link to="#" className="dropdown-item fs-13" onClick={() => { setAssemblyQty('1'); setShowCreateAssemblyModal(true); }}>
+                                                        <Link to="#" className="dropdown-item fs-14" onClick={() => { setAssemblyQty('1'); setShowCreateAssemblyModal(true); }}>
                                                             <i className="ti ti-stack-2 me-2" />Create Assembly
                                                         </Link>
                                                         <div className="dropdown-divider" />
-                                                        <Link to="#" className="dropdown-item fs-13 text-danger" onClick={() => { setDeleteTarget(selectedItem); }}>
+                                                        <Link to="#" className="dropdown-item fs-14 text-danger" onClick={() => { setDeleteTarget(selectedItem); }}>
                                                             <i className="ti ti-trash me-2" />Delete
                                                         </Link>
                                                     </div>
@@ -2123,10 +2148,10 @@ const CompositeItem = () => {
                                                                 { label: 'Created Source', value: selectedItem.createdSource || 'User' },
                                                                 { label: 'Inventory Account', value: selectedItem.inventoryAccount || 'Inventory Asset' },
                                                             ].map((field, idx) => (
-                                                            <div key={idx} className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">{field.label}</div>
-                                                                <div className="col-7 fs-13 fw-medium" style={{ color: field.color || '#212529' }}>{field.value}</div>
-                                                            </div>
+                                                                <div key={idx} className="row g-0 py-2 align-items-center">
+                                                                    <div className="col-5 text-muted fs-14">{field.label}</div>
+                                                                    <div className="col-7 fs-14 fw-medium" style={{ color: field.color || '#212529' }}>{field.value}</div>
+                                                                </div>
                                                             ))}
                                                         </div>
 
@@ -2134,16 +2159,16 @@ const CompositeItem = () => {
                                                         <div className="mb-5">
                                                             <h6 className="text-dark fs-15 fw-bold mb-3">Purchase Information</h6>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Cost Price</div>
-                                                                <div className="col-7 text-dark fs-13 fw-medium">₹{(selectedItem.costPrice || 0).toFixed(2)}</div>
+                                                                <div className="col-5 text-muted fs-14">Cost Price</div>
+                                                                <div className="col-7 text-dark fs-14 fw-medium">₹{(selectedItem.costPrice || 0).toFixed(2)}</div>
                                                             </div>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Purchase Account</div>
-                                                                <div className="col-7 text-dark fs-13">Cost of Goods Sold</div>
+                                                                <div className="col-5 text-muted fs-14">Purchase Account</div>
+                                                                <div className="col-7 text-dark fs-14">Cost of Goods Sold</div>
                                                             </div>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Description</div>
-                                                                <div className="col-7 text-dark fs-13">{selectedItem.purchaseDescription || '—'}</div>
+                                                                <div className="col-5 text-muted fs-14">Description</div>
+                                                                <div className="col-7 text-dark fs-14">{selectedItem.purchaseDescription || '—'}</div>
                                                             </div>
                                                         </div>
 
@@ -2151,16 +2176,16 @@ const CompositeItem = () => {
                                                         <div className="mb-5">
                                                             <h6 className="text-dark fs-15 fw-bold mb-3">Sales Information</h6>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Selling Price</div>
-                                                                <div className="col-7 text-dark fs-13 fw-medium">₹{(selectedItem.sellingPrice || 0).toFixed(2)}</div>
+                                                                <div className="col-5 text-muted fs-14">Selling Price</div>
+                                                                <div className="col-7 text-dark fs-14 fw-medium">₹{(selectedItem.sellingPrice || 0).toFixed(2)}</div>
                                                             </div>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Sales Account</div>
-                                                                <div className="col-7 text-dark fs-13">Sales</div>
+                                                                <div className="col-5 text-muted fs-14">Sales Account</div>
+                                                                <div className="col-7 text-dark fs-14">Sales</div>
                                                             </div>
                                                             <div className="row g-0 py-2 align-items-center">
-                                                                <div className="col-5 text-muted fs-13">Description</div>
-                                                                <div className="col-7 text-dark fs-13">{selectedItem.salesDescription || '—'}</div>
+                                                                <div className="col-5 text-muted fs-14">Description</div>
+                                                                <div className="col-7 text-dark fs-14">{selectedItem.salesDescription || '—'}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -2174,8 +2199,8 @@ const CompositeItem = () => {
                                                                     {selectedItem.image ? (
                                                                         <img src={selectedItem.image} alt={selectedItem.name} className="img-fluid rounded" style={{ maxHeight: '200px', objectFit: 'contain' }} />
                                                                     ) : (
-                                                                        <div 
-                                                                            className="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light border-dashed cursor-pointer" 
+                                                                        <div
+                                                                            className="w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-light border-dashed cursor-pointer"
                                                                             style={{ border: '2px dashed #ddd', borderRadius: 10, minHeight: 180 }}
                                                                             onClick={() => document.getElementById('composite-img-upload-panel')?.click()}
                                                                         >
@@ -2183,17 +2208,17 @@ const CompositeItem = () => {
                                                                             <span className="text-muted fs-12 fw-medium">Click to add primary image</span>
                                                                         </div>
                                                                     )}
-                                                                    
+
                                                                     {/* Action Icons Overlays */}
                                                                     {selectedItem.image && (
                                                                         <>
-                                                                            <div 
+                                                                            <div
                                                                                 className="position-absolute bottom-0 start-0 m-3 px-2 py-1 bg-soft-success text-success fs-11 fw-bold rounded d-flex align-items-center gap-1"
                                                                                 style={{ backgroundColor: '#e6f4ea', color: '#0d8a56' }}
                                                                             >
                                                                                 <i className="ti ti-circle-check-filled fs-12" /> Primary
                                                                             </div>
-                                                                            <div 
+                                                                            <div
                                                                                 className="position-absolute bottom-0 end-0 m-3 p-1 text-muted hover-text-danger cursor-pointer"
                                                                                 onClick={() => {
                                                                                     const all = loadData();
@@ -2224,7 +2249,7 @@ const CompositeItem = () => {
                                                                         try {
                                                                             const dataUrl = await compressImage(file);
                                                                             setPreviewUrl(dataUrl);
-                                                                            
+
                                                                             // Auto-save changes in overview tab
                                                                             const all = loadData();
                                                                             const updated = all.map(d => d.id === selectedItem.id ? { ...d, image: dataUrl } : d);
@@ -2307,7 +2332,7 @@ const CompositeItem = () => {
                                                                                     <h3 className="mb-0 fw-bold">{card.value}</h3>
                                                                                     <span className="text-muted fs-12">Qty</span>
                                                                                 </div>
-                                                                                <p className="text-dark fs-13 mb-0 mt-1">{card.label}</p>
+                                                                                <p className="text-dark fs-14 mb-0 mt-1">{card.label}</p>
                                                                             </div>
                                                                         </div>
                                                                     ))}
@@ -2328,29 +2353,29 @@ const CompositeItem = () => {
                                                 {/* Reporting Tags */}
                                                 <div className="mb-5">
                                                     <h6 className="text-dark fs-15 fw-bold mb-2">Reporting Tags</h6>
-                                                    <p className="text-muted fs-13 mb-0">No reporting tag has been associated with this item.</p>
+                                                    <p className="text-muted fs-14 mb-0">No reporting tag has been associated with this item.</p>
                                                 </div>
 
                                                 {/* Associated Price Lists Section */}
                                                 <div className="mb-5">
                                                     <div className="d-flex align-items-center justify-content-between mb-3">
-                                                        <div 
+                                                        <div
                                                             className="fs-14 fw-bold d-flex align-items-center gap-2 text-dark cursor-pointer select-none"
                                                             onClick={() => setIsPriceListExpanded(!isPriceListExpanded)}
                                                         >
-                                                            Associated Price Lists 
+                                                            Associated Price Lists
                                                             <i className={`ti ${isPriceListExpanded ? 'ti-chevron-down' : 'ti-chevron-right'} fs-11 text-muted`} />
                                                         </div>
                                                         {isPriceListExpanded && (
                                                             <div className="btn-group p-1 bg-light rounded" style={{ border: '1px solid #dee2e6' }}>
-                                                                <button 
+                                                                <button
                                                                     className={`btn btn-sm px-3 border-0 rounded ${priceListTypeView === 'Sales' ? 'bg-primary text-white shadow-sm' : 'text-muted'}`}
                                                                     style={priceListTypeView === 'Sales' ? { backgroundColor: '#0066ff' } : {}}
                                                                     onClick={() => setPriceListTypeView('Sales')}
                                                                 >
                                                                     Sales
                                                                 </button>
-                                                                <button 
+                                                                <button
                                                                     className={`btn btn-sm px-3 border-0 rounded ${priceListTypeView === 'Purchase' ? 'bg-primary text-white shadow-sm' : 'text-muted'}`}
                                                                     style={priceListTypeView === 'Purchase' ? { backgroundColor: '#0066ff' } : {}}
                                                                     onClick={() => setPriceListTypeView('Purchase')}
@@ -2377,14 +2402,14 @@ const CompositeItem = () => {
                                                                                 .filter(pl => pl.transactionType === priceListTypeView || pl.transactionType === 'Both')
                                                                                 .map(pl => (
                                                                                     <tr key={pl.id} className="border-bottom">
-                                                                                        <td className="py-2 fs-13 text-primary">{pl.name}</td>
-                                                                                        <td className="py-2 fs-13 text-end fw-medium text-dark">₹ {(selectedItem?.sellingPrice || 0).toLocaleString()}</td>
+                                                                                        <td className="py-2 fs-14 text-primary">{pl.name}</td>
+                                                                                        <td className="py-2 fs-14 text-end fw-medium text-dark">₹ {(selectedItem?.sellingPrice || 0).toLocaleString()}</td>
                                                                                     </tr>
                                                                                 ))
                                                                         ) : (
                                                                             <tr>
                                                                                 <td colSpan={2} className="py-5 text-center bg-white">
-                                                                                    <p className="text-muted fs-14 mb-2">The {priceListTypeView.toLowerCase()} price lists associated with this item will be <br/> displayed here. <Link to={route.priceListAdd} style={{ color: '#e41f07' }}>Create Price List</Link></p>
+                                                                                    <p className="text-muted fs-14 mb-2">The {priceListTypeView.toLowerCase()} price lists associated with this item will be <br /> displayed here. <Link to={route.priceListAdd} style={{ color: '#e41f07' }}>Create Price List</Link></p>
                                                                                 </td>
                                                                             </tr>
                                                                         )}
@@ -2392,9 +2417,9 @@ const CompositeItem = () => {
                                                                 </table>
                                                             </div>
                                                             <div className="mt-3">
-                                                                <Link 
-                                                                    to="#" 
-                                                                    className="text-primary fs-14 fw-medium d-flex align-items-center gap-2" 
+                                                                <Link
+                                                                    to="#"
+                                                                    className="text-primary fs-14 fw-medium d-flex align-items-center gap-2"
                                                                     style={{ color: '#e41f07' }}
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
@@ -2423,8 +2448,8 @@ const CompositeItem = () => {
                                                                             <label className="form-label mb-0 fs-14">Select Price List</label>
                                                                         </div>
                                                                         <div className="col-8">
-                                                                            <select 
-                                                                                className="form-select fs-14 shadow-none" 
+                                                                            <select
+                                                                                className="form-select fs-14 shadow-none"
                                                                                 style={{ borderColor: '#a3c3ff', color: '#6c757d' }}
                                                                                 value={selectedPriceListId}
                                                                                 onChange={(e) => setSelectedPriceListId(e.target.value)}
@@ -2440,17 +2465,17 @@ const CompositeItem = () => {
                                                                         </div>
                                                                     </div>
                                                                     <div className="border-top pt-3 d-flex gap-2">
-                                                                        <button 
-                                                                            type="button" 
-                                                                            className="btn btn-primary px-4 py-2 fs-14 fw-semibold" 
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-primary px-4 py-2 fs-14 fw-semibold"
                                                                             style={{ backgroundColor: '#4a90e2', borderColor: '#4a90e2' }}
                                                                             onClick={handleAssociatePriceList}
                                                                         >
                                                                             Save
                                                                         </button>
-                                                                        <button 
-                                                                            type="button" 
-                                                                            className="btn btn-light px-4 py-2 fs-14 fw-semibold border" 
+                                                                        <button
+                                                                            type="button"
+                                                                            className="btn btn-light px-4 py-2 fs-14 fw-semibold border"
                                                                             onClick={() => setShowAssociateModal(false)}
                                                                         >
                                                                             Cancel
@@ -2466,50 +2491,101 @@ const CompositeItem = () => {
                                                 {/* Associated Items Table */}
                                                 <div className="mb-5">
                                                     <h6 className="text-dark fs-15 fw-bold mb-3">Associated Items</h6>
-                                                    <div className="table-responsive border rounded">
-                                                        <table className="table table-nowrap mb-0 table-borderless">
-                                                            <thead className="bg-light">
+                                                    <div className="border rounded table-responsive" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                                        <table className="table mb-0 table-borderless table-nowrap">
+                                                            <thead className="bg-light border-bottom">
                                                                 <tr>
-                                                                    <th className="fs-12 fw-bold text-muted py-2" style={{ width: '60%' }}>ITEM DETAILS</th>
-                                                                    <th className="fs-12 fw-bold text-muted py-2 text-end">QUANTITY</th>
+                                                                    <th className="fs-12 fw-bold text-muted py-2" style={{ paddingLeft: 8 }}>ITEM DETAILS</th>
+                                                                    <th className="fs-12 fw-bold text-muted py-2 text-end px-3">QUANTITY</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {selectedItem.children && selectedItem.children.length > 0 ? (
-                                                                    selectedItem.children.map(child => (
-                                                                        <tr key={child.id} className="border-bottom">
-                                                                            <td className="py-3">
-                                                                                <div className="d-flex align-items-start gap-2">
-                                                                                    <div 
-                                                                                        className="avatar avatar-lg rounded border bg-light d-flex align-items-center justify-content-center cursor-pointer" 
-                                                                                        style={{ width: 44, height: 44 }}
-                                                                                        onClick={() => {
-                                                                                            const found = data.find(item => item.name === child.name);
-                                                                                            if (found) setSelectedItem(found);
-                                                                                        }}
-                                                                                    >
-                                                                                        <i className="ti ti-photo text-muted fs-18" />
+                                                                    <>
+                                                                        {/* Parent Row — only shown when it has children */}
+                                                                        <tr className="bg-white">
+                                                                            <td className="py-2 position-relative" style={{ paddingLeft: 8 }}>
+                                                                                <div className="d-flex align-items-center gap-2">
+                                                                                    <div className="d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 20, height: 20, position: 'relative', zIndex: 2 }}>
+                                                                                        <i className="ti ti-folder fs-18" style={{ color: '#5f6368' }} />
                                                                                     </div>
-                                                                                    <div>
-                                                                                        <span className="text-dark fw-medium fs-14 mb-1 d-block">{child.name}</span>
-                                                                                        {child.sku && <span className="text-muted fs-12 d-block">[{child.sku}]</span>}
-
-
-                                                                                        <div className="mt-1">
-                                                                                            <span className="text-muted fs-12 me-2">Accounting Stock: 0.00</span>
-                                                                                            <span className="text-muted fs-12">Physical Stock: 0.00</span>
-                                                                                        </div>
-                                                                                    </div>
+                                                                                    <span className="text-primary fw-medium fs-14">{selectedItem.name}</span>
                                                                                 </div>
+                                                                                {/* Vertical line start for children */}
+                                                                                <div style={{
+                                                                                    position: 'absolute',
+                                                                                    left: 18, // 8px padding + 10px half width of folder
+                                                                                    top: '50%',
+                                                                                    bottom: -16,
+                                                                                    width: '1px',
+                                                                                    backgroundColor: '#d1d5db',
+                                                                                    zIndex: 1
+                                                                                }} />
                                                                             </td>
-                                                                            <td className="py-3 text-end fs-14 fw-medium">
-                                                                                {child.quantity?.split(' ')[0] || '1'}
-                                                                            </td>
+                                                                            <td className="py-2 text-end px-3"></td>
                                                                         </tr>
-                                                                    ))
+
+                                                                        {/* Child Rows */}
+                                                                        {selectedItem.children.map((child, index, arr) => {
+                                                                            const foundItem = data.find(item => item.id === Number(child.id || -1) || item.name === child.name);
+                                                                            const isLast = index === arr.length - 1;
+                                                                            const stockVal = (foundItem?.stockOnHand || 0).toFixed(2);
+
+                                                                            return (
+                                                                                <tr key={child.id} className="bg-white">
+                                                                                    <td className="py-2 position-relative" style={{ paddingLeft: 34 }}>
+                                                                                        {/* Tree Lines */}
+                                                                                        {/* Vertical line from above */}
+                                                                                        <div style={{
+                                                                                            position: 'absolute',
+                                                                                            left: 18,
+                                                                                            top: -16,
+                                                                                            bottom: isLast ? '50%' : -16,
+                                                                                            width: '1px',
+                                                                                            backgroundColor: '#d1d5db',
+                                                                                            zIndex: 1
+                                                                                        }} />
+                                                                                        <div style={{
+                                                                                            position: 'absolute',
+                                                                                            left: 18,
+                                                                                            top: '50%',
+                                                                                            width: 20,
+                                                                                            height: '1px',
+                                                                                            backgroundColor: '#d1d5db',
+                                                                                            zIndex: 1
+                                                                                        }} />
+
+                                                                                        <div className="d-flex align-items-start gap-2">
+                                                                                            <div className="d-flex align-items-center justify-content-center text-muted flex-shrink-0" style={{ width: 16, height: 16, marginTop: '2px', position: 'relative', zIndex: 2 }}>
+                                                                                                <i className="ti ti-file" style={{ fontSize: '15px' }} />
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <span
+                                                                                                    className="text-primary fw-medium fs-14 mb-0 d-block cursor-pointer"
+                                                                                                    onClick={() => foundItem && setSelectedItem(foundItem)}
+                                                                                                >
+                                                                                                    {child.name}
+                                                                                                </span>
+                                                                                                <div className="d-flex flex-column gap-0">
+                                                                                                    {child.sku && <span className="text-muted fs-11">[{child.sku}]</span>}
+                                                                                                    <div className="mt-1">
+                                                                                                        <span className="text-muted fs-11 me-2">Accounting Stock: {stockVal}</span>
+                                                                                                        <span className="text-muted fs-11">Physical Stock: {stockVal}</span>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td className="py-2 text-end fs-14 fw-medium px-3 align-top pt-2">
+                                                                                        {child.quantity?.split(' ')[0] || '1'}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            );
+                                                                        })}
+                                                                    </>
                                                                 ) : (
                                                                     <tr>
-                                                                        <td colSpan={2} className="text-center py-4 text-muted fs-13">No associated items.</td>
+                                                                        <td colSpan={2} className="text-center py-4 text-muted fs-14">No associated items.</td>
                                                                     </tr>
                                                                 )}
                                                             </tbody>
@@ -2583,7 +2659,7 @@ const CompositeItem = () => {
                                                             {['Sales Orders', 'Purchase Orders', 'Invoices', 'Bills', 'Assembly Orders'].map(opt => (
                                                                 <button
                                                                     key={opt}
-                                                                    className={`dropdown-item fs-13 ${txFilterBy === opt ? 'active' : ''}`}
+                                                                    className={`dropdown-item fs-14 ${txFilterBy === opt ? 'active' : ''}`}
                                                                     onClick={() => { setTxFilterBy(opt); setShowTxFilterMenu(false); }}
                                                                 >
                                                                     {opt}
@@ -2595,7 +2671,7 @@ const CompositeItem = () => {
                                                 {/* Status */}
                                                 <div className="position-relative">
                                                     <button
-                                                        className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-13"
+                                                        className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-14"
                                                         onClick={() => { setShowTxStatusMenu(v => !v); setShowTxFilterMenu(false); }}
                                                         style={{ height: 32 }}
                                                     >
@@ -2608,7 +2684,7 @@ const CompositeItem = () => {
                                                             {['All', 'Open', 'Closed', 'Cancelled'].map(opt => (
                                                                 <button
                                                                     key={opt}
-                                                                    className={`dropdown-item fs-13 ${txStatus === opt ? 'active' : ''}`}
+                                                                    className={`dropdown-item fs-14 ${txStatus === opt ? 'active' : ''}`}
                                                                     onClick={() => { setTxStatus(opt); setShowTxStatusMenu(false); }}
                                                                 >
                                                                     {opt}
@@ -2639,8 +2715,8 @@ const CompositeItem = () => {
                                                         {(selectedItem.history && selectedItem.history.length > 0) ? (
                                                             selectedItem.history.map((entry, idx) => (
                                                                 <tr key={idx} style={{ borderBottom: '1px solid #f3f3f3' }}>
-                                                                    <td className="py-3 fs-13 text-muted align-top">{entry.date}</td>
-                                                                    <td className="py-3 fs-13 align-top">
+                                                                    <td className="py-3 fs-14 text-muted align-top">{entry.date}</td>
+                                                                    <td className="py-3 fs-14 align-top">
                                                                         <span className="fw-medium text-dark">{entry.details}</span>
                                                                         {' - '}
                                                                         <span className="fst-italic text-muted">{entry.user}</span>
@@ -2649,7 +2725,7 @@ const CompositeItem = () => {
                                                             ))
                                                         ) : (
                                                             <tr>
-                                                                <td colSpan={2} className="py-5 text-center text-muted fs-13">No history available.</td>
+                                                                <td colSpan={2} className="py-5 text-center text-muted fs-14">No history available.</td>
                                                             </tr>
                                                         )}
                                                     </tbody>
@@ -2679,9 +2755,9 @@ const CompositeItem = () => {
                                     </div>
                                     <button
                                         className="btn btn-sm border-0 p-0 ms-auto d-flex align-items-center justify-content-center rounded-circle"
-                                        style={{ 
-                                            width: 24, 
-                                            height: 24, 
+                                        style={{
+                                            width: 24,
+                                            height: 24,
                                             backgroundColor: '#fff5f5',
                                             border: '1px solid #f9d2cd'
                                         }}
@@ -2703,7 +2779,7 @@ const CompositeItem = () => {
                                         </div>
                                     </div>
                                     {/* Who is deleting */}
-                                    <div className="d-flex align-items-center gap-2 text-muted fs-13 mb-1">
+                                    <div className="d-flex align-items-center gap-2 text-muted fs-14 mb-1">
                                         <i className="ti ti-user fs-14" />
                                         <span>Deleted by:</span>
                                         <span className="fw-medium text-dark">{getCurrentUser()}</span>
@@ -2713,8 +2789,8 @@ const CompositeItem = () => {
                                     </p>
                                 </div>
                                 <div className="modal-footer border-0 px-4 pb-4 pt-2 d-flex gap-2 justify-content-end">
-                                    <button className="btn btn-light px-4 fs-13" onClick={() => setDeleteTarget(null)}>Cancel</button>
-                                    <button className="btn btn-danger px-4 fs-13 d-flex align-items-center gap-2" onClick={handleDelete}>
+                                    <button className="btn btn-light px-4 fs-14" onClick={() => setDeleteTarget(null)}>Cancel</button>
+                                    <button className="btn btn-danger px-4 fs-14 d-flex align-items-center gap-2" onClick={handleDelete}>
                                         <i className="ti ti-trash fs-14" />
                                         Delete
                                     </button>
@@ -2733,9 +2809,9 @@ const CompositeItem = () => {
                                     <h5 className="modal-title fw-semibold fs-16 mb-0">Create Assemblies</h5>
                                     <button
                                         className="btn btn-sm border-0 p-0 ms-auto d-flex align-items-center justify-content-center rounded-circle"
-                                        style={{ 
-                                            width: 24, 
-                                            height: 24, 
+                                        style={{
+                                            width: 24,
+                                            height: 24,
                                             backgroundColor: '#fff5f5',
                                             border: '1px solid #f9d2cd'
                                         }}
@@ -2746,11 +2822,11 @@ const CompositeItem = () => {
                                     </button>
                                 </div>
                                 <div className="modal-body px-4 py-3">
-                                    <p className="text-muted fs-13 mb-3">
+                                    <p className="text-muted fs-14 mb-3">
                                         Create an assembly order for <span className="fw-semibold text-dark">{selectedItem.name}</span>.
                                     </p>
                                     <div className="mb-3">
-                                        <label className="form-label fs-13 fw-medium">Quantity to Assemble <span className="text-danger">*</span></label>
+                                        <label className="form-label fs-14 fw-medium">Quantity to Assemble <span className="text-danger">*</span></label>
                                         <input
                                             type="number"
                                             min="1"
@@ -2764,7 +2840,7 @@ const CompositeItem = () => {
                                         <div className="border rounded p-3 bg-light mb-2">
                                             <p className="fs-12 fw-semibold text-muted mb-2 text-uppercase">Components Required</p>
                                             {selectedItem.children.map(c => (
-                                                <div key={c.id} className="d-flex justify-content-between fs-13 mb-1">
+                                                <div key={c.id} className="d-flex justify-content-between fs-14 mb-1">
                                                     <span className="text-dark">{c.name}</span>
                                                     <span className="text-muted">{parseFloat(c.quantity || '1') * (parseFloat(assemblyQty) || 1)} {c.quantity?.replace(/[\d.]/g, '').trim() || 'pcs'}</span>
                                                 </div>
@@ -2773,9 +2849,9 @@ const CompositeItem = () => {
                                     )}
                                 </div>
                                 <div className="modal-footer border-top px-4 py-3 d-flex gap-2 justify-content-end">
-                                    <button className="btn btn-light px-4 fs-13" onClick={() => setShowCreateAssemblyModal(false)}>Cancel</button>
+                                    <button className="btn btn-light px-4 fs-14" onClick={() => setShowCreateAssemblyModal(false)}>Cancel</button>
                                     <button
-                                        className="btn btn-primary px-4 fs-13"
+                                        className="btn btn-primary px-4 fs-14"
                                         onClick={() => {
                                             if (!assemblyQty || parseFloat(assemblyQty) <= 0) { alert('Please enter a valid quantity.'); return; }
                                             const nowStr = formatHistoryDate(new Date());
@@ -2819,47 +2895,57 @@ const CompositeItem = () => {
                     showModuleTile={true}
                     moduleLink={route.compositeItems}
                     showExport={false}
-                    onRefresh={() => window.location.reload()}
+                    exportComponent={
+                        <button
+                            type="button"
+                            className="btn btn-icon btn-outline-light shadow"
+                            aria-label="Close"
+                            title="Close"
+                            onClick={() => navigate(route.compositeItems)}
+                        >
+                            <i className="ti ti-x" />
+                        </button>
+                    }
                 />
 
-                <div className="card">
-                    <div className="card-body">
+                <div className="card" style={{ borderRadius: 0 }}>
+                    <div className="card-body" style={{ padding: isMobile ? '16px' : undefined }}>
                         <form onSubmit={e => e.preventDefault()}>
                             {/* ── Zoho-style two-column layout ── */}
-                            <div className="d-flex align-items-start gap-4 mb-4 pb-4 border-bottom">
+                            <div className="d-flex align-items-start gap-4 mb-4 pb-4 border-bottom" style={{ flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
 
                                 {/* Left: Form Fields */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
 
                                     {/* Name */}
-                                    <div className="d-flex align-items-center mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555' }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, fontSize: 14, color: '#555', fontWeight: 500 }}>
                                             Name <span className="text-danger">*</span>
                                         </label>
-                                        <div style={{ flex: 1 }}>
+                                        <div style={{ flex: 1, width: '100%' }}>
                                             <input className="form-control" value={itemName} onChange={e => setItemName(e.target.value)} placeholder="" />
                                         </div>
                                     </div>
 
                                     {/* Item Type */}
-                                    <div className="d-flex align-items-start mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555', paddingTop: 6 }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'flex-start' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, paddingTop: isMobile ? 0 : 6, fontSize: 14, color: '#555', fontWeight: 500 }}>
                                             Item Type <span className="text-danger">*</span>
                                         </label>
-                                        <div style={{ flex: 1, display: 'flex', gap: 12 }}>
+                                        <div style={{ flex: 1, display: 'flex', gap: 12, flexWrap: 'wrap', width: '100%' }}>
                                             {/* Assembly card */}
                                             <label
                                                 htmlFor="type-assembly"
                                                 style={{
                                                     flex: 1, border: `1.5px solid ${itemType === 'assembly' ? '#e41f07' : '#dee2e6'}`,
-                                                    borderRadius: 6, padding: '10px 14px', cursor: 'pointer',
+                                                    borderRadius: 0, padding: '10px 14px', cursor: 'pointer',
                                                     background: itemType === 'assembly' ? '#fff8f7' : '#fff',
                                                     transition: 'all 0.15s',
                                                 }}
                                             >
                                                 <div className="d-flex align-items-center gap-2 mb-1">
                                                     <input type="radio" id="type-assembly" name="itemType" checked={itemType === 'assembly'} onChange={() => setItemType('assembly')} style={{ accentColor: '#e41f07' }} />
-                                                    <span style={{ fontWeight: 600, fontSize: 13 }}>Assembly Item</span>
+                                                    <span style={{ fontWeight: 600, fontSize: 14 }}>Assembly Item</span>
                                                 </div>
                                                 <p style={{ fontSize: 12, color: '#888', marginBottom: 0, lineHeight: 1.4 }}>
                                                     A group of items combined together to be tracked and managed as a single item.
@@ -2870,14 +2956,14 @@ const CompositeItem = () => {
                                                 htmlFor="type-kit"
                                                 style={{
                                                     flex: 1, border: `1.5px solid ${itemType === 'kit' ? '#e41f07' : '#dee2e6'}`,
-                                                    borderRadius: 6, padding: '10px 14px', cursor: 'pointer',
+                                                    borderRadius: 0, padding: '10px 14px', cursor: 'pointer',
                                                     background: itemType === 'kit' ? '#fff5f5' : '#fff',
                                                     transition: 'all 0.15s',
                                                 }}
                                             >
                                                 <div className="d-flex align-items-center gap-2 mb-1">
                                                     <input type="radio" id="type-kit" name="itemType" checked={itemType === 'kit'} onChange={() => setItemType('kit')} style={{ accentColor: '#e41f07' }} />
-                                                    <span style={{ fontWeight: 600, fontSize: 13 }}>Kit Item</span>
+                                                    <span style={{ fontWeight: 600, fontSize: 14 }}>Kit Item</span>
                                                 </div>
                                                 <p style={{ fontSize: 12, color: '#888', marginBottom: 0, lineHeight: 1.4 }}>
                                                     Individual items sold together as one kit.
@@ -2887,17 +2973,17 @@ const CompositeItem = () => {
                                     </div>
 
                                     {/* SKU */}
-                                    <div className="d-flex align-items-center mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555' }}>SKU</label>
-                                        <div style={{ flex: 1 }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, fontSize: 14, color: '#555', fontWeight: 500 }}>SKU</label>
+                                        <div style={{ flex: 1, width: '100%' }}>
                                             <input className="form-control" value={sku} onChange={e => setSku(e.target.value)} />
                                         </div>
                                     </div>
 
                                     {/* Unit */}
-                                    <div className="d-flex align-items-center mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555' }}>Unit</label>
-                                        <div style={{ flex: 1 }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, fontSize: 14, color: '#555', fontWeight: 500 }}>Unit</label>
+                                        <div style={{ flex: 1, width: '100%' }}>
                                             <Select
                                                 className="custom-react-select"
                                                 options={[
@@ -2915,9 +3001,9 @@ const CompositeItem = () => {
                                     </div>
 
                                     {/* Category */}
-                                    <div className="d-flex align-items-center mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555' }}>Category</label>
-                                        <div style={{ flex: 1 }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, fontSize: 14, color: '#555', fontWeight: 500 }}>Category</label>
+                                        <div style={{ flex: 1, width: '100%' }}>
                                             <CreatableSelect
                                                 className="custom-react-select"
                                                 options={categories}
@@ -2947,9 +3033,9 @@ const CompositeItem = () => {
                                     </div>
 
                                     {/* Brand */}
-                                    <div className="d-flex align-items-center mb-3">
-                                        <label style={{ width: 160, minWidth: 160, textAlign: 'right', paddingRight: 16, fontSize: 13, color: '#555' }}>Brand</label>
-                                        <div style={{ flex: 1 }}>
+                                    <div className="d-flex mb-3" style={{ flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center' }}>
+                                        <label style={{ width: isMobile ? '100%' : 160, minWidth: isMobile ? 'unset' : 160, textAlign: isMobile ? 'left' : 'right', paddingRight: isMobile ? 0 : 16, paddingBottom: isMobile ? 4 : 0, fontSize: 14, color: '#555', fontWeight: 500 }}>Brand</label>
+                                        <div style={{ flex: 1, width: '100%' }}>
                                             <CreatableSelect
                                                 className="custom-react-select"
                                                 options={brands}
@@ -2980,11 +3066,11 @@ const CompositeItem = () => {
 
                                     {/* Returnable Item */}
                                     <div className="d-flex align-items-center mb-3">
-                                        <div style={{ width: 160, minWidth: 160 }} />
+                                        <div style={{ width: isMobile ? 0 : 160, minWidth: isMobile ? 0 : 160 }} />
                                         <div style={{ flex: 1 }}>
                                             <div className="form-check mb-0">
                                                 <input className="form-check-input" type="checkbox" id="returnable" checked={isReturnable} onChange={e => setIsReturnable(e.target.checked)} style={{ accentColor: '#e41f07' }} />
-                                                <label className="form-check-label d-flex align-items-center gap-1" htmlFor="returnable" style={{ fontSize: 13, cursor: 'pointer' }}>
+                                                <label className="form-check-label d-flex align-items-center gap-1" htmlFor="returnable" style={{ fontSize: 14, cursor: 'pointer' }}>
                                                     Returnable Item
                                                     <HelpIcon text="Enable if this item can be returned by customers." id="returnable-tip" />
                                                 </label>
@@ -2995,7 +3081,7 @@ const CompositeItem = () => {
                                 </div>
 
                                 {/* Right: Image Upload */}
-                                <div style={{ width: 260, minWidth: 220, flexShrink: 0 }}>
+                                <div style={{ width: isMobile ? '100%' : 260, minWidth: isMobile ? '100%' : 220, flexShrink: 0 }}>
                                     <label
                                         htmlFor="composite-img-upload"
                                         onDragOver={e => e.preventDefault()}
@@ -3030,7 +3116,7 @@ const CompositeItem = () => {
                                         ) : (
                                             <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: 200, padding: '24px 16px', textAlign: 'center' }}>
                                                 <i className="ti ti-photo mb-2" style={{ fontSize: 36, color: '#b0bec5' }} />
-                                                <p className="mb-1 fw-medium fs-13 text-dark">
+                                                <p className="mb-1 fw-medium fs-14 text-dark">
                                                     Drag image here or{' '}
                                                     <span style={{ color: '#e41f07', textDecoration: 'underline' }}>Browse Image</span>
                                                 </p>
@@ -3104,20 +3190,20 @@ const CompositeItem = () => {
                                                 <tr>
                                                     <td className="border-0 pt-2 pb-3 ps-2">
                                                         <div className="d-flex gap-3">
-                                                            <button type="button" className="fw-medium fs-13 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }} onClick={() => setItemRows([...itemRows, newRow('item')])}>
+                                                            <button type="button" className="fw-medium fs-14 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }} onClick={() => setItemRows([...itemRows, newRow('item')])}>
                                                                 <i className="ti ti-circle-plus me-1" /> Add New Row
                                                             </button>
                                                             {!showServiceSection && (
-                                                                <button type="button" className="fw-medium fs-13 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }}
+                                                                <button type="button" className="fw-medium fs-14 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }}
                                                                     onClick={() => { setShowServiceSection(true); setServiceRows([newRow('service')]); }}>
                                                                     <i className="ti ti-circle-plus me-1" /> Add Services
                                                                 </button>
                                                             )}
                                                         </div>
                                                     </td>
-                                                    <td className="border-0 pt-2 pb-3 text-end text-muted fs-13">Total (₹):</td>
-                                                    <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-13">{totalItemSelling.toFixed(2)}</td>
-                                                    <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-13">{totalItemCost.toFixed(2)}</td>
+                                                    <td className="border-0 pt-2 pb-3 text-end text-muted fs-14">Total (₹):</td>
+                                                    <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-14">{totalItemSelling.toFixed(2)}</td>
+                                                    <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-14">{totalItemCost.toFixed(2)}</td>
                                                     <td className="border-0"></td>
                                                 </tr>
                                             </tfoot>
@@ -3131,9 +3217,9 @@ const CompositeItem = () => {
                                 <div className="mt-4 pt-4 border-top">
                                     <div className="d-flex align-items-center justify-content-between mb-3">
                                         <h6 className="mb-0">Associate Services <span className="text-danger">*</span></h6>
-                                        <button type="button" className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-13"
+                                        <button type="button" className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-14"
                                             onClick={() => { setShowServiceSection(false); setServiceRows([]); }}>
-                                            <i className="ti ti-x fs-13" /> Close Services
+                                            <i className="ti ti-x fs-14" /> Close Services
                                         </button>
                                     </div>
                                     <div className="bg-white border rounded overflow-hidden">
@@ -3191,14 +3277,14 @@ const CompositeItem = () => {
                                                 <tfoot>
                                                     <tr>
                                                         <td className="border-0 pt-2 pb-3 ps-2">
-                                                            <button type="button" className="fw-medium fs-13 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }}
+                                                            <button type="button" className="fw-medium fs-14 d-flex align-items-center border-0 bg-transparent p-0" style={{ color: '#e41f07' }}
                                                                 onClick={() => setServiceRows([...serviceRows, newRow('service')])}>
                                                                 <i className="ti ti-circle-plus me-1" /> Add New Row
                                                             </button>
                                                         </td>
-                                                        <td className="border-0 pt-2 pb-3 text-end text-muted fs-13">Total (₹):</td>
-                                                        <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-13">{totalServiceSelling.toFixed(2)}</td>
-                                                        <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-13">{totalServiceCost.toFixed(2)}</td>
+                                                        <td className="border-0 pt-2 pb-3 text-end text-muted fs-14">Total (₹):</td>
+                                                        <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-14">{totalServiceSelling.toFixed(2)}</td>
+                                                        <td className="border-0 pt-2 pb-3 text-end fw-semibold fs-14">{totalServiceCost.toFixed(2)}</td>
                                                         <td className="border-0"></td>
                                                     </tr>
                                                 </tfoot>
