@@ -12,16 +12,21 @@ interface PageHeaderProps {
   exportComponent?: ReactNode;
   onRefresh?: () => void;
   settingsLink?: string;
+  titleDropdown?: ReactNode;
 }
 
-const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleTitle = "", moduleLink = "#", showModuleTile = true, exportComponent, onRefresh, settingsLink }: PageHeaderProps) => {
+const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleTitle = "", moduleLink = "#", showModuleTile = true, exportComponent, onRefresh, settingsLink, titleDropdown }: PageHeaderProps) => {
   return (
     <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
       <div>
-        <h4 className="mb-1" style={{ fontSize: '18px', fontWeight: 600 }}>
-          {title}
-          <span className="badge badge-soft-primary ms-2">{badgeCount}</span>
-        </h4>
+        {titleDropdown ? (
+          titleDropdown
+        ) : (
+          <h4 className="mb-1" style={{ fontSize: '18px', fontWeight: 600 }}>
+            {title}
+            <span className="badge badge-soft-primary ms-2">{badgeCount}</span>
+          </h4>
+        )}
         <nav aria-label="breadcrumb">
           <ol className="breadcrumb mb-0 p-0" style={{ fontSize: '14px' }}>
             <li className="breadcrumb-item" style={{ fontSize: '14px' }}>

@@ -301,4 +301,9 @@ export const all_routes = {
   compositeItems: "/billing-application/composite-items",
   compositeItemAdd: "/billing-application/composite-items/new",
   compositeItemEdit: "/billing-application/composite-items/edit/:id",
+  assignLocation: "/billing-application/assign-location",
+  customerList: "/billing-application/customers",
+  customerAdd: "/billing-application/customers/new",
+  customerEdit: "/billing-application/customers/:id/edit",
+  customerView: "/billing-application/customers/:id",
 };

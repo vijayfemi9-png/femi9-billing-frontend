@@ -212,6 +212,10 @@ const ProductList = lazy(() => import("../feature-module/Pages/billing-applicati
 const Locations = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/location"));
 const PriceList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/price-list"));
 const CompositeItem = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/composite-item"));
+const AssignLocation = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location"));
+const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-list"));
+const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
+const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
 
 const route = all_routes;
 
@@ -1703,6 +1707,41 @@ export const publicRoutes = [
     element: <CompositeItem />,
     route: Route,
     meta_title: "Edit Composite Item",
+  },
+  {
+    id: "211",
+    path: route.assignLocation,
+    element: <AssignLocation />,
+    route: Route,
+    meta_title: "Assign Location",
+  },
+  {
+    id: "212",
+    path: route.customerList,
+    element: <CustomerList />,
+    route: Route,
+    meta_title: "Customer List",
+  },
+  {
+    id: "213",
+    path: route.customerAdd,
+    element: <CustomerAdd />,
+    route: Route,
+    meta_title: "Add Customer",
+  },
+  {
+    id: "213b",
+    path: route.customerEdit,
+    element: <CustomerAdd />,
+    route: Route,
+    meta_title: "Edit Customer",
+  },
+  {
+    id: "214",
+    path: route.customerView,
+    element: <CustomerView />,
+    route: Route,
+    meta_title: "Customer Detail",
   },
 ];
 

@@ -63,65 +63,75 @@ const Datatable: React.FC<DatatableProps> = ({
   };
 
   return (
-    <div className="row align-items-center mb-3">
-      {/* Table */}
-      <Table
-        className="table-nowrap mt-3 mb-3"
-        size="small"
-        rowSelection={Selections ? rowSelection : undefined}
-        columns={columns}
-        rowHoverable={false}
-        rowKey={(record: any) => String(record.id ?? record.key ?? JSON.stringify(record))}
-        dataSource={filteredDataSource.slice((current - 1) * pageSize, current * pageSize)}
-        pagination={false}
-        expandable={expandable}
-        onRow={onRow}
-        rowClassName={rowClassName}
-      />
-      {/* Left side: show entries */}
-      <div className="col-md-6">
-        <div className="datatable-length">
-          <label>
-            Show
+    <>
+      {/* Table Container - Strict horizontal boundary so row/pagination is safe */}
+      <div className="table-responsive mb-3 w-100">
+        <Table
+          className="table-nowrap"
+          size="middle"
+          rowSelection={Selections ? rowSelection : undefined}
+          columns={columns}
+          rowHoverable={false}
+          rowKey={(record: any) => String(record.id ?? record.key ?? JSON.stringify(record))}
+          dataSource={filteredDataSource.slice((current - 1) * pageSize, current * pageSize)}
+          pagination={false}
+          expandable={expandable}
+          onRow={onRow}
+          rowClassName={rowClassName}
+        />
+      </div>
+
+      <div className="d-flex align-items-center justify-content-between pb-4 w-100">
+        {/* Left side: show entries */}
+        <div className="datatable-length text-muted">
+          <label className="d-flex align-items-center mb-0 text-dark fw-medium fs-14">
+            <span>Show</span>
             <Select
               value={pageSize}
               onChange={(value) => handlePageChange(1, value)} // reset to page 1
-              style={{ width: 70, margin: '0 8px' }}
-              size="small"
+              style={{ width: 80, margin: '0 10px' }}
+              size="middle"
             >
               <Option value={10}>10</Option>
               <Option value={25}>25</Option>
               <Option value={50}>50</Option>
               <Option value={100}>100</Option>
             </Select>
-            entries
+            <span>entries</span>
           </label>
         </div>
+
+        {/* Right side: pagination */}
+        <div className="d-flex justify-content-end align-items-center">
+          <Pagination
+            current={current}
+            pageSize={pageSize}
+            total={filteredDataSource.length}
+            onChange={handlePageChange}
+            size="default"
+            showSizeChanger={false}
+            className="d-flex align-items-center"
+            itemRender={(_page, type, originalElement) => {
+              if (type === 'prev') {
+                return (
+                  <span className="d-flex align-items-center justify-content-center h-100 w-100">
+                    <i className="ti ti-chevron-left fs-14" />
+                  </span>
+                );
+              }
+              if (type === 'next') {
+                return (
+                  <span className="d-flex align-items-center justify-content-center h-100 w-100">
+                    <i className="ti ti-chevron-right fs-14" />
+                  </span>
+                );
+              }
+              return originalElement;
+            }}
+          />
+        </div>
       </div>
-
-      {/* Right side: pagination */}
-      <div className="col-md-6 d-flex justify-content-end">
-        <Pagination
-          current={current}
-          pageSize={pageSize}
-          total={filteredDataSource.length}
-          onChange={handlePageChange}
-          size="small"
-          showSizeChanger={false}
-          itemRender={(_page, type, originalElement) => {
-            if (type === 'prev') {
-              return <a><i className="ti ti-chevron-left" /></a>;
-            }
-            if (type === 'next') {
-              return <a><i className="ti ti-chevron-right" /></a>;
-            }
-            return originalElement;
-          }}
-        />
-      </div>
-
-
-    </div>
+    </>
   );
 };
 

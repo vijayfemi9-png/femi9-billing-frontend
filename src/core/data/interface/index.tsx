@@ -308,6 +308,8 @@ export interface DatatableProps {
   expandable?: any;
   onRow?: (record: any) => React.HTMLAttributes<HTMLElement>;
   rowClassName?: (record: any) => string;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
 }
 
 export interface CountriesData {

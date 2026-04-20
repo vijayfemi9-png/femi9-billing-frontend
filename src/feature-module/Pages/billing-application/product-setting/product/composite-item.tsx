@@ -1552,8 +1552,8 @@ const CompositeItem = () => {
 
     // ── LIST VIEW ─────────────────────────────────────────────────────
     const listView = (
-        <div className="page-wrapper" style={{ overflow: 'hidden' }}>
-            <div className={`content ${selectedItem ? 'p-0' : 'pb-0'}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <div className="page-wrapper full-height-wrapper">
+            <div className={`content ${selectedItem ? 'p-0' : 'pb-0'}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                 {!selectedItem && (
                     <PageHeader
                         title="Composite Items"
@@ -1849,10 +1849,9 @@ const CompositeItem = () => {
                         </>
                     ) : (
                         /* ── Master-Detail Layout ── */
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
-
+                        <div className="d-flex flex-grow-1 overflow-hidden bg-white shadow-sm border-top" style={{ minHeight: 0 }}>
                             {/* 1. LEFT PANE: Navigation List */}
-                            <div className="sidebar-wrapper" style={{ width: (sidebarCollapsed || isMobile) ? 0 : 320, flexShrink: 0, borderRight: (sidebarCollapsed || isMobile) ? '0' : '1px solid #e9ecef', display: 'flex', flexDirection: 'column', background: '#f8f9fa' }}>
+                            <div className="sidebar-wrapper" style={{ width: (sidebarCollapsed || isMobile) ? 0 : 320, flexShrink: 0, display: 'flex', flexDirection: 'column', background: '#f8f9fa' }}>
                                 {/* Nav Header */}
                                 <div className="p-3 border-bottom d-flex align-items-center justify-content-between bg-white sticky-top" style={{ minHeight: '60px', zIndex: 10 }}>
                                     <div className="dropdown">

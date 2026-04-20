@@ -3,7 +3,9 @@
 //  Imported by all pages inside billing-application/
 // ══════════════════════════════════════════════════════════════════
 
-// ── Variables ──────────────────────────────────────────────────────
+// ── Variables & Mixins ──────────────────────────────────────────────
+@use "../../../assets/scss/utils/mixins" as *;
+
 $primary: #e41f07;
 $primary-bg: #fff8f7;
 $border: #f0f0f0;
@@ -23,16 +25,36 @@ $text-muted: #999;
   }
 }
 
-// ── Master-Detail Transitions ────────────────────────────
+// ── Master-Detail Transitions & Layout ────────────────────────────
 .sidebar-wrapper {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 1px 0 5px rgba(0, 0, 0, 0.02);
+  z-index: 5;
 }
 
 .detail-pane-wrapper {
   animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transition: all 0.3s ease;
+  background: #fff;
+  z-index: 1;
+
+  .detail-pane-content {
+      padding: 1.5rem; // 24px
+      @include respond-below(md) {
+          padding: 1rem;
+      }
+  }
 }
+
+// Tablet Narrow Sidebar
+@media (min-width: 992px) and (max-width: 1400px) {
+  .sidebar-wrapper {
+    width: 280px !important; // Slightly narrower on smaller desktops
+  }
+}
+
 
 // ── Composite Item – Mobile helpers ──────────────────────
 // ci-hide-xs: visible on ≥480px, hidden below

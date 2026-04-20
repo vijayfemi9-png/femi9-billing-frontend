@@ -8,9 +8,7 @@ export default defineConfig({
     port: 8001,
     allowedHosts: ['vasutunnel.neksomo.com'],
     hmr: {
-      host: 'vasutunnel.neksomo.com',
-      clientPort: 443,
-      protocol: 'wss',
+      overlay: false,
     },
     proxy: {
       '/api': {
