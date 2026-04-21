@@ -216,6 +216,7 @@ const AssignLocation = lazy(() => import("../feature-module/Pages/billing-applic
 const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-list"));
 const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
 const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
+const CustomerSetting = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-setting"));
 
 const route = all_routes;
 
@@ -1742,6 +1743,13 @@ export const publicRoutes = [
     element: <CustomerView />,
     route: Route,
     meta_title: "Customer Detail",
+  },
+  {
+    id: "215",
+    path: route.customerPreference,
+    element: <CustomerSetting />,
+    route: Route,
+    meta_title: "Customer & Vendor Preference",
   },
 ];
 

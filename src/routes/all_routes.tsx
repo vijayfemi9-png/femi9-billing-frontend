@@ -306,4 +306,5 @@ export const all_routes = {
   customerAdd: "/billing-application/customers/new",
   customerEdit: "/billing-application/customers/:id/edit",
   customerView: "/billing-application/customers/:id",
+  customerPreference: "/settings/customer-preferences",
 };

@@ -1349,10 +1349,9 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Associate Templates</h5>
-                                <button type="button" className="btn-close custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0 }}
+                                <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
@@ -1395,10 +1394,9 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Configure Portal Access</h5>
-                                <button type="button" className="btn-close custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0 }}
+                                <button type="button" className="custom-btn-close border me-0 d-flex justify-content-end rounded-circle-small"
                                     onClick={() => setActionModal('none')}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
@@ -1454,10 +1452,9 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Link to Vendor</h5>
-                                <button type="button" className="btn-close custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0 }}
+                                <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
@@ -1492,10 +1489,9 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Clone</h5>
-                                <button type="button" className="btn-close custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0 }}
+                                <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
@@ -1531,10 +1527,9 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Merge Customers</h5>
-                                <button type="button" className="btn-close custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0 }}
+                                <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => { setActionModal('none'); setMergeTargetId(null); }}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">

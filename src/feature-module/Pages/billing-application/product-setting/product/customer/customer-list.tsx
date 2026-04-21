@@ -472,7 +472,7 @@ const CustomerList: React.FC = () => {
                         setSortBy("newest");
                         setCustomers(loadCustomers());
                     }}
-                    settingsLink={route.productPreference}
+                    settingsLink={route.customerPreference}
                 />
 
                 <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column">
@@ -519,12 +519,11 @@ const CustomerList: React.FC = () => {
                                                         <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
                                                         <button
                                                             type="button"
-                                                            className="btn-close custom-btn-close border p-0 me-0 d-flex align-items-center justify-content-center rounded-circle"
+                                                            className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                                             onClick={() => setShowFilter(false)}
                                                             aria-label="Close"
-                                                            style={{ width: 18, height: 18, color: "#e41f07" }}
                                                         >
-                                                            <i className="ti ti-x fs-8 fw-bold" />
+                                                            <i className="ti ti-x" />
                                                         </button>
                                                     </div>
                                                     <div className="filter-set-view p-2 px-3">

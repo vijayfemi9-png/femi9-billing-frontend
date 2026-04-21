@@ -120,6 +120,19 @@ export const SidebarData = [
         ],
       },
       {
+        label: "Customer Preference",
+        link: route.customerPreference,
+        submenu: true,
+        showSubRoute: false,
+        icon: "user-cog",
+        base: "Customer Preference",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [
+          { label: "Customer Preference", link: route.customerPreference },
+        ],
+      },
+      {
         label: "Products",
         link: route.productList,
         submenu: true,

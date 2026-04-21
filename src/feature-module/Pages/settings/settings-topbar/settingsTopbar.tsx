@@ -60,7 +60,17 @@ const SettingsTopbar = () => {
                 }`}
             >
               <i className="ti ti-box me-2" />
-              Product Settings
+              Product
+            </Link>
+          </li>
+          <li className="nav-item me-3">
+            <Link
+              to={all_routes.customerPreference}
+              className={`nav-link p-2${isActive(all_routes.customerPreference) ? " active" : ""
+                }`}
+            >
+              <i className="ti ti-users me-2" />
+              Customers & Vendors
             </Link>
           </li>
           <li className="nav-item me-3">
