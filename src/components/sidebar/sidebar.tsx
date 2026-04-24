@@ -192,9 +192,9 @@ const Sidebar = () => {
                                   if (title?.submenu) handleMenuClick(title?.label);
                                   if (section?.title === "Layout") handleLayoutClick(title?.label);
                                 }}
-                                className={`${isActive ? "active" : ""} ${isMenuOpen ? "subdrop" : ""}`}
+                                className={`${isActive ? "active" : ""} ${isMenuOpen ? "subdrop" : ""}${!title.icon ? " no-icon-menu" : ""}`}
                               >
-                                <i className={`ti ti-${title.icon}`} />
+                                {title.icon && <i className={`ti ti-${title.icon}`} />}
                                 <span>{title?.label}</span>
                                 {(title?.submenu || title?.customSubmenuTwo) && (
                                   <span className="menu-arrow" />

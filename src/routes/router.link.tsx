@@ -198,6 +198,11 @@ const DatabaseBackup = lazy(() => import("../feature-module/Pages/settings/other
 const SystemUpdate = lazy(() => import("../feature-module/Pages/settings/other-settings/systemUpdate"));
 const Notifications = lazy(() => import("../feature-module/Pages/notifications/notifications"));
 const Dashboard = lazy(() => import("../feature-module/Pages/super-admin/dashboard"));
+const UserCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/customer-category"));
+const AddCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/add-category"));
+const NewCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/new-category"));
+const SubCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/sub-category"));
+const NewSubCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/new-sub-category"));
 const Company = lazy(() => import("../feature-module/Pages/super-admin/company"));
 const Subscription = lazy(() => import("../feature-module/Pages/super-admin/subscription"));
 const Packages = lazy(() => import("../feature-module/Pages/super-admin/packages"));
@@ -1750,6 +1755,39 @@ export const publicRoutes = [
     element: <CustomerSetting />,
     route: Route,
     meta_title: "Customer & Vendor Preference",
+  },
+  {
+    id: "216",
+    path: route.userCategory,
+    element: <UserCategory />,
+    route: Route,
+    meta_title: "User Category Hierarchy",
+  },
+  {
+    id: "217",
+    path: route.addCategory,
+    element: <AddCategory />,
+    route: Route,
+    meta_title: "Add Category",
+  },
+  {
+    id: "218",
+    path: route.subCategory,
+    element: <SubCategory />,
+    route: Route,
+    meta_title: "Sub Categories",
+  },
+  {
+    path: route.newCategory,
+    element: <NewCategory />,
+    route: Route,
+    meta_title: "Add Category",
+  },
+  {
+    path: route.newSubCategory,
+    element: <NewSubCategory />,
+    route: Route,
+    meta_title: "Add Sub Category",
   },
 ];
 

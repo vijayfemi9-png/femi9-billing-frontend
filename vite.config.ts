@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 8001,
-    allowedHosts: ['vasutunnel.neksomo.com'],
+    allowedHosts: ['vijay.neksomo.com'],
     hmr: {
       overlay: false,
     },

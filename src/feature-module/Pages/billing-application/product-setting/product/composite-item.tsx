@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import "../../billing-application.scss";
 import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
@@ -2433,8 +2434,8 @@ const CompositeItem = () => {
                                                 </div>
 
                                                 {/* Associate Price List Modal */}
-                                                {showAssociateModal && (
-                                                    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }}>
+                                                {showAssociateModal && ReactDOM.createPortal(
+                                                    <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }}>
                                                         <div className="modal-dialog modal-dialog-centered">
                                                             <div className="modal-content border-0 shadow-lg">
                                                                 <div className="modal-header border-bottom py-3">
@@ -2483,7 +2484,8 @@ const CompositeItem = () => {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </div>,
+                                                    document.body
                                                 )}
 
 

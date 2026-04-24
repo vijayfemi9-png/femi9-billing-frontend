@@ -1,0 +1,671 @@
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { all_routes } from "../../../../../../routes/all_routes";
+import PageHeader from "../../../../../../components/page-header/pageHeader";
+import Datatable from "../../../../../../components/dataTable";
+import SearchInput from "../../../../../../components/dataTable/dataTableSearch";
+import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
+import Footer from "../../../../../../components/footer/footer";
+import "./category.scss";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+
+/* ═══════════════════════════════════════
+   TYPES
+   ═══════════════════════════════════════ */
+interface UserCategory {
+  id: number;
+  name: string;
+  code: string;
+  level: number;
+  parent: string | null;
+  description: string;
+  portalAccess: boolean;
+  visibleInMap: boolean;
+  linkToLocation: string | null;
+  status: "Enabled" | "Disabled";
+  isChild?: boolean; // Added for form management
+}
+
+/* ═══════════════════════════════════════
+   COMPONENTS
+   ═══════════════════════════════════════ */
+const TooltipIcon = ({ text }: { text: string }) => (
+  <OverlayTrigger placement="top" overlay={<Tooltip id={`tooltip-${text}`}>{text}</Tooltip>}>
+    <i className="ti ti-info-circle text-muted ms-1 cursor-help" style={{ fontSize: "14px" }} />
+  </OverlayTrigger>
+);
+
+// ── Delete Confirm Component ──────────────────────────────────────────────────
+const DeleteConfirm: React.FC<{
+  name: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}> = ({ name, onConfirm, onCancel }) => (
+  <div
+    style={{
+      position: "fixed", inset: 0, zIndex: 2100,
+      background: "rgba(0,0,0,0.45)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}
+    onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+  >
+    <div
+      className="bg-white shadow-lg text-center"
+      style={{ borderRadius: 12, width: "100%", maxWidth: 380, padding: "32px 28px" }}
+    >
+      <div
+        className="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+        style={{ width: 60, height: 60, background: "#fff0ef" }}
+      >
+        <i className="ti ti-trash text-danger" style={{ fontSize: 26 }} />
+      </div>
+      <h6 className="fw-bold fs-16 mb-1">Delete Category?</h6>
+      <p className="text-muted fs-14 mb-4">
+        "<strong>{name}</strong>" will be permanently removed.
+      </p>
+      <div className="d-flex justify-content-center gap-3">
+        <button className="btn btn-light fs-14 px-4" onClick={onCancel} style={{ borderRadius: 8 }}>Cancel</button>
+        <button className="btn btn-danger fs-14 px-4" onClick={onConfirm} style={{ borderRadius: 8, background: '#E41F07' }}>
+          <i className="ti ti-trash me-1" />Delete
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const route = all_routes;
+
+const defaultCategories: UserCategory[] = [
+  { id: 1, name: "Super_stockist", code: "SS001", level: 1, parent: null, description: "Top level stockist", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 2, name: "mvbfy", code: "MV0001", level: 1, parent: null, description: "Marketing division", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 3, name: "cfvgbhj", code: "CF0001", level: 1, parent: null, description: "Finance division", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 4, name: "New SS", code: "SS01", level: 1, parent: null, description: "New Stockist", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 5, name: "drtr", code: "DR001", level: 2, parent: null, description: "District Retailer", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 6, name: "New S", code: "S001", level: 2, parent: "New SS", description: "Sub Stockist", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+  { id: 7, name: "Super_distributor", code: "SD001", level: 2, parent: "Super_stockist", description: "Main distributor", portalAccess: true, visibleInMap: true, linkToLocation: null, status: "Enabled" },
+];
+
+const UserCategoryPage: React.FC = () => {
+  const navigate = useNavigate();
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [categories, setCategories] = useState<UserCategory[]>(() => {
+    const saved = JSON.parse(localStorage.getItem("categories") || "[]");
+    const savedIds = new Set(saved.map((c: UserCategory) => c.id));
+    const merged = [...defaultCategories.filter(c => !savedIds.has(c.id)), ...saved];
+    return merged;
+  });
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [del, setDel] = useState<{ name: string; onConfirm: () => void } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  const [formData, setFormData] = useState<Partial<UserCategory>>({
+    name: "", code: "", description: "", level: 1, portalAccess: true, visibleInMap: true, parent: null, isChild: false, linkToLocation: ""
+  });
+
+  // ── Toolbar State ────────────────────────────────────────────────────────
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
+  const [showFilter, setShowFilter] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [pendingFilter, setPendingFilter] = useState<string[]>([]);
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+  const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({
+    "Name": true, "Code": true, "Level": true, "Parent": true, "Portal Access": true, "Status": true
+  });
+  const ALL_COLS = ["Name", "Code", "Level", "Parent", "Portal Access", "Status"];
+
+  // ── Toolbar Handlers ──────────────────────────────────────────────────────
+  const handleExportCSV = () => {
+    const headers = ["Name", "Code", "Level", "Parent", "Status"];
+    const rows = categories.map(c => [c.name, c.code, c.level, c.parent || "None", c.status]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "user_categories.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    const rows = categories.map(c =>
+      `<tr><td>${c.name}</td><td>${c.code}</td><td>Level ${c.level}</td><td>${c.parent || "—"}</td><td>${c.status}</td></tr>`
+    ).join("");
+    const html = `
+      <html>
+        <head>
+          <title>Customer Category</title>
+          <style>
+            body{font-family:sans-serif;padding:20px}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #ddd;padding:8px;text-align:left}
+            th{background:#f5f5f5;font-weight:600}
+            h2{margin-bottom:16px}
+          </style>
+        </head>
+        <body>
+          <h2>Customer Category</h2>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Code</th><th>Level</th><th>Parent</th><th>Status</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>`;
+    const win = window.open("", "_blank");
+    if (win) { win.document.write(html); win.document.close(); win.print(); }
+  };
+
+  const handleRefresh = () => {
+    setSearchTerm("");
+    setFilterStatus([]);
+    setPendingFilter([]);
+    setSortBy("newest");
+  };
+
+  const handleApplyFilter = () => {
+    setFilterStatus(pendingFilter);
+    setShowFilter(false);
+  };
+
+  const handleResetFilter = () => {
+    setPendingFilter([]);
+    setFilterStatus([]);
+    setShowFilter(false);
+  };
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+
+  const handleEdit = (cat: UserCategory) => {
+    setFormData({ ...cat, isChild: !!cat.parent });
+    setIsEditing(true);
+    setShowAddModal(true);
+  };
+
+  const handleDelete = (id: number) => {
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return;
+
+    setDel({
+      name: cat.name,
+      onConfirm: () => {
+        const updated = categories.filter(c => c.id !== id);
+        setCategories(updated);
+        localStorage.setItem("categories", JSON.stringify(updated.filter(c => !defaultCategories.find(d => d.id === c.id))));
+        setDel(null);
+      }
+    });
+  };
+
+  const handleSave = () => {
+    if (!formData.name) return;
+
+    if (isEditing) {
+      setCategories(categories.map(c => c.id === formData.id ? { ...formData } as UserCategory : c));
+    } else {
+      const newCat: UserCategory = {
+        ...formData,
+        id: categories.length + 1,
+        status: "Enabled",
+      } as UserCategory;
+      setCategories([...categories, newCat]);
+    }
+    setShowAddModal(false);
+  };
+
+  const filteredCategories = categories.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus.length === 0 || filterStatus.includes(c.status);
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => {
+    return sortBy === "newest" ? b.id - a.id : a.id - b.id;
+  });
+
+  const columns = [
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a: UserCategory, b: UserCategory) => a.name.localeCompare(b.name),
+      render: (text: string, record: UserCategory) => (
+        <span className="text-dark">{text}</span>
+      )
+    },
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      render: (code: string) => <span className="purple-badge-lock">{code}</span>
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      render: (level: number) => (
+        <span className="text-muted">
+          <i className="ti ti-layers-intersect me-1 fs-13" />
+          Level {level}
+        </span>
+      )
+    },
+    {
+      title: "Parent",
+      dataIndex: "parent",
+      key: "parent",
+      render: (parent: string) => parent ? <span className="text-muted">{parent}</span> : <span className="text-muted opacity-50">—</span>
+    },
+    {
+      title: "Portal Access",
+      dataIndex: "portalAccess",
+      key: "portalAccess",
+      render: (access: boolean) => (
+        <span className={`badge ${access ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`}>
+          {access ? "Enabled" : "Disabled"}
+        </span>
+      )
+    },
+    {
+      title: "Action",
+      key: "actions",
+      className: "text-center",
+      render: (_: any, record: UserCategory) => (
+        <div className="dropdown d-flex justify-content-center">
+          <button className="btn btn-icon btn-sm btn-outline-light shadow-sm" data-bs-toggle="dropdown" aria-expanded="false" style={{ borderRadius: 6 }}>
+            <i className="ti ti-dots-vertical" />
+          </button>
+          <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
+            <Link
+              className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14"
+              to="#"
+              onClick={(e) => { e.preventDefault(); handleEdit(record); }}
+            >
+              <i className="ti ti-edit text-primary fs-15" /> Edit
+            </Link>
+            <Link
+              className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
+              to="#"
+              onClick={(e) => { e.preventDefault(); handleDelete(record.id); }}
+            >
+              <i className="ti ti-trash fs-15" /> Delete
+            </Link>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  const visibleColumns = columns.filter(c => {
+    if (c.title === "Action") return true; // Always show action
+    return visibleCols[c.title as string] !== false;
+  });
+
+  const levelGroups = categories.filter(c => c.visibleInMap).reduce((acc, c) => {
+    if (!acc[c.level]) acc[c.level] = [];
+    acc[c.level].push(c);
+    return acc;
+  }, {} as Record<number, UserCategory[]>);
+  const sortedLevels = Object.keys(levelGroups).map(Number).sort((a, b) => a - b);
+  const hfColors = ["purple", "blue", "teal", "green", "orange", "rose", "indigo"];
+  const hfIcons = [
+    "ti-user-star", "ti-briefcase", "ti-building-store",
+    "ti-truck", "ti-chart-bar", "ti-users-group", "ti-certificate",
+  ];
+  const allVisibleNodes = categories.filter(c => c.visibleInMap).sort((a, b) => a.id - b.id);
+  const nodeStyleMap: Record<number, { color: string; icon: string }> = {};
+  allVisibleNodes.forEach((cat, idx) => {
+    nodeStyleMap[cat.id] = {
+      color: hfColors[idx % hfColors.length],
+      icon: hfIcons[idx % hfIcons.length],
+    };
+  });
+
+  return (
+    <div className="page-wrapper">
+      <div className="content">
+        <PageHeader
+          title="Customer category"
+          showModuleTile={false}
+          badgeCount={categories.length}
+          exportComponent={
+            <div className="dropdown">
+              <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                <i className="ti ti-package-export me-2" />Export
+              </Link>
+              <div className="dropdown-menu dropdown-menu-end">
+                <ul className="mb-0">
+                  <li>
+                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
+                      <i className="ti ti-file-type-pdf me-1" />Export as PDF
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
+                      <i className="ti ti-file-type-xls me-1" />Export as Excel
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          }
+          onRefresh={handleRefresh}
+          settingsLink="/settings/product-preferences"
+        />
+
+        {/* Hierarchy Flow Section */}
+        <div className="hierarchy-flow-container mb-4">
+          <div className="hf-header">
+            <div>
+              <h5 className="hf-title">Hierarchy flow</h5>
+              <p className="hf-subtitle">Visual representation of your distribution network</p>
+            </div>
+            <div className="hf-stats">
+              <span className="hf-stat-badge">{sortedLevels.length} levels</span>
+              <span className="hf-stat-badge">{categories.filter(c => c.visibleInMap).length} nodes</span>
+            </div>
+          </div>
+          <div className="hf-tree">
+            {sortedLevels.map((level, idx) => {
+              const levelColor = hfColors[(level - 1) % hfColors.length];
+              return (
+                <React.Fragment key={level}>
+                  <div className="hf-level-group">
+                    <div className={`hf-level-label ${levelColor}`}>
+                      <span className="hf-level-num">L{level}</span>
+                      <span className="hf-level-text">Level {level}</span>
+                    </div>
+                    <div className="hf-nodes-col">
+                      {levelGroups[level].map(cat => {
+                        const { color, icon } = nodeStyleMap[cat.id] ?? { color: "purple", icon: "ti-user-circle" };
+                        return (
+                        <div className={`hf-node-card ${color}`} key={cat.id}>
+                          <div className={`hf-node-accent ${color}`} />
+                          <div className="hf-node-icon-wrap">
+                            <i className={`ti ${icon}`} />
+                          </div>
+                          <div className="hf-node-info">
+                            <span className="hf-node-name">{cat.name}</span>
+                            <span className={`hf-node-code ${color}`}>{cat.code}</span>
+                          </div>
+                          {cat.parent && (
+                            <div className="hf-node-parent">
+                              <i className="ti ti-corner-down-right fs-11" />
+                              <span>{cat.parent}</span>
+                            </div>
+                          )}
+                        </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {idx < sortedLevels.length - 1 && (
+                    <div className="hf-h-connector">
+                      <div className="hf-connector-dot" />
+                      <div className="hf-connector-dash" />
+                      <i className="ti ti-arrow-narrow-right hf-connector-arrow" />
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column shadow-sm">
+          <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
+            <div className="input-icon input-icon-start position-relative" style={{ width: 250 }}>
+              <span className="input-icon-addon text-dark">
+                <i className="ti ti-search" />
+              </span>
+              <SearchInput value={searchTerm} onChange={setSearchTerm} />
+            </div>
+            <button className="btn btn-danger" onClick={() => navigate(route.addCategory)} style={{ background: '#E41F07', borderColor: '#E41F07' }}>
+              <i className="ti ti-square-rounded-plus-filled me-1" /> Add New Category
+            </button>
+          </div>
+
+          <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
+            <div className="toolbar-custom py-3 px-4">
+              <div className="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+                <div className="dropdown">
+                  <Link to="#" className="dropdown-toggle btn btn-outline-light shadow-sm px-3 fs-14 bg-white text-dark" data-bs-toggle="dropdown" style={{ borderRadius: 6 }}>
+                    <i className="ti ti-sort-ascending-2 me-2" />Sort By
+                  </Link>
+                  <div className="dropdown-menu shadow border-0">
+                    <ul className="mb-0 p-0 list-unstyled">
+                      <li><Link to="#" className={`dropdown-item fs-14 py-2 ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
+                      <li><Link to="#" className={`dropdown-item fs-14 py-2 ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
+                    </ul>
+                  </div>
+                </div>
+                <PredefinedDatePicker />
+              </div>
+
+              <div className="d-flex align-items-center gap-2">
+                <div style={{ position: "relative" }}>
+                  <button
+                    className={`btn btn-outline-light shadow-sm px-3 bg-white ${filterStatus.length > 0 ? 'border-primary text-primary' : ''}`}
+                    style={{ height: 38, fontSize: 14, borderRadius: 6 }}
+                    onClick={() => setShowFilter(!showFilter)}
+                  >
+                    <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
+                  </button>
+                  {showFilter && (
+                    <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
+                      <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
+                        <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
+                        <button
+                          type="button"
+                          className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
+                          onClick={() => setShowFilter(false)}
+                        >
+                          <i className="ti ti-x" />
+                        </button>
+                      </div>
+                      <div className="filter-set-view p-2 px-3">
+                        <div className="filter-set-content">
+                          <div className="filter-set-content-head mb-2 mt-1">
+                            <Link
+                              to="#"
+                              className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
+                              onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
+                            >
+                              Status
+                            </Link>
+                          </div>
+                          {statusFilterOpen && (
+                            <div className="filter-set-contents">
+                              <div className="filter-content-list ps-3">
+                                {["Enabled", "Disabled"].map(status => (
+                                  <div className="form-check mb-2" key={status}>
+                                    <input
+                                      className="form-check-input primary-checkbox"
+                                      type="checkbox"
+                                      id={`filter-${status}`}
+                                      checked={pendingFilter.includes(status)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) setPendingFilter([...pendingFilter, status]);
+                                        else setPendingFilter(pendingFilter.filter(s => s !== status));
+                                      }}
+                                    />
+                                    <label className="form-check-label fs-14 cursor-pointer text-muted ms-1" htmlFor={`filter-${status}`}>
+                                      {status}
+                                    </label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
+                          <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
+                          <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 8, height: 36, background: '#E41F07' }} onClick={handleApplyFilter}>Filter</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {viewMode === "list" && (
+                  <div className="dropdown">
+                    <Link to="#" className="btn bg-soft-indigo px-3 border-0 shadow-sm" style={{ height: 38, fontSize: 13, display: "inline-flex", alignItems: "center", color: '#5b21b6', borderRadius: 6 }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                      <i className="ti ti-columns-3 me-2" />Manage Columns
+                    </Link>
+                    <div className="dropdown-menu dropdown-md p-3 shadow border-0 mt-2">
+                      <ul className="mb-0 list-unstyled p-0">
+                        {ALL_COLS.map(col => (
+                          <li className="gap-1 d-flex align-items-center mb-2" key={col}>
+                            <div className="form-check form-switch w-100 ps-0">
+                              <label className="form-check-label d-flex align-items-center gap-2 w-100 cursor-pointer">
+                                <span>{col}</span>
+                                <input
+                                  className="form-check-input switchCheckDefault ms-auto"
+                                  type="checkbox"
+                                  role="switch"
+                                  checked={visibleCols[col] !== false}
+                                  onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
+                                />
+                              </label>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <div className="d-flex align-items-center gap-1 border rounded p-1 bg-white shadow-sm" style={{ height: 38, borderRadius: 6 }}>
+                  <button
+                    onClick={() => setViewMode("list")}
+                    className={`btn btn-sm d-flex align-items-center justify-content-center`}
+                    style={{ width: 28, height: 26, background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", border: 'none', borderRadius: 4 }}
+                  >
+                    <i className="ti ti-list fs-14" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("grid")}
+                    className={`btn btn-sm d-flex align-items-center justify-content-center`}
+                    style={{ width: 28, height: 26, background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#6c757d", border: 'none', borderRadius: 4 }}
+                  >
+                    <i className="ti ti-grid-dots fs-14" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-grow-1 overflow-auto px-4 pb-4">
+              {viewMode === "list" ? (
+                <div className="custom-table list-view-table table-nowrap border-0">
+                  <Datatable
+                    columns={visibleColumns}
+                    dataSource={filteredCategories}
+                    Selection={true}
+                    searchText={searchTerm}
+                  />
+                </div>
+              ) : (
+                <div className="row g-3 px-3 mt-3">
+                  {filteredCategories.map(cat => (
+                    <div className="col-xxl-3 col-xl-4 col-md-6" key={cat.id}>
+                      <div className="card h-100 border shadow-sm hover-shadow transition-all" style={{ borderRadius: 10 }}>
+                        <div className="card-body p-3">
+                          <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                            <div className="d-flex align-items-center">
+                              <div className="avatar avatar-md bg-soft-primary rounded-circle me-3 d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 42, height: 42 }}>
+                                {cat.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <h6 className="mb-0 text-dark fw-bold">{cat.name}</h6>
+                                <span className="fs-12 text-muted">Level {cat.level}</span>
+                              </div>
+                            </div>
+                            <div className="dropdown">
+                              <button
+                                className="btn btn-sm btn-icon border-0 bg-light"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                style={{ width: 32, height: 32, borderRadius: 8, color: '#64748b' }}
+                              >
+                                <i className="ti ti-dots-vertical fs-15" />
+                              </button>
+                              <div
+                                className="dropdown-menu dropdown-menu-end py-2 mt-1"
+                                style={{
+                                  minWidth: 160,
+                                  borderRadius: 10,
+                                  border: '1px solid #f1f5f9',
+                                  boxShadow: '0 10px 30px -5px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.05)',
+                                  background: '#fff',
+                                }}
+                              >
+                                <button
+                                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14"
+                                  style={{ color: '#334155', borderRadius: 6 }}
+                                  onClick={() => handleEdit(cat)}
+                                >
+                                  <i className="ti ti-edit text-primary fs-15" /> Edit
+                                </button>
+                                <div className="dropdown-divider my-1" style={{ borderColor: '#f1f5f9' }} />
+                                <button
+                                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
+                                  style={{ borderRadius: 6 }}
+                                  onClick={() => handleDelete(cat.id)}
+                                >
+                                  <i className="ti ti-trash fs-15" /> Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mb-3">
+                            <div className="d-flex align-items-center gap-2 mb-2">
+                              <span className="fs-12 text-muted fw-medium">Code:</span>
+                              <span className="badge bg-soft-primary text-primary border-0 rounded-1">{cat.code}</span>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                              <span className="fs-12 text-muted fw-medium">Parent:</span>
+                              <span className="fs-12 text-dark">{cat.parent || "None"}</span>
+                            </div>
+                          </div>
+                          <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
+                            <span className={`badge ${cat.status === "Enabled" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`}>
+                              <i className="ti ti-point-filled me-1" />{cat.status}
+                            </span>
+                            <button className="btn btn-sm btn-outline-primary px-3 fs-12" onClick={() => handleEdit(cat)}>View Details</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
+      <Footer />
+    </div>
+  );
+};
+
+export default UserCategoryPage;

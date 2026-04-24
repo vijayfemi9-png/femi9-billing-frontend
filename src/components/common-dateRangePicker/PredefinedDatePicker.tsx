@@ -93,21 +93,22 @@ export default function PredefinedDatePicker() {
   };
 
   return (
-    <div className="form-control w-auto d-flex align-items-center">
-      <i className="ti ti-calendar text-dark me-2" />
-      <DateRangePicker
-        initialSettings={initialSettings}
-        onApply={handleApply}
-        onShow={handleShow}
-      >
+    <DateRangePicker
+      initialSettings={initialSettings as any}
+      onApply={handleApply}
+      onShow={handleShow}
+    >
+      <div className="btn btn-outline-light bg-white shadow-sm d-flex align-items-center gap-2 px-3" style={{ height: 38, borderRadius: 6, cursor: 'pointer' }}>
         <input
           ref={inputRef}
           type="text"
-          className="reportrange-picker-field text-dark border-0 shadow-none"
+          className="reportrange-picker-field text-dark border-0 shadow-none bg-transparent p-0 fs-14 cursor-pointer"
+          style={{ width: 170, pointerEvents: 'none' }}
           value={displayValue}
           readOnly
         />
-      </DateRangePicker>
-    </div>
+        <i className="ti ti-calendar text-dark fs-16" />
+      </div>
+    </DateRangePicker>
   );
 }

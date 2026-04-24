@@ -307,4 +307,10 @@ export const all_routes = {
   customerEdit: "/billing-application/customers/:id/edit",
   customerView: "/billing-application/customers/:id",
   customerPreference: "/settings/customer-preferences",
+  userCategory: "/billing-application/user-category",
+  addCategory: "/billing-application/user-category/new",
+  newCategory: "/billing-application/user-category/create",
+  editCategory: "/billing-application/user-category/:id/edit",
+  subCategory: "/billing-application/sub-category",
+  newSubCategory: "/billing-application/sub-category/new",
 };
