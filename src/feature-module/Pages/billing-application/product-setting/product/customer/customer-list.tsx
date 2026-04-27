@@ -73,46 +73,6 @@ const nextId = (arr: { id: number }[]) =>
 const fmt = (n: number) =>
     "₹" + n.toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
-// ── Customer Modal ────────────────────────────────────────────────────────────
-const CustomerModal: React.FC<{
-    title: string;
-    form: FormState;
-    onChange: (f: FormState) => void;
-    onSave: () => void;
-    onClose: () => void;
-}> = ({ title, form, onChange, onSave, onClose }) => (
-    <div
-        style={{
-            position: "fixed", inset: 0, zIndex: 2000,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-        }}
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-        <div
-            className="bg-white shadow-lg"
-            style={{ borderRadius: 12, width: "100%", maxWidth: 560, maxHeight: "90vh", overflow: "auto" }}
-        >
-            {/* Header */}
-            <div className="d-flex align-items-center justify-content-between px-4 pt-4 pb-3 border-bottom">
-                <h5 className="mb-0 fw-bold fs-18">{title}</h5>
-                <button className="btn-close" onClick={onClose} />
-            </div>
-
-            {/* Footer */}
-            <div className="d-flex justify-content-end gap-2 px-4 pb-4">
-                <button className="btn btn-light fs-14 px-4" onClick={onClose}>Cancel</button>
-                <button
-                    className="btn btn-primary fs-14 px-4"
-                    onClick={onSave}
-                    disabled={!form.name.trim() || !form.email.trim()}
-                >
-                    Save
-                </button>
-            </div>
-        </div>
-    </div>
-);
 
 // ── Delete Confirm ────────────────────────────────────────────────────────────
 const DeleteConfirm: React.FC<{
@@ -158,8 +118,9 @@ const CustomerList: React.FC = () => {
     const navigate = useNavigate();
     const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
     const [searchText, setSearchText] = useState("");
+    const [searchFocused, setSearchFocused] = useState(false);
     const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
-    const [selectedView, setSelectedView] = useState("Active Customers");
+    const [selectedView, setSelectedView] = useState(" Customers");
     const [filterStatus, setFilterStatus] = useState<string[]>([]);
     const [pendingFilter, setPendingFilter] = useState<string[]>([]);
     const [showFilter, setShowFilter] = useState(false);
@@ -169,11 +130,6 @@ const CustomerList: React.FC = () => {
         Object.fromEntries(ALL_COLS.map((c) => [c, true]))
     );
     const [del, setDel] = useState<{ name: string; onConfirm: () => void } | null>(null);
-    const [modal, setModal] = useState<{
-        mode: "add" | "edit";
-        id?: number;
-        form: FormState;
-    } | null>(null);
 
 
     const openAdd = () => {
@@ -181,34 +137,9 @@ const CustomerList: React.FC = () => {
     };
 
     const openEdit = (c: Customer) => {
-        setModal({
-            mode: "edit",
-            id: c.id,
-            form: {
-                name: c.name, companyName: c.companyName, email: c.email,
-                workPhone: c.workPhone, receivables: c.receivables,
-                unusedCredits: c.unusedCredits, status: c.status,
-            },
-        });
+        navigate(all_routes.customerEdit.replace(":id", String(c.id)));
     };
 
-    const handleSave = () => {
-        if (!modal) return;
-        if (modal.mode === "add") {
-            const raw = getAllRaw();
-            const newC: Customer = { id: nextId(raw.length ? raw : customers), ...modal.form };
-            const all = [...raw, newC];
-            saveAll(all);
-            setCustomers(all.filter((c) => !c.isDeleted));
-        } else {
-            const raw = getAllRaw();
-            const updated = raw.map((c) => (c.id === modal.id ? { ...c, ...modal.form } : c));
-            saveAll(updated);
-            const active = updated.filter((c) => !c.isDeleted);
-            setCustomers(active);
-        }
-        setModal(null);
-    };
 
     const handleDelete = (c: Customer) => {
         setDel({
@@ -277,8 +208,8 @@ const CustomerList: React.FC = () => {
             sorter: (a: Customer, b: Customer) => a.name.localeCompare(b.name),
             render: (_: any, record: Customer) => (
                 <button
-                    className="border-0 bg-transparent p-0 fs-14 fw-bold text-start"
-                    style={{ color: "#333", cursor: "pointer" }}
+                    className="border-0 bg-transparent p-0 text-start"
+                    style={{ color: "#333", cursor: "pointer", fontSize: "15px" }}
                     onClick={(e) => {
                         e.stopPropagation();
                         navigate(route.customerView.replace(":id", String(record.id)));
@@ -296,7 +227,7 @@ const CustomerList: React.FC = () => {
             render: (v: string) =>
                 v ? (
                     <span
-                        className="fs-13 fw-semibold px-2 py-1 rounded-pill"
+                        className="fs-14 fw-semibold px-2 py-1 rounded-pill"
                         style={{
                             background: "#ede9fe", color: "#5b21b6",
                             border: "1px solid #c4b5fd", display: "inline-block",
@@ -306,7 +237,7 @@ const CustomerList: React.FC = () => {
                         {v}
                     </span>
                 ) : (
-                    <span className="fs-14 text-muted">—</span>
+                    <span className="fs-15 text-muted">—</span>
                 ),
         },
         {
@@ -477,14 +408,25 @@ const CustomerList: React.FC = () => {
 
                 <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column">
                             <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
-                                <div className="input-icon input-icon-start position-relative" style={{ width: 220 }}>
-                                    <span className="input-icon-addon text-dark">
-                                        <i className="ti ti-search" />
+                                <div className="d-flex align-items-center rounded bg-white" style={{
+                                    width: 220,
+                                    border: searchFocused ? '1px solid #e41f07' : '1px solid #dee2e6',
+                                    boxShadow: searchFocused ? '0 0 0 0.2rem rgba(228,31,7,0.15)' : 'none',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                                }}>
+                                    <span className="px-2 d-flex align-items-center text-muted">
+                                        <i className="ti ti-search fs-14" />
                                     </span>
-                                    <SearchInput value={searchText} onChange={setSearchText} />
+                                    <input className="form-control border-0 ps-0 fs-14 bg-transparent"
+                                        style={{ outline: 'none', boxShadow: 'none', height: '36px' }}
+                                        placeholder="Search..."
+                                        value={searchText}
+                                        onChange={e => setSearchText(e.target.value)}
+                                        onFocus={() => setSearchFocused(true)}
+                                        onBlur={() => setSearchFocused(false)} />
                                 </div>
-                                <button className="btn btn-primary" onClick={openAdd}>
-                                    <i className="ti ti-square-rounded-plus-filled me-1" /> Add New Customer
+                                <button className="btn text-white d-flex align-items-center" style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }} onClick={openAdd}>
+                                    <i className="ti ti-plus me-2 fs-16" /> Add New Customer
                                 </button>
                             </div>
 
@@ -636,8 +578,8 @@ const CustomerList: React.FC = () => {
                                                                         <span className="fs-16 fw-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
                                                                     </div>
                                                                     <div>
-                                                                        <h6 className="fs-14 mb-0">
-                                                                            <span className="fw-bold cursor-pointer text-dark" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
+                                                                        <h6 className="mb-0">
+                                                                            <span className="cursor-pointer text-dark fs-14" style={{ fontSize: '14px' }} onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
                                                                                 {c.name}
                                                                             </span>
                                                                         </h6>
@@ -665,11 +607,11 @@ const CustomerList: React.FC = () => {
                                                             </div>
                                                             <div className="d-block pt-1">
                                                                 <div className="d-flex flex-column mb-3">
-                                                                    <p className="text-default d-inline-flex align-items-center mb-2 fs-13">
+                                                                    <p className="text-default d-inline-flex align-items-center mb-2 fs-14" style={{ fontSize: '14px' }}>
                                                                         <i className="ti ti-mail text-dark me-2 fs-15" />
                                                                         {c.email || "No Email"}
                                                                     </p>
-                                                                    <p className="text-default d-inline-flex align-items-center mb-0 fs-13">
+                                                                    <p className="text-default d-inline-flex align-items-center mb-0 fs-14" style={{ fontSize: '14px' }}>
                                                                         <i className="ti ti-phone text-dark me-2 fs-15" />
                                                                         {c.workPhone || "No Phone"}
                                                                     </p>

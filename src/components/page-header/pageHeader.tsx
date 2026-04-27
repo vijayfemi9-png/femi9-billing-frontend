@@ -28,16 +28,16 @@ const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleT
           </h4>
         )}
         <nav aria-label="breadcrumb">
-          <ol className="breadcrumb mb-0 p-0" style={{ fontSize: '14px' }}>
-            <li className="breadcrumb-item" style={{ fontSize: '14px' }}>
-              <Link to={all_routes.dealsDashboard} style={{ fontSize: '14px' }}>Home</Link>
+          <ol className="breadcrumb mb-0 p-0 fs-14" style={{ fontSize: '14px' }}>
+            <li className="breadcrumb-item fs-14" style={{ fontSize: '14px' }}>
+              <Link to={all_routes.dealsDashboard} className="text-muted fs-14" style={{ fontSize: '14px' }}>Home</Link>
             </li>
             {showModuleTile && (
-              <li className="breadcrumb-item" aria-current="page" style={{ fontSize: '14px' }}>
-                <Link to={moduleLink} style={{ fontSize: '14px' }}>{moduleTitle}</Link>
+              <li className="breadcrumb-item fs-14" aria-current="page" style={{ fontSize: '14px' }}>
+                <Link to={moduleLink} className="text-muted fs-14" style={{ fontSize: '14px' }}>{moduleTitle}</Link>
               </li>
             )}
-            <li className="breadcrumb-item active" aria-current="page" style={{ fontSize: '14px' }}>
+            <li className="breadcrumb-item active text-dark fs-14" aria-current="page" style={{ fontSize: '14px', fontWeight: 500 }}>
               {title}
             </li>
           </ol>

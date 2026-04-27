@@ -135,7 +135,8 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
     const [deleteId, setDeleteId] = React.useState<number | null>(null);
     const editorRef = React.useRef<HTMLDivElement>(null);
     const editRef = React.useRef<HTMLDivElement>(null);
-    const commentItemRef = React.useRef<HTMLDivElement>(null); // For click outside cancel
+    const commentItemRef = React.useRef<HTMLDivElement>(null);
+    const commentsEndRef = React.useRef<HTMLDivElement>(null);
 
     useClickOutside([editRef, commentItemRef], () => {
         setEditingId(null);
@@ -169,8 +170,9 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
             avatarColor: getAvatarColor(author),
             timestamp: new Date().toISOString(),
         };
-        save([item, ...comments]);
+        save([...comments, item]);
         if (editorRef.current) editorRef.current.innerHTML = "";
+        setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     };
 
     const handleDelete = (id: number) => {
@@ -186,9 +188,26 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
         setEditingId(null);
     };
 
+    const [activeFmts, setActiveFmts] = React.useState({ bold: false, italic: false, underline: false, insertUnorderedList: false });
+
+    const updateFmtState = React.useCallback(() => {
+        setActiveFmts({
+            bold: document.queryCommandState('bold'),
+            italic: document.queryCommandState('italic'),
+            underline: document.queryCommandState('underline'),
+            insertUnorderedList: document.queryCommandState('insertUnorderedList'),
+        });
+    }, []);
+
+    React.useEffect(() => {
+        document.addEventListener('selectionchange', updateFmtState);
+        return () => document.removeEventListener('selectionchange', updateFmtState);
+    }, [updateFmtState]);
+
     const applyFmt = (cmd: string) => {
-        document.execCommand(cmd, false);
         editorRef.current?.focus();
+        document.execCommand(cmd, false);
+        setTimeout(updateFmtState, 0);
     };
 
     return (
@@ -197,11 +216,11 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
             {/* ── Editor ── */}
             <div className="cv-comment-editor">
                 <div className="cv-comment-toolbar">
-                    <button className="cv-fmt-btn" onMouseDown={e => { e.preventDefault(); applyFmt("bold"); }} title="Bold"><strong>B</strong></button>
-                    <button className="cv-fmt-btn" onMouseDown={e => { e.preventDefault(); applyFmt("italic"); }} title="Italic"><em>I</em></button>
-                    <button className="cv-fmt-btn" onMouseDown={e => { e.preventDefault(); applyFmt("underline"); }} title="Underline"><span style={{ textDecoration: "underline" }}>U</span></button>
+                    <button className={`cv-fmt-btn${activeFmts.bold ? ' active' : ''}`} onMouseDown={e => { e.preventDefault(); applyFmt("bold"); }} title="Bold"><strong>B</strong></button>
+                    <button className={`cv-fmt-btn${activeFmts.italic ? ' active' : ''}`} onMouseDown={e => { e.preventDefault(); applyFmt("italic"); }} title="Italic"><em>I</em></button>
+                    <button className={`cv-fmt-btn${activeFmts.underline ? ' active' : ''}`} onMouseDown={e => { e.preventDefault(); applyFmt("underline"); }} title="Underline"><span style={{ textDecoration: "underline" }}>U</span></button>
                     <div className="cv-toolbar-sep" />
-                    <button className="cv-fmt-btn" onMouseDown={e => { e.preventDefault(); applyFmt("insertUnorderedList"); }} title="Bullet list"><i className="ti ti-list" /></button>
+                    <button className={`cv-fmt-btn${activeFmts.insertUnorderedList ? ' active' : ''}`} onMouseDown={e => { e.preventDefault(); applyFmt("insertUnorderedList"); }} title="Bullet list"><i className="ti ti-list" /></button>
                 </div>
                 <div
                     ref={editorRef}
@@ -260,8 +279,9 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
                                                         if (editRef.current) {
                                                             editRef.current.innerHTML = c.html;
                                                             editRef.current.focus();
+                                                            editRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                                                         }
-                                                    }, 30);
+                                                    }, 50);
                                                 }}>
                                                 <i className="ti ti-pencil fs-12" />
                                             </button>
@@ -293,7 +313,7 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
                                             contentEditable
                                             suppressContentEditableWarning
                                         />
-                                        <div className="cv-edit-actions">
+                                        <div className="cv-edit-actions" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })}>
                                             <button className="cv-comment-add-btn" onClick={() => handleSaveEdit(c.id)}>Save</button>
                                             <button className="cv-cancel-btn" onClick={() => setEditingId(null)}>Cancel</button>
                                         </div>
@@ -308,6 +328,7 @@ const CommentsTab: React.FC<{ customerId: number }> = ({ customerId }) => {
                         </div>
                     ))
                 )}
+                <div ref={commentsEndRef} />
             </div>
         </div>
     );
@@ -599,35 +620,85 @@ const PaymentDueCard: React.FC = () => {
     const [editing, setEditing] = React.useState(false);
     const [value, setValue] = React.useState("Due on Receipt");
     const [draft, setDraft] = React.useState("Due on Receipt");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
-    const handleEdit = () => { setDraft(value); setEditing(true); };
-    const handleSave = () => { setValue(draft); setEditing(false); };
-    const handleCancel = () => setEditing(false);
+    useClickOutside([dropdownRef], () => setIsOpen(false));
+
+    const filteredTerms = PAYMENT_TERMS.filter(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const handleSave = () => { setValue(draft); setEditing(false); setIsOpen(false); };
+    const handleCancel = () => { setEditing(false); setIsOpen(false); };
 
     return (
-        <div className="cv-pdue-card mb-4 mt-2" style={{ padding: "0 12px" }}>
-            <div className="fs-13 fw-semibold text-muted mb-1" style={{ color: "#8b93a6" }}>Payment due period</div>
+        <div className="cv-pdue-card mb-4 mt-2 px-3">
+            <div className="fs-14 fw-medium mb-2" style={{ color: "#74829c", letterSpacing: '0.02em' }}>Payment due period</div>
             {editing ? (
-                <div className="cv-pdue-edit-row d-flex gap-2">
-                    <select
-                        className="form-select form-select-sm shadow-none"
-                        value={draft}
-                        onChange={e => setDraft(e.target.value)}
-                        autoFocus>
-                        {PAYMENT_TERMS.map(t => (
-                            <option key={t} value={t}>{t}</option>
-                        ))}
-                    </select>
-                    <button className="btn btn-sm btn-primary p-1 shadow-none" onClick={handleSave} title="Save">
-                        <i className="ti ti-check fs-14" />
-                    </button>
-                    <button className="btn btn-sm btn-light p-1 shadow-none" onClick={handleCancel} title="Cancel">
-                        <i className="ti ti-x fs-14" />
-                    </button>
+                <div className="position-relative" ref={dropdownRef} style={{ width: 'fit-content' }}>
+                    <div
+                        className="d-flex align-items-center border rounded shadow-sm overflow-hidden cursor-pointer"
+                        style={{ height: '32px', minWidth: '180px', borderColor: '#408dfb', background: '#fff' }}
+                        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                    >
+                        <div className="flex-grow-1 px-2 fs-14 text-dark text-truncate" style={{ maxWidth: '85px' }}>
+                            {draft}
+                        </div>
+                        <i className={`ti ti-chevron-${isOpen ? 'up' : 'down'} fs-10 me-2`} style={{ color: isOpen ? '#408dfb' : '#94a3b8' }} />
+                        <div className="d-flex align-items-center h-100 border-start" style={{ borderColor: '#e2e8f0' }} onClick={e => e.stopPropagation()}>
+                            <button className="btn p-0 d-flex align-items-center justify-content-center" style={{ width: 32, height: '100%', background: '#2eb872', border: 'none' }} onClick={handleSave}>
+                                <i className="ti ti-check fs-12 text-white" />
+                            </button>
+                            <button className="btn p-0 d-flex align-items-center justify-content-center" style={{ width: 32, height: '100%', background: '#fff0f0', border: 'none' }} onClick={handleCancel}>
+                                <i className="ti ti-x fs-12" style={{ color: '#ef4444' }} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {isOpen && (
+                        <div className="position-absolute start-0 w-100 mt-1 bg-white border rounded shadow-lg overflow-hidden" style={{ zIndex: 1000, minWidth: '240px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}>
+                            <div className="p-2 border-bottom">
+                                <div className="input-group input-group-sm border rounded" style={{ background: '#fff' }}>
+                                    <span className="input-group-text bg-transparent border-0 pe-1">
+                                        <i className="ti ti-search text-muted fs-12" />
+                                    </span>
+                                    <input
+                                        className="form-control border-0 bg-transparent shadow-none fs-12 p-1"
+                                        placeholder="Search"
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                            <div className="custom-scrollbar" style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                                {filteredTerms.length === 0 ? (
+                                    <div className="p-3 text-center text-muted fs-12">No results</div>
+                                ) : filteredTerms.map(t => (
+                                    <div
+                                        key={t}
+                                        className={`px-3 py-2 fs-13 cursor-pointer d-flex align-items-center justify-content-between ${draft === t ? 'bg-primary text-white' : 'text-dark hover-bg-light'}`}
+                                        style={{ transition: 'all 0.05s' }}
+                                        onClick={() => { setDraft(t); setIsOpen(false); }}
+                                    >
+                                        <span>{t}</span>
+                                        {draft === t && <i className="ti ti-check fs-12 text-white" />}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : (
-                <div className="cv-pdue-value-row d-inline-flex align-items-center gap-2 cursor-pointer" onClick={handleEdit} title="Click to edit">
-                    <span className="fs-14 fw-medium text-dark">{value}</span>
+                <div className="d-flex align-items-center">
+                    <div
+                        className="cursor-pointer py-1"
+                        style={{ transition: 'all 0.2s' }}
+                        onClick={(e) => { e.stopPropagation(); setDraft(value); setEditing(true); setIsOpen(true); }}
+                        title="Click to edit"
+                    >
+                        <div className="fs-15 fw-bold text-dark" style={{ lineHeight: '1.4' }}>{value}</div>
+                    </div>
                 </div>
             )}
         </div>
@@ -643,6 +714,7 @@ const CustomerView: React.FC = () => {
     const [selected, setSelected] = useState<Customer | null>(null);
     const [tab, setTab] = useState<TabKey>("overview");
     const [sideSearch, setSideSearch] = useState("");
+    const [searchFocused, setSearchFocused] = useState(false);
     const [addrOpen, setAddrOpen] = useState(true);
     const [otherOpen, setOtherOpen] = useState(true);
     const [contactPersonsOpen, setContactPersonsOpen] = useState(true);
@@ -650,6 +722,7 @@ const CustomerView: React.FC = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [showSidebar, setShowSidebar] = useState(window.innerWidth >= 768);
     const [viewFilter, setViewFilter] = useState("Active Customers");
+    const [viewFilterOpen, setViewFilterOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [actionModal, setActionModal] = useState<'none' | 'clone' | 'merge' | 'associate-templates' | 'configure-portal' | 'link-vendor'>('none');
     const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
@@ -658,6 +731,7 @@ const CustomerView: React.FC = () => {
     const [linkVendorId, setLinkVendorId] = useState<string>('');
     const [portalAccessMap, setPortalAccessMap] = useState<Record<number, boolean>>({});
     const [showPortalConfig, setShowPortalConfig] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     const openPortalConfig = () => {
         const map: Record<number, boolean> = {};
@@ -682,6 +756,16 @@ const CustomerView: React.FC = () => {
     const blankForm = { salutation: "Mr.", firstName: "", lastName: "", email: "", workPhone: "", mobile: "", skype: "", designation: "", department: "", isPrimary: false, portalAccess: true };
     const [cpForm, setCpForm] = useState(blankForm);
     const [cpImage, setCpImage] = useState<string | null>(null);
+    const [expandedSidebarContactId, setExpandedSidebarContactId] = useState<number | null>(null);
+    const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
+
+    const handleDeleteContact = (cid: number) => {
+        if (!selected) return;
+        const updated = contactPersons.filter(c => c.id !== cid);
+        saveContacts(selected.id, updated);
+        setContactPersons(updated);
+        showNotify("Contact removed", "error");
+    };
 
     const handleCpImage = (file: File) => {
         const reader = new FileReader();
@@ -852,7 +936,7 @@ const CustomerView: React.FC = () => {
 
     /* ── Full-page split layout ──────────────────────────────────────────────── */
     return (
-        <div className="page-wrapper" style={isMobile ? { minHeight: "100vh", display: "flex", flexDirection: "column" } : { height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div className={`page-wrapper customer-view-page`} style={isMobile ? { minHeight: "100vh", display: "flex", flexDirection: "column" } : { height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             <div className={`content pb-0 flex-grow-1 d-flex flex-column`} style={isMobile ? { minHeight: 0 } : { minHeight: 0, overflow: "hidden" }}>
 
                 {/* ── Top Unified Header ── */}
@@ -864,10 +948,10 @@ const CustomerView: React.FC = () => {
                                     <i className="ti ti-menu-2 fs-16" />
                                 </button>
                             )}
-                            <h4 className="fw-bold mb-0" style={{ fontSize: '20px' }}>{selected?.name}</h4>
+                            <h4 className="fw-bold mb-0" style={{ fontSize: '18px' }}>{selected?.name}</h4>
                         </div>
                         <nav aria-label="breadcrumb">
-                            <ol className="breadcrumb mb-0 p-0" style={{ fontSize: '13px' }}>
+                            <ol className="breadcrumb mb-0 p-0" style={{ fontSize: '14px' }}>
                                 <li className="breadcrumb-item"><Link to={all_routes.dealsDashboard}>Home</Link></li>
                                 <li className="breadcrumb-item"><Link to={route.customerList}>Customers</Link></li>
                                 <li className="breadcrumb-item active">{selected?.name}</li>
@@ -973,7 +1057,7 @@ const CustomerView: React.FC = () => {
                                         <button className="btn p-0 border-0 bg-transparent d-flex align-items-center gap-1 fw-bold fs-13 text-dark"
                                             data-bs-toggle="dropdown">
                                             {viewFilter}
-                                            <i className="ti ti-chevron-down fs-11 ms-1" style={{ color: "#e41f07" }} />
+                                            <i className="ti ti-chevron-down fs-14 ms-1" style={{ color: "#767879ff" }} />
                                         </button>
                                         <div className="dropdown-menu shadow-sm border-0 py-1" style={{ minWidth: 180 }}>
                                             {["All Customers", "Active Customers", "Inactive Customers"].map(v => (
@@ -987,14 +1071,14 @@ const CustomerView: React.FC = () => {
                                     </div>
                                     <div className="d-flex align-items-center gap-2">
                                         <button className="btn d-flex align-items-center justify-content-center p-0 rounded"
-                                            style={{ width: 24, height: 24, background: "#e41f07", border: "none", color: "#fff" }}
+                                            style={{ width: 34, height: 34, background: "#e41f07", border: "none", color: "#fff" }}
                                             onClick={() => navigate(route.customerAdd)}>
-                                            <i className="ti ti-plus fs-13" />
+                                            <i className="ti ti-plus fs-14" />
                                         </button>
                                         <div className="dropdown">
                                             <button className="btn btn-light d-flex align-items-center justify-content-center p-0 rounded border"
-                                                style={{ width: 24, height: 24, background: "#fff" }} data-bs-toggle="dropdown">
-                                                <i className="ti ti-dots fs-13 text-muted" />
+                                                style={{ width: 34, height: 34, background: "#fff" }} data-bs-toggle="dropdown">
+                                                <i className="ti ti-dots fs-14 text-muted" />
                                             </button>
                                             <div className="dropdown-menu dropdown-menu-end shadow border-0 py-1">
                                                 <button className="dropdown-item fs-14 py-2" onClick={() => { setCustomers(getAllRaw().filter(c => !c.isDeleted)); setSideSearch(""); }}>Refresh List</button>
@@ -1009,14 +1093,22 @@ const CustomerView: React.FC = () => {
 
                             {/* Sidebar search */}
                             <div className="px-2 py-2 border-bottom bg-white" style={{ flexShrink: 0 }}>
-                                <div className="input-group input-group-sm">
-                                    <span className="input-group-text bg-transparent border-end-0">
+                                <div className="d-flex align-items-center rounded" style={{
+                                    background: '#fff',
+                                    border: searchFocused ? '1px solid #e41f07' : '1px solid #dee2e6',
+                                    boxShadow: searchFocused ? '0 0 0 0.2rem rgba(228,31,7,0.15)' : 'none',
+                                    transition: 'border-color 0.15s, box-shadow 0.15s',
+                                }}>
+                                    <span className="px-2 d-flex align-items-center">
                                         <i className="ti ti-search fs-13 text-muted" />
                                     </span>
-                                    <input className="form-control border-start-0 ps-0 fs-13"
+                                    <input className="form-control border-0 ps-0 fs-14 bg-transparent"
+                                        style={{ outline: 'none', boxShadow: 'none' }}
                                         placeholder="Search..."
                                         value={sideSearch}
-                                        onChange={e => setSideSearch(e.target.value)} />
+                                        onChange={e => setSideSearch(e.target.value)}
+                                        onFocus={() => setSearchFocused(true)}
+                                        onBlur={() => setSearchFocused(false)} />
                                 </div>
                             </div>
 
@@ -1051,271 +1143,318 @@ const CustomerView: React.FC = () => {
                         <div key={selected.id} className={`flex-grow-1 d-flex flex-column bg-white customer-detail-wrapper cv-fade-in${isMobile ? "" : " overflow-hidden"}`} style={{ minWidth: 0 }}>
 
                             {/* Tab bar */}
-                            <div className="d-flex align-items-center border-bottom px-2 bg-white custom-scrollbar"
-                                style={{ flexShrink: 0, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-                                {TABS.map(t => (
-                                    <button key={t.key}
-                                        onClick={() => setTab(t.key)}
-                                        className="btn border-0 py-3 px-3 fs-14 fw-medium flex-shrink-0"
-                                        style={{
-                                            background: "transparent",
-                                            color: tab === t.key ? "#e41f07" : "#6c757d",
-                                            borderBottom: tab === t.key ? "2px solid #e41f07" : "2px solid transparent",
-                                            borderRadius: 0,
-                                        }}>
-                                        {t.label}
-                                    </button>
-                                ))}
+                            <div style={{ flexShrink: 0, borderBottom: "2px solid #dee2e6" }}>
+                                <div className="d-flex align-items-center bg-white custom-scrollbar"
+                                    style={{ overflowX: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "2px" }}>
+                                    {TABS.map(t => (
+                                        <button key={t.key}
+                                            onClick={() => setTab(t.key)}
+                                            className="btn py-3 px-3 fs-14 fw-medium flex-shrink-0 position-relative"
+                                            style={{
+                                                background: "transparent",
+                                                color: tab === t.key ? "#e41f07" : "#6c757d",
+                                                border: "none",
+                                                borderRadius: 0,
+                                            }}>
+                                            {t.label}
+                                            {tab === t.key && (
+                                                <div className="position-absolute start-0 end-0 bottom-0"
+                                                    style={{ height: "2px", backgroundColor: "#e41f07", marginBottom: "-2px" }} />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Tab content */}
-                            <div className="flex-grow-1 detail-pane-content" style={{ background: "#f7f8fa", minHeight: isMobile ? "auto" : 0, display: "flex", flexDirection: "column" }}>
+                            <div className="flex-grow-1 detail-pane-content custom-scrollbar" style={{ background: "#f7f8fa", minHeight: isMobile ? "auto" : 0, display: "flex", flexDirection: "column", overflowY: 'auto' }}>
 
                                 {/* ── OVERVIEW ── */}
                                 {tab === "overview" && (
-                                    <div className="cv-overview-split flex-grow-1">
-
+                                    <div className="cv-overview-split d-flex">
                                         {/* ── LEFT: Contact Info Panel ── */}
-                                        <div className="cv-overview-left custom-scrollbar p-3">
+                                        <div className="cv-overview-left p-3">
 
-                                            {/* ── Unified Profile & Contact Box ── */}
-                                            <div className="mb-4" style={{ background: "#f8f9fa", borderRadius: "12px", overflow: "hidden" }}>
-                                                {/* Profile display name */}
-                                                <div className="px-3 py-3 border-bottom d-flex align-items-center justify-content-between" style={{ borderColor: "#e5e7eb !important" }}>
-                                                    <span className="fs-15 text-dark">{selected.name || "COMPANY INFO"}</span>
-                                                </div>
-                                                {contactPersons.length === 0 ? null : (
-                                                    <div className="cv-cp-cards py-3 px-3 m-0" style={{ gap: 0 }}>
-                                                        {contactPersons.map(cp => (
-                                                            <div key={cp.id} className={`d-flex align-items-start ${!cp.isEnabled ? "cv-cp-disabled" : ""}`} style={{ background: "transparent", border: "none" }}>
-                                                                {/* Avatar - Exact Solid Match */}
-                                                                <div className="flex-shrink-0" style={{ width: 50, height: 50, borderRadius: 8, background: "#c2c2c2", display: "flex", alignItems: "flex-end", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-                                                                    <svg width="42" height="40" viewBox="0 0 24 24" fill="none" style={{ marginBottom: "-4px" }}>
-                                                                        <circle cx="12" cy="8" r="4.5" fill="#ffffff"/>
-                                                                        <path d="M4 22C4 17.5817 7.58172 14 12 14C16.4183 14 20 17.5817 20 22H4Z" fill="#ffffff"/>
-                                                                    </svg>
-                                                                </div>
-                                                                {/* Info */}
-                                                                <div className="ms-3 flex-grow-1 min-w-0">
-                                                                    <div className="d-flex align-items-center justify-content-between mb-1">
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <span className="fs-15 fw-bold text-truncate" style={{ color: "#111827" }}>{cp.salutation} {cp.firstName} {cp.lastName}</span>
-                                                                            {cp.isPrimary && <span className="cv-cp-badge primary">PRIMARY</span>}
-                                                                            {!cp.isEnabled && <span className="cv-cp-badge inactive">INACTIVE</span>}
-                                                                        </div>
-                                                                        {/* Settings gear */}
-                                                                        <div className="dropdown cv-cp-card-gear ms-2">   
-                                                                            <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style={{ minWidth: 160 }}>
-                                                                                <li><button className="dropdown-item fs-13 py-2" onClick={() => openEditContact(cp)}><i className="ti ti-pencil me-2 text-muted" />Edit</button></li>
-                                                                                {!cp.isPrimary && <li><button className="dropdown-item fs-13 py-2" onClick={() => markPrimary(cp.id)}><i className="ti ti-star me-2 text-muted" />Mark as Primary</button></li>}
-                                                                                <li><button className="dropdown-item fs-13 py-2" onClick={() => toggleContact(cp.id)}><i className={`ti ${cp.isEnabled ? "ti-toggle-left" : "ti-toggle-right"} me-2 text-muted`} />{cp.isEnabled ? "Disable" : "Enable"}</button></li>
-                                                                                <li><hr className="dropdown-divider" /></li>
-                                                                                <li><button className="dropdown-item fs-13 py-2 text-danger" onClick={() => deleteContact(cp.id)}><i className="ti ti-trash me-2" />Delete</button></li>
-                                                                            </ul>
-                                                                        </div>
-                                                                    </div>
-                                                                    {cp.email && <div className="fs-14 text-dark text-truncate mb-1" style={{ lineHeight: "1.3" }}>{cp.email}</div>}
-                                                                    {cp.workPhone && (
-                                                                        <div className="fs-14 text-dark d-flex align-items-center mb-2" style={{ lineHeight: "1.3" }}>
-                                                                            <i className="ti ti-phone fs-13 me-1" />+91-{cp.workPhone.replace(/^\+91[-\s]?/, "")}
-                                                                        </div>
-                                                                    )}
-                                                                    {cp.portalAccess ? (
-                                                                        <div className="mt-1" style={{ lineHeight: "1.4" }}>
-                                                                            <div className="fs-13 fw-medium" style={{ color: "#ff8c42" }}>Portal invitation not accepted</div>
-                                                                            <button className="btn btn-link p-0 text-decoration-none fs-13 mt-1" style={{ color: "#317af1" }} onClick={() => showNotify(`Portal invite sent to ${cp.email}`)}>Re-invite</button>
-                                                                        </div>
-                                                                    ) : null}
-                                                                </div>
+                                            {/* Company Header */}
+                                            <div className="px-1 mb-4">
+                                                <h4 className="fs-15 fw-bold text-dark mb-0">femi9</h4>
+                                                <hr className="mt-2 mb-0" style={{ opacity: 0.1 }} />
+                                            </div>
+
+                                            {/* ── Unified Profile Card ── */}
+                                            <div className="cv-profile-card-premium mb-4">
+                                                <div className="d-flex align-items-start justify-content-between">
+                                                    <div className="d-flex align-items-start gap-3">
+                                                        {/* Avatar */}
+                                                        <div className="cv-avatar-solid">
+                                                            <svg width="36" height="34" viewBox="0 0 24 24" fill="none">
+                                                                <circle cx="12" cy="8" r="4.5" fill="#ffffff" />
+                                                                <path d="M4 22C4 17.5817 7.58172 14 12 14C16.4183 14 20 17.5817 20 22H4Z" fill="#ffffff" />
+                                                            </svg>
+                                                        </div>
+                                                        <div className="cv-profile-info">
+                                                            <h5 className="fs-16 fw-bold text-dark mb-1">{selected?.name}</h5>
+                                                            <div className="fs-13 text-muted mb-1">{selected?.email}</div>
+                                                            <div className="fs-14 text-muted d-flex align-items-center gap-1">
+                                                                <i className="ti ti-phone fs-14" />
+                                                                {selected?.workPhone}
                                                             </div>
-                                                        ))}
+                                                            <div className="mt-2">
+                                                                <div className="fs-14 fw-medium" style={{ color: "#6c757d" }}>Portal invitation not accepted</div>
+                                                                <button
+                                                                    className="btn btn-link p-0 fs-13 text-decoration-none mt-1"
+                                                                    style={{ color: "#e41f07" }}
+                                                                    onClick={() => showNotify('Your invitation has been sent')}
+                                                                >
+                                                                    Re-invite
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                )}
+                                                    <div className="position-absolute" style={{ top: 12, right: 12 }}>
+                                                        <button
+                                                            className="btn p-1 text-muted hover-opacity shadow-none"
+                                                            onClick={() => setShowSettings(!showSettings)}
+                                                        >
+                                                            <i className="ti ti-settings fs-16" />
+                                                        </button>
+                                                        {showSettings && (
+                                                            <>
+                                                                <div
+                                                                    className="position-fixed top-0 start-0 w-100 h-100"
+                                                                    style={{ zIndex: 1000 }}
+                                                                    onClick={() => setShowSettings(false)}
+                                                                />
+                                                                <div className="cv-settings-dropdown" style={{ zIndex: 1001, top: "100%", right: 0 }}>
+                                                                    <Link to={route.customerEdit.replace(":id", String(selected?.id))} className="dropdown-item">
+                                                                        <i className="ti ti-edit me-2" />Edit
+                                                                    </Link>
+                                                                    <div className="dropdown-divider" />
+                                                                    <button
+                                                                        className="dropdown-item text-danger"
+                                                                        onClick={() => { setShowSettings(false); handleDelete(); }}
+                                                                    >
+                                                                        <i className="ti ti-trash me-2" />Delete
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             {/* Address */}
-                                            <div className="cv-section-header" onClick={() => setAddrOpen(o => !o)}>
-                                                <span className="text-uppercase letter-spacing-1 fs-12 fw-bold text-dark">ADDRESS</span>
-                                                <i className={`ti ti-chevron-${addrOpen ? "up" : "down"} fs-12`} style={{ color: "#e41f07" }} />
+                                            <div className="cv-section-header-compact mt-4 mb-2" onClick={() => setAddrOpen(o => !o)}>
+                                                <span>ADDRESS</span>
+                                                <i className={`ti ti-chevron-${addrOpen ? "up" : "down"} fs-14`} />
                                             </div>
                                             {addrOpen && (
-                                                <div className="px-4 pb-4 pt-1">
-                                                    <div className="mb-4">
-                                                        <div className="fs-13 fw-bold text-dark mb-2">Billing Address</div>
-                                                        <div className="fs-13 text-muted">No Billing Address - <button className="btn btn-link p-0 hover-underline fs-13" style={{ color: "#e41f07" }} onClick={() => showNotify('Opening Billing Address form...')}>New Address</button></div>
+                                                <div className="ps-1 mb-4">
+                                                    <div className="mb-3">
+                                                        <div className="fs-14 fw-semibold text-dark mb-1">Billing Address</div>
+                                                        <div className="fs-14 text-muted">No Billing Address - <span className="text-primary cursor-pointer">New Address</span></div>
                                                     </div>
                                                     <div>
-                                                        <div className="fs-13 fw-bold text-dark mb-2">Shipping Address</div>
-                                                        <div className="fs-13 text-muted">No Shipping Address - <button className="btn btn-link p-0 hover-underline fs-13" style={{ color: "#e41f07" }} onClick={() => showNotify('Opening Shipping Address form...')}>New Address</button></div>
+                                                        <div className="fs-14 fw-semibold text-dark mb-1">Shipping Address</div>
+                                                        <div className="fs-14 text-muted">No Shipping Address - <span className="text-primary cursor-pointer">New Address</span></div>
                                                     </div>
                                                 </div>
                                             )}
 
                                             {/* Other Details */}
-                                            <div className="cv-section-header" onClick={() => setOtherOpen(o => !o)}>
-                                                <span className="text-uppercase letter-spacing-1 fs-12 fw-bold text-dark">OTHER DETAILS</span>
-                                                <i className={`ti ti-chevron-${otherOpen ? "up" : "down"} fs-12`} style={{ color: "#e41f07" }} />
+                                            <div className="cv-section-header-compact mb-2" onClick={() => setOtherOpen(o => !o)}>
+                                                <span>OTHER DETAILS</span>
+                                                <i className={`ti ti-chevron-${otherOpen ? "up" : "down"} fs-12`} />
                                             </div>
                                             {otherOpen && (
-                                                <div className="px-4 pb-4 pt-1">
-                                                    {(() => {
-                                                        const enabledCount = contactPersons.filter(cp => cp.portalAccess && cp.isEnabled).length;
-                                                        const totalCount = contactPersons.length;
-                                                        const portalStatusVal = (
-                                                            <div className="d-flex align-items-center justify-content-between w-100">
-                                                                {enabledCount > 0
-                                                                    ? <span className="text-success d-flex align-items-center gap-1"><i className="ti ti-circle-filled fs-8" /> Enabled <span className="text-muted fw-normal">({enabledCount} of {totalCount} Contacts)</span></span>
-                                                                    : <span className="text-danger d-flex align-items-center gap-1"><i className="ti ti-circle-filled fs-8" /> Disabled</span>}
-                                                                {contactPersons.length > 0 && (
-                                                                    <button className="btn p-0 border-0 bg-transparent text-secondary ms-2 hover-opacity" title="Configure Portal Access" onClick={openPortalConfig}>
-                                                                        <i className="ti ti-settings fs-15" />
+                                                <div className="ps-1">
+                                                    {[
+                                                        { label: "Customer Type", value: "Business" },
+                                                        { label: "Default Currency", value: "INR" },
+                                                    ].map((row, i) => (
+                                                        <div key={i} className="d-flex align-items-center mb-3">
+                                                            <div className="fs-14 text-muted w-50">{row.label}</div>
+                                                            <div className="fs-14 text-dark fw-medium">{row.value}</div>
+                                                        </div>
+                                                    ))}
+                                                    {/* Portal Status */}
+                                                    <div className="d-flex align-items-start mb-3">
+                                                        <div className="fs-14 text-muted w-50">Portal Status</div>
+                                                        {(() => {
+                                                            const enabled = contactPersons.filter(cp => cp.portalAccess).length;
+                                                            const total = contactPersons.length;
+                                                            return enabled > 0 ? (
+                                                                <div className="d-flex flex-column">
+                                                                    <div className="d-flex align-items-center gap-1">
+                                                                        <span style={{ color: '#16a34a', fontSize: 13, fontWeight: 500 }}>
+                                                                            <span style={{ fontSize: 10 }}>●</span> Enabled
+                                                                        </span>
+                                                                        <button
+                                                                            className="btn p-0 border-0 bg-transparent"
+                                                                            style={{ color: '#64748b', lineHeight: 1 }}
+                                                                            title="Configure Portal Access"
+                                                                            onClick={openPortalConfig}>
+                                                                            <i className="ti ti-settings fs-14" />
+                                                                        </button>
+                                                                    </div>
+                                                                    <span className="fs-14 text-muted">({enabled} of {total} Contacts)</span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="d-flex align-items-center gap-1">
+                                                                    <span className="fs-14 text-muted">Disabled</span>
+                                                                    <button
+                                                                        className="btn p-0 border-0 bg-transparent"
+                                                                        style={{ color: '#64748b', lineHeight: 1 }}
+                                                                        title="Configure Portal Access"
+                                                                        onClick={openPortalConfig}>
+                                                                        <i className="ti ti-settings fs-16" />
                                                                     </button>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                        return [
-                                                            { label: "Customer Type", value: "Business" },
-                                                            { label: "Default Currency", value: "INR - Indian Rupee" },
-                                                            { label: "Payment Terms", value: "Due on Receipt" },
-                                                            { label: "PAN", value: "jhhgfxcz" },
-                                                            { label: "Portal Status", value: portalStatusVal },
-                                                            { label: "Customer Language", value: "English" },
-                                                        ].map((row, i) => (
-                                                            <div key={i} className="row g-2 py-2 border-bottom" style={{ borderColor: "#f8f9fa" }}>
-                                                                <div className="col-5 fs-13 text-muted">{row.label}</div>
-                                                                <div className="col-7 fs-13 text-dark fw-medium text-break">{row.value}</div>
-                                                            </div>
-                                                        ));
-                                                    })()}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             )}
 
-                                                {/* ── CONTACT PERSONS Section ── */}
-                                                <div className="cv-section-header" onClick={() => setContactPersonsOpen(o => !o)}>
-                                                    <span className="text-uppercase letter-spacing-1 fs-12 fw-bold text-dark">CONTACT PERSONS</span>
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <button
-                                                            className="d-flex align-items-center justify-content-center rounded-circle border-0"
-                                                            style={{ width: 20, height: 20, background: '#347aeb', color: '#fff', cursor: 'pointer' }}
-                                                            onClick={e => { e.stopPropagation(); openAddContact(); }}
-                                                            title="Add contact person">
-                                                            <i className="ti ti-plus" style={{ fontSize: 11 }} />
-                                                        </button>
-                                                        <i className={`ti ti-chevron-${contactPersonsOpen ? 'up' : 'down'} fs-12`} style={{ color: '#6c757d' }} />
-                                                    </div>
+                                            {/* ── CONTACT PERSONS Section ── */}
+                                            <div className="cv-section-header" onClick={() => setContactPersonsOpen(o => !o)}>
+                                                <span className="text-uppercase letter-spacing-1 fs-14 fw-bold text-dark">CONTACT PERSONS</span>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    <button
+                                                        className="d-flex align-items-center justify-content-center rounded-circle border-0"
+                                                        style={{ width: 20, height: 20, background: '#e41f07', color: '#fff', cursor: 'pointer' }}
+                                                        onClick={e => { e.stopPropagation(); openAddContact(); }}
+                                                        title="Add contact person">
+                                                        <i className="ti ti-plus" style={{ fontSize: 11 }} />
+                                                    </button>
+                                                    <i className={`ti ti-chevron-${contactPersonsOpen ? 'up' : 'down'} fs-12`} style={{ color: '#64748b' }} />
                                                 </div>
-                                                {contactPersonsOpen && (
-                                                    <div className="px-3 pb-3 pt-1">
-                                                        {contactPersons.length === 0 ? (
-                                                            <div className="fs-13 text-muted py-2">No contact persons found.</div>
-                                                        ) : contactPersons.map(cp => (
-                                                            <div key={cp.id} className="d-flex align-items-center justify-content-between py-2 border-bottom" style={{ borderColor: '#f1f5f9' }}>
-                                                                <div>
-                                                                    <div className="fs-13 fw-semibold text-dark">{cp.salutation} {cp.firstName} {cp.lastName}</div>
-                                                                    {cp.email && <div className="fs-12 text-muted">{cp.email}</div>}
+                                            </div>
+                                            {contactPersonsOpen && (
+                                                <div className="px-3 pb-3">
+                                                    {contactPersons.length === 0 ? (
+                                                        <div className="fs-14 text-muted py-2 px-1">No contact persons found.</div>
+                                                    ) : contactPersons.map(cp => {
+                                                        const isExpanded = expandedSidebarContactId === cp.id;
+                                                        return (
+                                                            <div key={cp.id} className="mb-2 rounded border" style={{ borderColor: isExpanded ? '#e41f07' : '#f1f5f9', background: isExpanded ? '#fffcfc' : '#fff', overflow: 'hidden' }}>
+                                                                <div
+                                                                    className="d-flex align-items-center justify-content-between p-2 cursor-pointer"
+                                                                    onClick={() => setExpandedSidebarContactId(isExpanded ? null : cp.id)}
+                                                                >
+                                                                    <div className="d-flex align-items-center gap-2">
+                                                                        <div className="avatar-circle fs-10 fw-bold text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(cp.firstName + cp.lastName) }}>
+                                                                            {getInitials(cp.firstName + " " + cp.lastName)}
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="fs-14 fw-semibold text-dark">{cp.firstName} {cp.lastName}</div>
+                                                                            <div className="fs-14 text-muted" style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cp.email}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="d-flex align-items-center gap-1">
+                                                                        <button className="btn btn-sm p-1 border-0" onClick={(e) => { e.stopPropagation(); openEditContact(cp); }} title="Edit">
+                                                                            <i className="ti ti-pencil fs-14 text-muted" />
+                                                                        </button>
+                                                                        <i className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} fs-14 text-muted`} />
+                                                                    </div>
                                                                 </div>
-                                                                <button className="btn btn-sm p-1 border-0" onClick={() => openEditContact(cp)} title="Edit">
-                                                                    <i className="ti ti-pencil fs-12 text-muted" />
-                                                                </button>
+                                                                {isExpanded && (
+                                                                    <div className="p-3 border-top" style={{ backgroundColor: "#f8f9fa" }}>
+                                                                        <div className="d-flex align-items-center justify-content-between mb-2">
+                                                                            <div className="fs-12 text-muted text-uppercase fw-bold" style={{ letterSpacing: '0.5px' }}>Work Phone</div>
+                                                                            <div className="fs-13 text-dark fw-medium">{cp.workPhone || "—"}</div>
+                                                                        </div>
+                                                                        <div className="d-flex align-items-center justify-content-between">
+                                                                            <div className="fs-12 text-muted text-uppercase fw-bold" style={{ letterSpacing: '0.5px' }}>Mobile</div>
+                                                                            <div className="fs-13 text-dark fw-medium">{cp.mobile || "—"}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {/* ── Request Review Card ── */}
-                                                <div className="mx-3 my-3 p-3 rounded" style={{ background: '#f0faf0', border: '1px solid #c3e6cb' }}>
-                                                    <div className="d-flex align-items-center gap-2 mb-2">
-                                                        <span style={{ fontSize: 20 }}>🙂</span>
-                                                        <span className="fs-13 text-dark fw-medium">Would you like to know how much your customers like your service?</span>
-                                                    </div>
-                                                    <button className="btn btn-sm btn-outline-secondary fs-12 w-100" style={{ borderRadius: 4 }}
-                                                        onClick={() => showNotify('Request Review feature coming soon')}>Request Review</button>
+                                                        );
+                                                    })}
                                                 </div>
+                                            )}
 
-                                                {/* ── RECORD INFO Section ── */}
-                                                <div className="cv-section-header" onClick={() => setRecordInfoOpen(o => !o)}>
-                                                    <span className="text-uppercase letter-spacing-1 fs-12 fw-bold text-dark">RECORD INFO</span>
-                                                    <i className={`ti ti-chevron-${recordInfoOpen ? 'up' : 'down'} fs-12`} style={{ color: '#6c757d' }} />
+
+
+                                            {/* ── RECORD INFO Section ── */}
+                                            <div className="cv-section-header" onClick={() => setRecordInfoOpen(o => !o)}>
+                                                <span className="text-uppercase letter-spacing-1 fs-14 fw-bold text-dark">RECORD INFO</span>
+                                                <i className={`ti ti-chevron-${recordInfoOpen ? 'up' : 'down'} fs-14`} style={{ color: '#64748b' }} />
+                                            </div>
+                                            {recordInfoOpen && (
+                                                <div className="px-4 pb-4 pt-1">
+                                                    {[
+                                                        { label: 'Created By', value: 'vijayfemi9-png' },
+                                                        { label: 'Created Date', value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
+                                                        { label: 'Last Modified By', value: 'vijayfemi9-png' },
+                                                        { label: 'Last Modified Date', value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
+                                                    ].map((row, i) => (
+                                                        <div key={i} className="row g-2 py-2 border-bottom" style={{ borderColor: '#f8f9fa' }}>
+                                                            <div className="col-5 fs-14 text-muted">{row.label}</div>
+                                                            <div className="col-7 fs-14 text-dark fw-medium">{row.value}</div>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                {recordInfoOpen && (
-                                                    <div className="px-4 pb-4 pt-1">
-                                                        {[
-                                                            { label: 'Created By', value: 'vijayfemi9-png' },
-                                                            { label: 'Created Date', value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
-                                                            { label: 'Last Modified By', value: 'vijayfemi9-png' },
-                                                            { label: 'Last Modified Date', value: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) },
-                                                        ].map((row, i) => (
-                                                            <div key={i} className="row g-2 py-2 border-bottom" style={{ borderColor: '#f8f9fa' }}>
-                                                                <div className="col-5 fs-13 text-muted">{row.label}</div>
-                                                                <div className="col-7 fs-13 text-dark fw-medium">{row.value}</div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                            )}
 
                                         </div>
 
                                         {/* ── RIGHT: Business Data Panel ── */}
-                                        <div className="cv-overview-right custom-scrollbar">
+                                        <div className="cv-overview-right bg-white p-4">
 
-                                            {/* Payment due – inline editable */}
+                                            {/* Payment due period */}
                                             <PaymentDueCard />
 
-                                            {/* Receivables Table */}
-                                            <div className="cv-recv-card mb-4">
-                                                <div className="px-3 pb-2">
-                                                    <h5 className="mb-0 fw-semibold text-dark fs-16">Receivables</h5>
-                                                </div>
-                                                <div className="cv-recv-table-wrap mt-2">
-                                                    <table className="table mb-0 border-top" style={{ borderColor: "#f1f5f9" }}>
-                                                        <thead style={{ background: "#f8f9fa" }}>
+                                            {/* Receivables */}
+                                            <div className="mb-4">
+                                                <h5 className="fs-14 text-dark mb-3">Receivables</h5>
+                                                <div className="cv-table-premium">
+                                                    <table className="table mb-0 border-bottom">
+                                                        <thead>
                                                             <tr>
-                                                                <th className="border-0 fs-11 text-muted fw-bold py-2 px-3" style={{ color: "#8b93a6" }}>CURRENCY</th>
-                                                                <th className="border-0 text-end fs-11 text-muted fw-bold py-2 px-3" style={{ color: "#8b93a6" }}>OUTSTANDING<br />RECEIVABLES</th>
-                                                                <th className="border-0 text-end fs-11 text-muted fw-bold py-2 px-3" style={{ color: "#8b93a6" }}>UNUSED CREDITS</th>
+                                                                <th className="fs-13 text-muted text-front">CURRENCY</th>
+                                                                <th className="fs-13 text-muted text-end">OUTSTANDING<br />RECEIVABLES</th>
+                                                                <th className="fs-13 text-muted text-end">UNUSED CREDITS</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <tr className="border-bottom" style={{ borderColor: "#f1f5f9", background: "#fff" }}>
-                                                                <td className="border-0 py-3 px-3 fs-14 fw-medium text-dark">INR- Indian Rupee</td>
-                                                                <td className="border-0 text-end py-3 px-3 fs-14 text-dark align-middle">
-                                                                    <span className="cv-recv-amount">{fmt(selected.receivables)}</span>
-                                                                </td>
-                                                                <td className="border-0 text-end py-3 px-3 fs-14 text-dark align-middle">
-                                                                    <span className="cv-recv-amount">{fmt(selected.unusedCredits)}</span>
-                                                                </td>
+                                                            <tr>
+                                                                <td className="fs-14 text-dark py-3">INR- Indian Rupee</td>
+                                                                <td className="fs-14 text-dark text-end py-3">{selected ? fmt(selected.receivables) : "₹0.00"}</td>
+                                                                <td className="fs-14 text-dark text-end py-3">{selected ? fmt(selected.unusedCredits) : "₹0.00"}</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
-                                                <div className="cv-recv-inline-status px-3 py-3 d-flex align-items-center gap-3 fs-14" style={{ background: "#fcfcfd", borderBottom: "1px solid #f1f5f9" }}>
-                                                    <span className="text-secondary">Items to be packed: <strong style={{ color: "#e41f07" }}>0</strong></span>
-                                                    <span className="text-muted" style={{ opacity: 0.3 }}>|</span>
-                                                    <span className="text-secondary">Items to be shipped: <strong style={{ color: "#e41f07" }}>0</strong></span>
+                                                {/* Inline Status Bar */}
+                                                <div className="cv-status-bar-premium mt-0">
+                                                    <div className="status-item">Items to be packed: <span className="count">0</span></div>
+                                                    <div className="status-divider" />
+                                                    <div className="status-item">Items to be shipped: <span className="count">0</span></div>
                                                 </div>
                                             </div>
 
                                             {/* Timeline */}
-                                            <div className="cv-act-timeline mt-4" style={{ pointerEvents: 'none' }}>
-                                                {timelineData.map((item, i, arr) => (
-                                                    <div key={i} className={`cv-act-row${i === 0 ? " cv-act-row-first" : ""}${i === arr.length - 1 ? " cv-act-row-last" : ""}`}>
-                                                        {/* Date / Time */}
-                                                        <div className="cv-act-left text-end pe-3">
-                                                            <div className="cv-act-date">{item.date}</div>
-                                                            <div className="cv-act-time">{item.time}</div>
+                                            <div className="cv-timeline-premium mt-5">
+                                                {timelineData.map((item, i) => (
+                                                    <div key={i} className="timeline-item">
+                                                        <div className="timeline-left">
+                                                            <div className="time">{item.date}</div>
+                                                            <div className="time-sub">{item.time}</div>
                                                         </div>
-                                                        {/* Node — cv-act-node draws continuous ::before line */}
-                                                        <div className="cv-act-node">
-                                                            <div className="cv-act-icon-wrap">
-                                                                <i className="ti ti-message fs-14" />
+                                                        <div className="timeline-middle">
+                                                            <div className="timeline-icon-wrap">
+                                                                <i className={`ti ${item.icon}`} />
                                                             </div>
+                                                            <div className="timeline-line" />
                                                         </div>
-                                                        {/* Card */}
-                                                        <div className="cv-act-card">
-                                                            <div className="bg-white border rounded p-2" style={{ borderColor: '#e9ecef', pointerEvents: 'auto' }}>
-                                                                <div className="cv-act-title fs-15 text-dark mb-1">{item.title}</div>
-                                                                <div className="cv-act-desc fs-14" style={{ color: '#6b7280' }}>{item.desc}</div>
-                                                                <div className="fs-14 fw-bold mt-1" style={{ color: '#5c6b89' }}>by error 404</div>
+                                                        <div className="timeline-right">
+                                                            <div className="timeline-card">
+                                                                <h6 className="fs-14 fw-bold text-dark mb-2">{item.title}</h6>
+                                                                <div className="fs-14 text-muted">{item.desc}</div>
+                                                                <div className="fs-14 fw-bold mt-1" style={{ color: "#7c8ca0" }}>by {item.by}</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1326,7 +1465,7 @@ const CustomerView: React.FC = () => {
                                 )}
 
                                 {tab !== "overview" && (
-                                    <div className="flex-grow-1 overflow-auto custom-scrollbar" style={{ minHeight: 0 }}>
+                                    <div className="flex-grow-1" style={{ minHeight: 0 }}>
                                         {tab === "comments" && <CommentsTab customerId={selected?.id ?? 0} />}
                                         {tab === "transactions" && <EmptyTab icon="ti ti-receipt" title="No Transactions" sub="No transactions recorded yet." />}
                                         {tab === "statement" && <StatementTab customer={selected} />}
@@ -1355,25 +1494,26 @@ const CustomerView: React.FC = () => {
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p className="fs-13 text-muted mb-3">
+                                <p className="fs-14 text-muted mb-3">
                                     Choose the PDF templates to associate with this customer. These will be used when sending documents.
                                 </p>
                                 <div className="d-flex align-items-center justify-content-between mb-3">
-                                    <span className="fs-13 fw-semibold text-dark">PDF Templates</span>
-                                    <button className="btn btn-outline-primary btn-sm fs-12 px-3">
+                                    <span className="fs-14 fw-semibold text-dark">PDF Templates</span>
+                                    <button className="btn btn-outline-primary btn-sm fs-14 px-3">
                                         <i className="ti ti-plus me-1" />New PDF Template
                                     </button>
                                 </div>
                                 {["Customer Statement", "Sales Orders", "Invoices", "Credit Notes", "Payment Thank You"].map(label => (
-                                    <div key={label} className="row g-2 mb-2 align-items-center">
-                                        <label className="col-sm-5 col-form-label fs-13 text-muted">{label}</label>
-                                        <div className="col-sm-7">
-                                            <select className="form-select form-select-sm fs-13">
-                                                <option>Standard Template</option>
-                                                <option>Spreadsheet Template</option>
-                                                <option>Elite Template</option>
-                                            </select>
-                                        </div>
+                                    <div key={label} className="d-flex align-items-center mb-3">
+                                        <label className="fs-14 text-muted mb-0" style={{ minWidth: 180, flexShrink: 0 }}>{label}</label>
+                                        <select className="form-select form-select-sm fs-14 flex-grow-1"
+                                            style={{ transition: 'border-color 0.15s', outline: 'none' }}
+                                            onFocus={e => { e.currentTarget.style.borderColor = '#e41f07'; e.currentTarget.style.boxShadow = '0 0 0 0.2rem rgba(228,31,7,0.15)'; }}
+                                            onBlur={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.boxShadow = ''; }}>
+                                            <option>Standard Template</option>
+                                            <option>Spreadsheet Template</option>
+                                            <option>Elite Template</option>
+                                        </select>
                                     </div>
                                 ))}
                             </div>
@@ -1394,21 +1534,21 @@ const CustomerView: React.FC = () => {
                         <div className="modal-content">
                             <div className="modal-header py-3">
                                 <h5 className="modal-title fw-bold fs-15">Configure Portal Access</h5>
-                                <button type="button" className="custom-btn-close border me-0 d-flex justify-content-end rounded-circle-small"
+                                <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
                                     <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p className="fs-13 text-muted mb-3">
+                                <p className="fs-14 text-muted mb-3">
                                     Select the contact persons who should have access to the customer portal.
                                 </p>
                                 <table className="table table-sm mb-0">
                                     <thead className="table-light">
                                         <tr>
                                             <th style={{ width: 36 }}></th>
-                                            <th className="fs-12 fw-bold text-uppercase">Name</th>
-                                            <th className="fs-12 fw-bold text-uppercase">Email Address</th>
+                                            <th className="fs-14 fw-semibold text-uppercase">Name</th>
+                                            <th className="fs-14 fw-semibold text-uppercase">Email Address</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1421,8 +1561,8 @@ const CustomerView: React.FC = () => {
                                                         checked={!!portalAccessMap[cp.id]}
                                                         onChange={e => setPortalAccessMap(m => ({ ...m, [cp.id]: e.target.checked }))} />
                                                 </td>
-                                                <td className="fs-13">{cp.salutation} {cp.firstName} {cp.lastName}</td>
-                                                <td className="fs-13 text-muted">{cp.email || "—"}</td>
+                                                <td className="fs-14">{cp.salutation} {cp.firstName} {cp.lastName}</td>
+                                                <td className="fs-14 text-muted">{cp.email || "—"}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -1451,17 +1591,17 @@ const CustomerView: React.FC = () => {
                     <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header py-3">
-                                <h5 className="modal-title fw-bold fs-15">Link to Vendor</h5>
+                                <h5 className="modal-title fw-bold fs-14">Link to Vendor</h5>
                                 <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
                                     <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p className="fs-13 text-muted mb-4">
+                                <p className="fs-14 text-muted mb-4">
                                     Link this customer to a vendor in your organization. This helps in tracking transactions between the customer and vendor.
                                 </p>
-                                <label className="form-label fs-13 fw-semibold mb-1">Choose a vendor to link</label>
+                                <label className="form-label fs-14 fw-semibold mb-1">Choose a vendor to link</label>
                                 <select className="form-select fs-14" value={linkVendorId} onChange={e => setLinkVendorId(e.target.value)}>
                                     <option value="">Select Vendor</option>
                                     <option value="v1">Vendor A</option>
@@ -1488,14 +1628,14 @@ const CustomerView: React.FC = () => {
                     <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             <div className="modal-header py-3">
-                                <h5 className="modal-title fw-bold fs-15">Clone</h5>
+                                <h5 className="modal-title fw-bold fs-14">Clone</h5>
                                 <button type="button" className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
                                     onClick={() => setActionModal('none')}>
                                     <i className="ti ti-x" />
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p className="fs-13 text-muted mb-3">Clone <strong>{selected?.name}</strong> as a:</p>
+                                <p className="fs-14 text-muted mb-3">Clone <strong>{selected?.name}</strong> as a:</p>
                                 <div className="d-flex flex-column gap-3">
                                     <div className="form-check">
                                         <input type="radio" className="form-check-input" id="clone-customer"
@@ -1533,7 +1673,7 @@ const CustomerView: React.FC = () => {
                                 </button>
                             </div>
                             <div className="modal-body">
-                                <p className="fs-13 text-muted mb-4">
+                                <p className="fs-14 text-muted mb-4">
                                     You are about to merge <strong className="text-dark">{selected?.name}</strong> with the selected customer. All transactions, contacts and data will be moved to the selected customer and <strong className="text-dark">{selected?.name}</strong> will be deleted. This action cannot be undone.
                                 </p>
                                 <select className="form-select fs-14"
@@ -1557,15 +1697,24 @@ const CustomerView: React.FC = () => {
             {/* Notification Toast */}
             {notification && (
                 <div style={{
-                    position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-                    background: notification.type === 'error' ? "#ef4444" : "#1f2937",
-                    color: "#fff", padding: "12px 24px", borderRadius: 8,
-                    display: "flex", alignItems: "center", gap: "8px",
-                    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)",
-                    zIndex: 9999, animation: "cvFadeAndSlide 0.3s ease"
+                    position: "fixed", top: 40, left: "50%", transform: "translateX(-50%)",
+                    background: notification.type === 'error' ? "#fef2f2" : "#f0fdf4",
+                    border: `1px solid ${notification.type === 'error' ? "#fee2e2" : "#dcfce7"}`,
+                    color: notification.type === 'error' ? "#991b1b" : "#166534",
+                    padding: "6px 16px 6px 6px", borderRadius: "10px",
+                    display: "flex", alignItems: "center", gap: "10px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+                    zIndex: 9999, animation: "cvFadeInDown 0.4s ease forwards"
                 }}>
-                    <i className={notification.type === 'error' ? "ti ti-alert-circle fs-18" : "ti ti-check fs-18"} />
-                    <span className="fs-14 fw-medium">{notification.msg}</span>
+                    <div style={{
+                        width: 32, height: 32, borderRadius: "6px",
+                        background: notification.type === 'error' ? "#ef4444" : "#22c55e",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", flexShrink: 0
+                    }}>
+                        <i className={notification.type === 'error' ? "ti ti-alert-circle fs-16" : "ti ti-check fs-16"} />
+                    </div>
+                    <span className="fs-14 fw-medium" style={{ letterSpacing: "-0.01em" }}>{notification.msg}</span>
                 </div>
             )}
 
@@ -1576,26 +1725,26 @@ const CustomerView: React.FC = () => {
                     <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ maxWidth: 820 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-content">
                             {/* Header */}
-                            <div className="modal-header py-3">
-                                <h5 className="modal-title fw-bold fs-15">{editingContact ? "Edit Contact Person" : "Add Contact Person"}</h5>
+                            <div className="modal-header py-2 px-3 d-flex align-items-center justify-content-between border-bottom" style={{ minHeight: '50px' }}>
+                                <h5 className="modal-title fw-bold fs-14 text-dark mb-0">{editingContact ? "Edit Contact Person" : "Add Contact Person"}</h5>
                                 <button
                                     type="button"
-                                    className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                    style={{ width: 24, height: 24, padding: 0, flexShrink: 0, background: 'transparent', boxShadow: 'none', outline: 'none', color: '#6c757d', border: '1px solid #dee2e6', cursor: 'pointer' }}
+                                    className="btn-close-small d-flex align-items-center justify-content-center border-0 rounded-circle"
+                                    style={{ width: 20, height: 20, cursor: 'pointer', background: '#fff0ef', color: '#e41f07', padding: 0 }}
                                     onClick={() => setShowContactModal(false)}>
-                                    <i className="ti ti-x" style={{ fontSize: 12 }} />
+                                    <i className="ti ti-x fs-14 fw-bold" />
                                 </button>
                             </div>
 
                             {/* Body */}
-                            <div className="modal-body d-flex gap-4" style={{ overflowY: "auto" }}>
+                            <div className="modal-body d-flex gap-4 p-4" style={{ overflowY: "auto" }}>
 
                                 {/* Left: Form */}
                                 <div className="flex-grow-1" style={{ minWidth: 0 }}>
 
                                     {/* Name */}
                                     <div className="row g-2 mb-3">
-                                        <label className="col-sm-3 col-form-label fw-semibold fs-13">Name</label>
+                                        <label className="col-sm-3 col-form-label fw-semibold fs-14">Name</label>
                                         <div className="col-sm-9 d-flex gap-2">
                                             <select className="form-select form-select-sm" style={{ width: 90, flexShrink: 0 }}
                                                 value={cpForm.salutation}
@@ -1613,7 +1762,7 @@ const CustomerView: React.FC = () => {
 
                                     {/* Email */}
                                     <div className="row g-2 mb-3">
-                                        <label className="col-sm-3 col-form-label fw-semibold fs-13">Email Address</label>
+                                        <label className="col-sm-3 col-form-label fw-semibold fs-14">Email Address</label>
                                         <div className="col-sm-9">
                                             <input className="form-control form-control-sm" type="email"
                                                 value={cpForm.email}
@@ -1621,32 +1770,36 @@ const CustomerView: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Work Phone */}
-                                    <div className="row g-2 mb-2">
-                                        <label className="col-sm-3 col-form-label fw-semibold fs-13">Phone</label>
-                                        <div className="col-sm-9 d-flex flex-column gap-2">
-                                            <div className="input-group input-group-sm">
-                                                <select className="form-select form-select-sm" style={{ maxWidth: 72 }}>
-                                                    <option>+91</option><option>+1</option><option>+44</option><option>+61</option>
-                                                </select>
-                                                <input className="form-control form-control-sm" placeholder="Work Phone"
-                                                    value={cpForm.workPhone}
-                                                    onChange={e => setCpForm(f => ({ ...f, workPhone: e.target.value }))} />
-                                            </div>
-                                            <div className="input-group input-group-sm">
-                                                <select className="form-select form-select-sm" style={{ maxWidth: 72 }}>
-                                                    <option>+91</option><option>+1</option><option>+44</option><option>+61</option>
-                                                </select>
-                                                <input className="form-control form-control-sm" placeholder="Mobile"
-                                                    value={cpForm.mobile}
-                                                    onChange={e => setCpForm(f => ({ ...f, mobile: e.target.value }))} />
+                                    {/* Phone */}
+                                    <div className="row g-2 mb-3">
+                                        <label className="col-sm-3 col-form-label fw-semibold fs-14">Phone</label>
+                                        <div className="col-sm-9">
+                                            <div className="d-flex flex-column gap-2">
+                                                {/* Work Phone Group */}
+                                                <div className="cv-phone-input-group">
+                                                    <select>
+                                                        <option>+91</option><option>+1</option><option>+44</option><option>+61</option>
+                                                    </select>
+                                                    <input placeholder="Work Phone"
+                                                        value={cpForm.workPhone}
+                                                        onChange={e => setCpForm(f => ({ ...f, workPhone: e.target.value }))} />
+                                                </div>
+                                                {/* Mobile Group */}
+                                                <div className="cv-phone-input-group">
+                                                    <select>
+                                                        <option>+91</option><option>+1</option><option>+44</option><option>+61</option>
+                                                    </select>
+                                                    <input placeholder="Mobile"
+                                                        value={cpForm.mobile}
+                                                        onChange={e => setCpForm(f => ({ ...f, mobile: e.target.value }))} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Skype */}
                                     <div className="row g-2 mb-3">
-                                        <label className="col-sm-3 col-form-label fw-semibold fs-13">Skype Name/Number</label>
+                                        <label className="col-sm-3 col-form-label fw-semibold fs-14">Skype Name/Number</label>
                                         <div className="col-sm-9">
                                             <div className="input-group input-group-sm">
                                                 <span className="input-group-text bg-white">
@@ -1660,15 +1813,31 @@ const CustomerView: React.FC = () => {
                                     </div>
 
                                     {/* Other Details */}
-                                    <div className="row g-2 mb-3">
-                                        <label className="col-sm-3 col-form-label fw-semibold fs-13">Other Details</label>
-                                        <div className="col-sm-9 d-flex gap-2">
-                                            <input className="form-control form-control-sm" placeholder="Designation"
-                                                value={cpForm.designation}
-                                                onChange={e => setCpForm(f => ({ ...f, designation: e.target.value }))} />
-                                            <input className="form-control form-control-sm" placeholder="Department"
-                                                value={cpForm.department}
-                                                onChange={e => setCpForm(f => ({ ...f, department: e.target.value }))} />
+                                    <div className="row g-2 mb-4">
+                                        <label className="col-sm-3 col-form-label fw-semibold fs-14">Other Details</label>
+                                        <div className="col-sm-9">
+                                            <div className="d-flex gap-2 mb-3">
+                                                <input className="form-control form-control-sm" placeholder="Designation"
+                                                    value={cpForm.designation}
+                                                    onChange={e => setCpForm(f => ({ ...f, designation: e.target.value }))} />
+                                                <input className="form-control form-control-sm" placeholder="Department"
+                                                    value={cpForm.department}
+                                                    onChange={e => setCpForm(f => ({ ...f, department: e.target.value }))} />
+                                            </div>
+
+                                            {/* Enable portal access (Moved below other details) */}
+                                            <div className="form-check d-flex align-items-start gap-2 p-0 mt-3">
+                                                <input type="checkbox" className="form-check-input mt-1 ms-0" id="cp-portal"
+                                                    checked={cpForm.portalAccess}
+                                                    onChange={e => setCpForm(f => ({ ...f, portalAccess: e.target.checked }))} />
+                                                <div>
+                                                    <label htmlFor="cp-portal" className="form-check-label fw-semibold fs-14 text-dark">Enable portal access</label>
+                                                    <p className="text-muted fs-14 mb-0 mt-1" style={{ lineHeight: '1.4' }}>
+                                                        This customer will be able to see all their transactions with your organization by logging in to the portal using their email address.{" "}
+                                                        <a href="#" className="text-primary fw-medium" style={{ textDecoration: 'none' }}>Learn More</a>
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1704,43 +1873,30 @@ const CustomerView: React.FC = () => {
                                                         <i className="ti ti-x" style={{ fontSize: 11 }} />
                                                     </button>
                                                 </div>
-                                                <p className="text-muted fs-11 mt-2 mb-0">Click to change</p>
+                                                <p className="text-muted fs-14 mt-2 mb-0">Click to change</p>
                                             </>
                                         ) : (
                                             <>
                                                 <div className="rounded-circle d-flex align-items-center justify-content-center mb-2" style={{ width: 40, height: 40, background: '#e41f07' }}>
-                                                    <i className="ti ti-upload text-white fs-18" />
+                                                    <i className="ti ti-upload text-white fs-14" />
                                                 </div>
-                                                <p className="fw-bold fs-13 mb-1">Drag &amp; Drop or Click</p>
-                                                <p className="text-muted fs-11 mb-0">jpg, jpeg, png, gif, bmp</p>
-                                                <p className="text-muted fs-11 mb-2">Max: 10MB (auto-compressed)</p>
-                                                <span className="fs-12 fw-semibold" style={{ color: '#347aeb', textDecoration: 'underline' }}>Upload File</span>
+                                                <p className="fw-bold fs-14 mb-1">Drag &amp; Drop or Click</p>
+                                                <p className="text-muted fs-14 mb-0">jpg, jpeg, png, gif, bmp</p>
+                                                <p className="text-muted fs-14 mb-2">Max: 10MB (auto-compressed)</p>
+                                                <span className="fs-14 fw-semibold" style={{ color: '#347aeb', textDecoration: 'underline' }}>Upload File</span>
                                             </>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Portal access */}
-                            <div className="px-3 py-3 border-top border-bottom">
-                                <div className="form-check d-flex align-items-start gap-2">
-                                    <input type="checkbox" className="form-check-input mt-1" id="cp-portal"
-                                        checked={cpForm.portalAccess}
-                                        onChange={e => setCpForm(f => ({ ...f, portalAccess: e.target.checked }))} />
-                                    <div>
-                                        <label htmlFor="cp-portal" className="form-check-label fw-semibold fs-14">Enable portal access</label>
-                                        <p className="text-muted fs-13 mb-0 mt-1">
-                                            This customer will be able to see all their transactions with your organization by logging in to the portal using their email address.{" "}
-                                            <a href="#" className="text-primary fw-semibold">Learn More</a>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                            {/* Spacer replaced the old portal block */}
+                            <div className="px-3"></div>
 
                             {/* Footer */}
-                            <div className="modal-footer">
-                                <button className="btn btn-light me-2" onClick={() => setShowContactModal(false)}>Cancel</button>
-                                <button className="btn btn-primary" disabled={!cpForm.firstName.trim()} onClick={saveContact}>Save</button>
+                            <div className="cv-cp-modal-footer">
+                                <button className="cv-cp-modal-save" disabled={!cpForm.firstName.trim()} onClick={saveContact}>Save</button>
+                                <button className="cv-cp-modal-cancel" onClick={() => setShowContactModal(false)}>Cancel</button>
                             </div>
                         </div>
                     </div>
@@ -1767,7 +1923,7 @@ const CustomerView: React.FC = () => {
                         >
                             <i className="ti ti-trash text-danger" style={{ fontSize: 26 }} />
                         </div>
-                        <h6 className="fw-bold fs-16 mb-1">Delete Customer?</h6>
+                        <h6 className="fw-bold fs-14 mb-1">Delete Customer?</h6>
                         <p className="text-muted fs-14 mb-4">
                             "<strong>{selected?.name}</strong>" will be permanently removed.
                         </p>
@@ -1794,48 +1950,52 @@ const CustomerView: React.FC = () => {
                         className="bg-white shadow-lg mx-3"
                         style={{ borderRadius: 12, width: "100%", maxWidth: 650, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "90vh" }}
                     >
-                        <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ flexShrink: 0 }}>
-                            <h5 className="mb-0 fs-18 fw-medium text-dark" style={{ letterSpacing: "0.2px" }}>Configure Portal Access</h5>
-                            <button className="btn p-0 border-0 bg-transparent text-danger hover-opacity" onClick={() => setShowPortalConfig(false)}>
-                                <i className="ti ti-x fs-18" />
+                        {/* Header */}
+                        <div className="d-flex align-items-center justify-content-between px-4 py-3 border-bottom" style={{ flexShrink: 0 }}>
+                            <h5 className="mb-0 fw-bold fs-14 text-dark">Configure Portal Access</h5>
+                            <button
+                                className="d-flex align-items-center justify-content-center border-0 rounded-circle shadow-sm"
+                                style={{ width: 22, height: 22, cursor: 'pointer', background: '#fff0ef', color: '#e41f07', transition: 'all 0.2s' }}
+                                onClick={() => setShowPortalConfig(false)}>
+                                <i className="ti ti-x fs-14 fw-bold" />
                             </button>
                         </div>
 
+                        {/* Table */}
                         <div className="table-responsive" style={{ overflowY: "auto", flex: 1 }}>
                             <table className="table mb-0">
-                                <thead className="border-top border-bottom" style={{ background: "#fcfdff" }}>
+                                <thead style={{ background: "#f8fafc", borderBottom: '1px solid #e5e7eb' }}>
                                     <tr>
-                                        <th className="text-uppercase text-muted fs-11 fw-bold letter-spacing-1 bg-transparent border-0 px-4 py-3" style={{ color: "#747f93" }}>NAME</th>
-                                        <th className="text-uppercase text-muted fs-11 fw-bold letter-spacing-1 bg-transparent border-0 px-4 py-3" style={{ color: "#747f93" }}>EMAIL ADDRESS</th>
+                                        <th className="fs-14 fw-bold text-uppercase px-4 py-3 border-0" style={{ color: "#94a3b8", letterSpacing: '0.07em' }}>NAME</th>
+                                        <th className="fs-14 fw-bold text-uppercase px-4 py-3 border-0" style={{ color: "#94a3b8", letterSpacing: '0.07em' }}>EMAIL ADDRESS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {contactPersons.map(cp => (
-                                        <tr key={cp.id} className="border-bottom" style={{ background: "#ffffff" }}>
+                                        <tr key={cp.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                                             <td className="px-4 py-3 border-0">
                                                 <div className="d-flex align-items-center gap-3">
-                                                    <div className="form-check m-0 d-flex align-items-center justify-content-center">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            className="form-check-input m-0 cursor-pointer" 
-                                                            style={{ width: 16, height: 16 }}
-                                                            checked={!!portalAccessMap[cp.id]} 
-                                                            onChange={e => setPortalAccessMap(prev => ({ ...prev, [cp.id]: e.target.checked }))} 
-                                                        />
-                                                    </div>
-                                                    <span className="fs-14 text-dark" style={{ color: "#2d3748" }}>{cp.salutation} {cp.firstName} {cp.lastName}</span>
+                                                    <input
+                                                        type="checkbox"
+                                                        className="form-check-input m-0 cursor-pointer"
+                                                        style={{ width: 17, height: 17, borderRadius: 4 }}
+                                                        checked={!!portalAccessMap[cp.id]}
+                                                        onChange={e => setPortalAccessMap(prev => ({ ...prev, [cp.id]: e.target.checked }))}
+                                                    />
+                                                    <span className="fs-14 text-dark">{cp.salutation} {cp.firstName} {cp.lastName}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 border-0 fs-14" style={{ color: "#2d3748" }}>{cp.email}</td>
+                                            <td className="px-4 py-3 border-0 fs-14 text-dark">{cp.email}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
 
-                        <div className="modal-footer justify-content-start border-0 px-4 pb-4 pt-3" style={{ flexShrink: 0 }}>
-                            <button className="btn btn-primary px-3 fs-14 fw-medium" onClick={savePortalConfig}>Save</button>
-                            <button className="btn btn-light bg-white px-3 fs-14 fw-medium border shadow-sm" style={{ color: "#111827" }} onClick={() => setShowPortalConfig(false)}>Cancel</button>
+                        {/* Footer */}
+                        <div className="d-flex align-items-center gap-2 px-4 py-3 border-top" style={{ flexShrink: 0 }}>
+                            <button className="btn fs-14 fw-medium text-white px-4" style={{ background: '#e41f07', border: 'none', borderRadius: 6 }} onClick={savePortalConfig}>Save</button>
+                            <button className="btn fs-14 fw-medium px-4 border" style={{ background: '#fff', color: '#111827', borderColor: '#e2e8f0', borderRadius: 6 }} onClick={() => setShowPortalConfig(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>

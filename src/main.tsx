@@ -21,7 +21,6 @@ import moment from 'moment';
 import "daterangepicker"; 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
     <Provider store={store}>
       <StyleProvider hashPriority="high">
         <BrowserRouter basename={base_path}>
@@ -30,5 +29,4 @@ createRoot(document.getElementById('root')!).render(
         </BrowserRouter>
       </StyleProvider>
     </Provider>
-  </StrictMode>
 );

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { all_routes } from "../../../../../../routes/all_routes";
 import Footer from "../../../../../../components/footer/footer";
 import "./category.scss";
@@ -33,6 +33,9 @@ const AddCategoryPage: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const location = useLocation();
+  const editData = location.state?.editData;
+
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -45,17 +48,36 @@ const AddCategoryPage: React.FC = () => {
     linkToLocation: "",
   });
 
+  useEffect(() => {
+    if (editData) {
+      setFormData({
+        ...editData,
+        isChild: !!editData.parent,
+      });
+    }
+  }, [editData]);
+
   const handleSave = () => {
     if (!formData.name) return;
     const existing = JSON.parse(localStorage.getItem("categories") || "[]");
-    const newCat = {
-      ...formData,
-      id: Date.now(),
-      status: "Enabled",
-      linkToLocation: formData.linkToLocation || null,
-      parent: formData.parent || null,
-    };
-    localStorage.setItem("categories", JSON.stringify([...existing, newCat]));
+
+    if (editData) {
+      // Update existing
+      const updated = existing.map((cat: any) =>
+        cat.id === editData.id ? { ...cat, ...formData, parent: formData.parent || null } : cat
+      );
+      localStorage.setItem("categories", JSON.stringify(updated));
+    } else {
+      // Create new
+      const newCat = {
+        ...formData,
+        id: Date.now(),
+        status: "Enabled",
+        linkToLocation: formData.linkToLocation || null,
+        parent: formData.parent || null,
+      };
+      localStorage.setItem("categories", JSON.stringify([...existing, newCat]));
+    }
     navigate(route.userCategory);
   };
 
@@ -66,12 +88,12 @@ const AddCategoryPage: React.FC = () => {
         {/* Page Header */}
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div>
-            <h4 className="fw-bold fs-20 mb-1">Add Category</h4>
+            <h4 className="fw-bold fs-20 mb-1">{editData ? "Edit Category" : "Add Category"}</h4>
             <nav aria-label="breadcrumb">
               <ol className="breadcrumb mb-0 fs-13">
                 <li className="breadcrumb-item"><Link to="/" className="text-muted">Home</Link></li>
                 <li className="breadcrumb-item"><Link to={route.userCategory} className="text-muted">Customer Category</Link></li>
-                <li className="breadcrumb-item active text-dark fw-medium">Add Category</li>
+                <li className="breadcrumb-item active text-dark fw-medium">{editData ? "Edit Category" : "Add Category"}</li>
               </ol>
             </nav>
           </div>
@@ -362,7 +384,7 @@ const AddCategoryPage: React.FC = () => {
 
               {/* Hierarchy Preview */}
               <div className="col-md-12">
-                  <div className="p-3" style={{ background: "#f1f7ff", border: "1px solid #bfdbfe", borderRadius: 5 }}>
+                <div className="p-3" style={{ background: "#f1f7ff", border: "1px solid #bfdbfe", borderRadius: 5 }}>
                   <p className="fs-12 fw-bold text-uppercase mb-3" style={{ color: "#1e40af", letterSpacing: "0.05em" }}>
                     Hierarchy Preview
                   </p>
@@ -413,7 +435,7 @@ const AddCategoryPage: React.FC = () => {
                 style={{ background: "#e41f07", borderColor: "#e41f07", borderRadius: 3 }}
                 onClick={handleSave}
               >
-                Save Category
+                {editData ? "Update Category" : "Save Category"}
               </button>
             </div>
           </div>

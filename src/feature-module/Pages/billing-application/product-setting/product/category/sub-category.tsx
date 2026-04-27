@@ -88,11 +88,6 @@ const SubCategoryPage: React.FC = () => {
     setFormData({ ...emptyForm });
   };
 
-  const handleEdit = (item: SubCategory) => {
-    setFormData({ name: item.name, description: item.description, targetAmount: item.targetAmount, reference: item.reference, coupon: item.coupon, parentCategory: item.parentCategory, status: item.status });
-    setEditId(item.id);
-  };
-
   const handleDelete = (id: number) => {
     setSubCategories(subCategories.filter(s => s.id !== id));
   };
@@ -442,40 +437,93 @@ const SubCategoryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="row g-3 mt-2">
-                  {filtered.map(item => (
-                    <div className="col-xxl-3 col-xl-4 col-md-6" key={item.id}>
-                      <div className="card h-100 border shadow-sm" style={{ borderRadius: 10 }}>
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="avatar avatar-md bg-soft-primary rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 42, height: 42 }}>
+                  {filtered.map(item => {
+                    const priority = item.targetAmount >= 100000 ? "High" : item.targetAmount >= 40000 ? "Medium" : "Low";
+                    const priorityStyle = priority === "High"
+                      ? { bg: "#fff0f0", color: "#e41f07" }
+                      : priority === "Medium"
+                      ? { bg: "#fff8e1", color: "#f59e0b" }
+                      : { bg: "#f0fdf4", color: "#16a34a" };
+                    const avatarColors = ["#6366f1", "#0891b2", "#059669", "#d97706", "#db2777"];
+                    const avatarColor = avatarColors[item.id % avatarColors.length];
+                    return (
+                      <div className="col-xxl-3 col-xl-4 col-md-6" key={item.id}>
+                        <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: 12 }}>
+                          <div className="card-body p-3 d-flex flex-column">
+
+                            {/* Top badges */}
+                            <div className="d-flex align-items-center gap-2 mb-3">
+                              <span className="px-2 py-1 fs-12 fw-semibold rounded" style={{ background: priorityStyle.bg, color: priorityStyle.color }}>{priority}</span>
+                              <span className="px-2 py-1 fs-12 fw-semibold rounded text-white" style={{ background: item.status === "active" ? "#22c55e" : "#ef4444" }}>
+                                {item.status === "active" ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+
+                            {/* Header: avatar + name + menu */}
+                            <div className="d-flex align-items-center justify-content-between mb-3 p-2 rounded" style={{ background: "#f8fafc" }}>
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white fs-16" style={{ width: 40, height: 40, borderRadius: 10, background: avatarColor }}>
+                                  {item.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="fw-bold fs-14 text-dark">{item.name}</div>
+                                  <div className="fs-12 text-muted">{item.parentCategory || "Sub Category"}</div>
+                                </div>
+                              </div>
+                              <div className="dropdown">
+                                <button className="btn btn-sm bg-white border shadow-sm d-flex align-items-center justify-content-center" data-bs-toggle="dropdown" style={{ width: 30, height: 30, borderRadius: 6, padding: 0 }}>
+                                  <i className="ti ti-dots-vertical fs-14" />
+                                </button>
+                                <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
+                                  <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => navigate(route.newSubCategory, { state: { record: item } })}>
+                                    <i className="ti ti-edit fs-15" /> Edit
+                                  </button>
+                                  <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => handleDelete(item.id)}>
+                                    <i className="ti ti-trash fs-15" /> Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-muted fs-14 mb-3" style={{ lineHeight: 1.6, flexGrow: 1, minHeight: 60 }}>
+                              {item.description || "No description available for this sub-category."}
+                            </p>
+
+                            {/* Info rows */}
+                            <div className="d-flex flex-column gap-2 mb-3">
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-circle-check text-muted fs-15" />
+                                <span>Sub-Cat ID : <span className="text-muted">#{item.id}</span></span>
+                              </div>
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-currency-rupee text-muted fs-15" />
+                                <span>Amount : <span className="text-muted">₹{item.targetAmount.toLocaleString("en-IN")}</span></span>
+                              </div>
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-tag text-muted fs-15" />
+                                <span>Coupon : <span className="text-muted">{item.coupon || "—"}</span></span>
+                              </div>
+                            </div>
+
+                            {/* Bottom: avatars + icon */}
+                            <div className="d-flex align-items-center justify-content-between pt-2 border-top">
+                              <div className="d-flex align-items-center">
+                                {["A", "B", "C"].map((l, i) => (
+                                  <div key={l} className="d-flex align-items-center justify-content-center text-white fw-bold" style={{ width: 26, height: 26, borderRadius: "50%", background: avatarColors[i], border: "2px solid #fff", marginLeft: i > 0 ? -8 : 0, fontSize: 10 }}>{l}</div>
+                                ))}
+                                <div className="d-flex align-items-center justify-content-center fw-bold" style={{ width: 26, height: 26, borderRadius: "50%", background: "#e2e8f0", border: "2px solid #fff", marginLeft: -8, fontSize: 10, color: "#64748b" }}>+2</div>
+                              </div>
+                              <div className="d-flex align-items-center justify-content-center text-white fw-bold fs-16" style={{ width: 36, height: 36, borderRadius: "50%", background: avatarColor }}>
                                 {item.name.charAt(0).toUpperCase()}
                               </div>
-                              <div>
-                                <h6 className="mb-0 text-dark fw-bold fs-14">{item.name}</h6>
-                                <span className="fs-14 text-muted">{item.parentCategory}</span>
-                              </div>
                             </div>
-                            <div className="dropdown">
-                              <button className="btn btn-sm btn-icon border-0 bg-light" data-bs-toggle="dropdown" style={{ width: 32, height: 32, borderRadius: 8 }}>
-                                <i className="ti ti-dots-vertical fs-15" />
-                              </button>
-                              <div className="dropdown-menu dropdown-menu-end py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
-                                <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14" onClick={() => handleEdit(item)}><i className="ti ti-edit text-primary fs-15" /> Edit</button>
-                                <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => handleDelete(item.id)}><i className="ti ti-trash fs-15" /> Delete</button>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-2">
-                            <span className={`badge ${item.status === "active" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`}>
-                              <i className="ti ti-point-filled me-1" />{item.status}
-                            </span>
-                            <span className="fs-14 text-muted">₹{item.targetAmount.toLocaleString("en-IN")}</span>
+
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

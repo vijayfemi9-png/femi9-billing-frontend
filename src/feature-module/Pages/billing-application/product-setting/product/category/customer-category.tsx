@@ -197,9 +197,7 @@ const UserCategoryPage: React.FC = () => {
 
 
   const handleEdit = (cat: UserCategory) => {
-    setFormData({ ...cat, isChild: !!cat.parent });
-    setIsEditing(true);
-    setShowAddModal(true);
+    navigate(route.addCategory, { state: { editData: cat } });
   };
 
   const handleDelete = (id: number) => {
@@ -296,11 +294,11 @@ const UserCategoryPage: React.FC = () => {
           </button>
           <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
             <Link
-              className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14"
+              className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
               to="#"
               onClick={(e) => { e.preventDefault(); handleEdit(record); }}
             >
-              <i className="ti ti-edit text-primary fs-15" /> Edit
+              <i className="ti ti-edit fs-15" /> Edit
             </Link>
             <Link
               className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
@@ -372,64 +370,6 @@ const UserCategoryPage: React.FC = () => {
           settingsLink="/settings/product-preferences"
         />
 
-        {/* Hierarchy Flow Section */}
-        <div className="hierarchy-flow-container mb-4">
-          <div className="hf-header">
-            <div>
-              <h5 className="hf-title">Hierarchy flow</h5>
-              <p className="hf-subtitle">Visual representation of your distribution network</p>
-            </div>
-            <div className="hf-stats">
-              <span className="hf-stat-badge">{sortedLevels.length} levels</span>
-              <span className="hf-stat-badge">{categories.filter(c => c.visibleInMap).length} nodes</span>
-            </div>
-          </div>
-          <div className="hf-tree">
-            {sortedLevels.map((level, idx) => {
-              const levelColor = hfColors[(level - 1) % hfColors.length];
-              return (
-                <React.Fragment key={level}>
-                  <div className="hf-level-group">
-                    <div className={`hf-level-label ${levelColor}`}>
-                      <span className="hf-level-num">L{level}</span>
-                      <span className="hf-level-text">Level {level}</span>
-                    </div>
-                    <div className="hf-nodes-col">
-                      {levelGroups[level].map(cat => {
-                        const { color, icon } = nodeStyleMap[cat.id] ?? { color: "purple", icon: "ti-user-circle" };
-                        return (
-                        <div className={`hf-node-card ${color}`} key={cat.id}>
-                          <div className={`hf-node-accent ${color}`} />
-                          <div className="hf-node-icon-wrap">
-                            <i className={`ti ${icon}`} />
-                          </div>
-                          <div className="hf-node-info">
-                            <span className="hf-node-name">{cat.name}</span>
-                            <span className={`hf-node-code ${color}`}>{cat.code}</span>
-                          </div>
-                          {cat.parent && (
-                            <div className="hf-node-parent">
-                              <i className="ti ti-corner-down-right fs-11" />
-                              <span>{cat.parent}</span>
-                            </div>
-                          )}
-                        </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  {idx < sortedLevels.length - 1 && (
-                    <div className="hf-h-connector">
-                      <div className="hf-connector-dot" />
-                      <div className="hf-connector-dash" />
-                      <i className="ti ti-arrow-narrow-right hf-connector-arrow" />
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
-        </div>
 
         <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column shadow-sm">
           <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
@@ -439,8 +379,8 @@ const UserCategoryPage: React.FC = () => {
               </span>
               <SearchInput value={searchTerm} onChange={setSearchTerm} />
             </div>
-            <button className="btn btn-danger" onClick={() => navigate(route.addCategory)} style={{ background: '#E41F07', borderColor: '#E41F07' }}>
-              <i className="ti ti-square-rounded-plus-filled me-1" /> Add New Category
+            <button className="btn btn-danger d-flex align-items-center" onClick={() => navigate(route.addCategory)} style={{ background: '#E41F07', borderColor: '#E41F07' }}>
+              <i className="ti ti-plus me-2" /> Add New Category
             </button>
           </div>
 
@@ -585,77 +525,93 @@ const UserCategoryPage: React.FC = () => {
                 </div>
               ) : (
                 <div className="row g-3 px-3 mt-3">
-                  {filteredCategories.map(cat => (
-                    <div className="col-xxl-3 col-xl-4 col-md-6" key={cat.id}>
-                      <div className="card h-100 border shadow-sm hover-shadow transition-all" style={{ borderRadius: 10 }}>
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
-                            <div className="d-flex align-items-center">
-                              <div className="avatar avatar-md bg-soft-primary rounded-circle me-3 d-flex align-items-center justify-content-center text-primary fw-bold" style={{ width: 42, height: 42 }}>
+                  {filteredCategories.map(cat => {
+                    const priority = cat.level === 1 ? "High" : cat.level === 2 ? "Medium" : "Low";
+                    const priorityStyle = priority === "High"
+                      ? { bg: "#fff0f0", color: "#e41f07" }
+                      : priority === "Medium"
+                      ? { bg: "#fff8e1", color: "#f59e0b" }
+                      : { bg: "#f0fdf4", color: "#16a34a" };
+                    const avatarColors = ["#6366f1", "#0891b2", "#059669", "#d97706", "#db2777"];
+                    const avatarColor = avatarColors[cat.id % avatarColors.length];
+                    return (
+                      <div className="col-xxl-3 col-xl-4 col-md-6" key={cat.id}>
+                        <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: 12 }}>
+                          <div className="card-body p-3 d-flex flex-column">
+
+                            {/* Top badges */}
+                            <div className="d-flex align-items-center gap-2 mb-3">
+                              <span className="px-2 py-1 fs-12 fw-semibold rounded" style={{ background: priorityStyle.bg, color: priorityStyle.color }}>{priority}</span>
+                              <span className="px-2 py-1 fs-12 fw-semibold rounded text-white" style={{ background: cat.status === "Enabled" ? "#22c55e" : "#ef4444" }}>
+                                {cat.status}
+                              </span>
+                            </div>
+
+                            {/* Header: avatar + name + menu */}
+                            <div className="d-flex align-items-center justify-content-between mb-3 p-2 rounded" style={{ background: "#f8fafc" }}>
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white fs-16" style={{ width: 40, height: 40, borderRadius: 10, background: avatarColor }}>
+                                  {cat.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="fw-bold fs-14 text-dark">{cat.name}</div>
+                                  <div className="fs-12 text-muted">Level {cat.level}</div>
+                                </div>
+                              </div>
+                              <div className="dropdown">
+                                <button className="btn btn-sm bg-white border shadow-sm d-flex align-items-center justify-content-center" data-bs-toggle="dropdown" style={{ width: 30, height: 30, borderRadius: 6, padding: 0 }}>
+                                  <i className="ti ti-dots-vertical fs-14" />
+                                </button>
+                                <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
+                                  <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => handleEdit(cat)}>
+                                    <i className="ti ti-edit fs-15" /> Edit
+                                  </button>
+                                  <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => handleDelete(cat.id)}>
+                                    <i className="ti ti-trash fs-15" /> Delete
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-muted fs-14 mb-3" style={{ lineHeight: 1.6, flexGrow: 1, minHeight: 60 }}>
+                              {cat.description || "No description available for this category."}
+                            </p>
+
+                            {/* Info rows */}
+                            <div className="d-flex flex-column gap-2 mb-3">
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-circle-check text-muted fs-15" />
+                                <span>Category ID : <span className="text-muted">#{cat.id}</span></span>
+                              </div>
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-tag text-muted fs-15" />
+                                <span>Code : <span className="text-muted">{cat.code}</span></span>
+                              </div>
+                              <div className="d-flex align-items-center gap-2 fs-14 text-dark">
+                                <i className="ti ti-sitemap text-muted fs-15" />
+                                <span>Parent : <span className="text-muted">{cat.parent || "None"}</span></span>
+                              </div>
+                            </div>
+
+                            {/* Bottom: avatars + icon */}
+                            <div className="d-flex align-items-center justify-content-between pt-2 border-top">
+                              <div className="d-flex align-items-center">
+                                {["A", "B", "C"].map((l, i) => (
+                                  <div key={l} className="d-flex align-items-center justify-content-center text-white fw-bold" style={{ width: 26, height: 26, borderRadius: "50%", background: avatarColors[i], border: "2px solid #fff", marginLeft: i > 0 ? -8 : 0, fontSize: 10 }}>{l}</div>
+                                ))}
+                                <div className="d-flex align-items-center justify-content-center fw-bold" style={{ width: 26, height: 26, borderRadius: "50%", background: "#e2e8f0", border: "2px solid #fff", marginLeft: -8, fontSize: 10, color: "#64748b" }}>+2</div>
+                              </div>
+                              <div className="d-flex align-items-center justify-content-center text-white fw-bold fs-16" style={{ width: 36, height: 36, borderRadius: "50%", background: avatarColor }}>
                                 {cat.name.charAt(0).toUpperCase()}
                               </div>
-                              <div>
-                                <h6 className="mb-0 text-dark fw-bold">{cat.name}</h6>
-                                <span className="fs-12 text-muted">Level {cat.level}</span>
-                              </div>
                             </div>
-                            <div className="dropdown">
-                              <button
-                                className="btn btn-sm btn-icon border-0 bg-light"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                style={{ width: 32, height: 32, borderRadius: 8, color: '#64748b' }}
-                              >
-                                <i className="ti ti-dots-vertical fs-15" />
-                              </button>
-                              <div
-                                className="dropdown-menu dropdown-menu-end py-2 mt-1"
-                                style={{
-                                  minWidth: 160,
-                                  borderRadius: 10,
-                                  border: '1px solid #f1f5f9',
-                                  boxShadow: '0 10px 30px -5px rgba(0,0,0,0.12), 0 4px 8px -2px rgba(0,0,0,0.05)',
-                                  background: '#fff',
-                                }}
-                              >
-                                <button
-                                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14"
-                                  style={{ color: '#334155', borderRadius: 6 }}
-                                  onClick={() => handleEdit(cat)}
-                                >
-                                  <i className="ti ti-edit text-primary fs-15" /> Edit
-                                </button>
-                                <div className="dropdown-divider my-1" style={{ borderColor: '#f1f5f9' }} />
-                                <button
-                                  className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
-                                  style={{ borderRadius: 6 }}
-                                  onClick={() => handleDelete(cat.id)}
-                                >
-                                  <i className="ti ti-trash fs-15" /> Delete
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mb-3">
-                            <div className="d-flex align-items-center gap-2 mb-2">
-                              <span className="fs-12 text-muted fw-medium">Code:</span>
-                              <span className="badge bg-soft-primary text-primary border-0 rounded-1">{cat.code}</span>
-                            </div>
-                            <div className="d-flex align-items-center gap-2">
-                              <span className="fs-12 text-muted fw-medium">Parent:</span>
-                              <span className="fs-12 text-dark">{cat.parent || "None"}</span>
-                            </div>
-                          </div>
-                          <div className="d-flex align-items-center justify-content-between border-top pt-3 mt-3">
-                            <span className={`badge ${cat.status === "Enabled" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`}>
-                              <i className="ti ti-point-filled me-1" />{cat.status}
-                            </span>
-                            <button className="btn btn-sm btn-outline-primary px-3 fs-12" onClick={() => handleEdit(cat)}>View Details</button>
+
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

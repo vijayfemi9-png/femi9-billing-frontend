@@ -380,14 +380,22 @@ const CustomerSetting: React.FC = () => {
                     <div className="row">
                         <div className="col-12">
                             <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white border-bottom pt-3 pb-0 px-3 px-md-4">
-                                    <div className="d-flex align-items-center gap-3 pref-tab-bar" style={{ overflowX: 'auto', paddingBottom: '10px' }}>
+                                <div className="card-header bg-white pt-3 pb-0 px-3 px-md-4" style={{ borderBottom: '2px solid #dee2e6' }}>
+                                    <div className="d-flex align-items-center gap-3 pref-tab-bar" style={{ overflowX: 'auto' }}>
                                         {(['general', 'field-customization'] as const).map(tab => (
                                             <button key={tab} onClick={() => setActiveTab(tab)}
-                                                className={`btn btn-sm fw-bold border-0 p-0 position-relative ${activeTab === tab ? 'text-primary' : 'text-muted'}`}
-                                                style={{ fontSize: '14px', color: activeTab === tab ? '#e41f07' : '#6b7280', whiteSpace: 'nowrap', flexShrink: 0, paddingBottom: '4px !important' }}>
+                                                className="btn btn-sm fw-bold py-3 px-1 flex-shrink-0"
+                                                style={{
+                                                    fontSize: '14px',
+                                                    color: activeTab === tab ? '#e41f07' : '#6b7280',
+                                                    whiteSpace: 'nowrap',
+                                                    border: 'none',
+                                                    borderBottom: activeTab === tab ? '2px solid #e41f07' : '2px solid transparent',
+                                                    marginBottom: '-2px',
+                                                    borderRadius: 0,
+                                                    background: 'transparent',
+                                                }}>
                                                 {tab === 'general' ? 'General' : 'Field Customization'}
-                                                {activeTab === tab && <div className="position-absolute start-0 end-0 bottom-0" style={{ height: '2px', backgroundColor: '#e41f07', marginBottom: '-10px' }} />}
                                             </button>
                                         ))}
                                     </div>

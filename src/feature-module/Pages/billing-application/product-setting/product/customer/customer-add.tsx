@@ -156,7 +156,8 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
         const customerData = {
             ...formData,
             name: formData.displayName,
-            workPhone: `${formData.workPhonePrefix} ${formData.workPhone}`,
+            workPhone: `${formData.workPhonePrefix}-${formData.workPhone}`.replace(/-+$/, ""),
+            mobile: `${formData.mobilePrefix}-${formData.mobile}`.replace(/-+$/, ""),
             status: "Active"
         };
 
@@ -202,27 +203,39 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
 
     // Load existing customer data when editing
     useEffect(() => {
-        if (!isEdit || !id) return;
+        if (!isEdit || !id) {
+            console.log("CustomerAdd: Not in edit mode or no ID", { isEdit, id });
+            return;
+        }
+
         try {
-            const all = JSON.parse(localStorage.getItem(SK) || "[]");
+            const raw = localStorage.getItem(SK);
+            if (!raw) return;
+
+            const all = JSON.parse(raw);
             const existing = all.find((c: any) => String(c.id) === String(id));
+
+            console.log("CustomerAdd: Found existing customer", existing);
+
             if (existing) {
+                // Explicitly map fields to ensure they are picked up by the form state
                 setFormData(prev => ({
                     ...prev,
-                    type: existing.type || "Business",
-                    salutation: existing.salutation || "Mr.",
-                    firstName: existing.firstName || "",
-                    lastName: existing.lastName || "",
-                    companyName: existing.companyName || "",
-                    displayName: existing.name || existing.displayName || "",
-                    email: existing.email || "",
-                    workPhone: (existing.workPhone || "").replace(/^\+91[-\s]?/, ""),
-                    pan: existing.pan || "",
-                    currency: existing.currency || "INR- Indian Rupee",
-                    paymentTerms: existing.paymentTerms || "Due on Receipt",
+                    ...existing,
+                    // Ensure these are explicitly set if they exist in the raw data
+                    displayName: existing.displayName || existing.name || "",
+                    billingAddress: existing.billingAddress || prev.billingAddress,
+                    shippingAddress: existing.shippingAddress || prev.shippingAddress,
+                    contactPersons: existing.contactPersons || prev.contactPersons,
+                    workPhone: (existing.workPhone || "").replace(/^\+91[-\s]?/, "").trim(),
+                    mobile: (existing.mobile || "").replace(/^\+91[-\s]?/, "").trim(),
                 }));
+            } else {
+                console.warn("CustomerAdd: Could not find customer with ID", id);
             }
-        } catch { /* ignore */ }
+        } catch (err) {
+            console.error("CustomerAdd: Error loading existing data", err);
+        }
     }, [id, isEdit]);
 
     // Auto-populate Display Name if empty
@@ -268,7 +281,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
         <div className="page-wrapper">
             <div className="content">
                 <PageHeader
-                    title="New Customer"
+                    title={isEdit ? "Edit Customer" : "New Customer"}
                     badgeCount={false}
                     moduleTitle="Customers"
                     showModuleTile={true}
@@ -290,14 +303,14 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                 <div className="card" style={{ borderRadius: 0 }}>
                     <div className="card-body p-0">
                         <div className="zoho-form-wrapper border-0 shadow-none m-0 rounded-0 w-100">
-                            <div className="form-header-title">New Customer</div>
+                            <div className="form-header-title">{isEdit ? "Edit Customer" : "New Customer"}</div>
 
                             <div className="zoho-form-content">
                                 {/* GST Prefill Banner */}
                                 <div className="prefill-banner-custom">
                                     <i className="ti ti-download fs-16" />
                                     <span>Prefill customer details from the GST portal using the Customer's GSTIN.</span>
-                                    <a href="#" className="ms-auto text-primary fw-medium text-decoration-none" onClick={(e) => { e.preventDefault(); setShowGstModal(true); }}>Prefill &gt;</a>
+                                    <a href="#" style={{ color: "#e41f07" }} onClick={(e) => { e.preventDefault(); setShowGstModal(true); }}>Prefill &gt;</a>
                                 </div>
 
                                 {/* Customer Type Cards */}
@@ -334,12 +347,12 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                 </div>
 
                                 {formData.type !== "Individual" && (
-                                <div className="form-row">
-                                    <div className="form-label">Company Name</div>
-                                    <div className="form-field-container">
-                                        <input type="text" className="form-control-custom" placeholder="Enter company name" value={formData.companyName} onChange={(e) => handleBaseChange("companyName", e.target.value)} />
+                                    <div className="form-row">
+                                        <div className="form-label">Company Name</div>
+                                        <div className="form-field-container">
+                                            <input type="text" className="form-control-custom" placeholder="Enter company name" value={formData.companyName} onChange={(e) => handleBaseChange("companyName", e.target.value)} />
+                                        </div>
                                     </div>
-                                </div>
                                 )}
 
                                 <div className="form-row">
@@ -416,7 +429,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                             <div className="d-flex border rounded overflow-hidden" style={{ display: "inline-flex" }}>
                                                 <label className="btn btn-light border-0 d-flex align-items-center gap-2 px-3 py-2 fs-14 mb-0" style={{ cursor: "pointer", borderRadius: 0 }}>
                                                     <i className="ti ti-upload fs-14" /> Upload File
-                                                    <input type="file" multiple accept="*/*" style={{ display: "none" }} onChange={() => {}} />
+                                                    <input type="file" multiple accept="*/*" style={{ display: "none" }} onChange={() => { }} />
                                                 </label>
                                                 <button type="button" className="btn btn-light border-0 border-start px-2 py-2" style={{ borderRadius: 0 }}>
                                                     <i className="ti ti-chevron-down fs-13" />
@@ -465,7 +478,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                                 </div>
                                             </div>
 
-                                              {/* Enable Portal */}
+                                            {/* Enable Portal */}
                                             <div className="form-row mt-4">
                                                 <div className="form-label d-flex align-items-center">Enable Portal? <HelpIcon text="Allow portal access for this customer." id="tip-portal" /></div>
                                                 <div className="form-field-container text-start">
@@ -541,7 +554,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                                 </>
                                             )}
 
-                                          
+
                                         </div>
                                     )}
 
