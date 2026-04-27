@@ -388,13 +388,13 @@ const UserCategoryPage: React.FC = () => {
             <div className="toolbar-custom py-3 px-4">
               <div className="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
                 <div className="dropdown">
-                  <Link to="#" className="dropdown-toggle btn btn-outline-light shadow-sm px-3 fs-14 bg-white text-dark" data-bs-toggle="dropdown" style={{ borderRadius: 6 }}>
+                  <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
                     <i className="ti ti-sort-ascending-2 me-2" />Sort By
                   </Link>
-                  <div className="dropdown-menu shadow border-0">
-                    <ul className="mb-0 p-0 list-unstyled">
-                      <li><Link to="#" className={`dropdown-item fs-14 py-2 ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
-                      <li><Link to="#" className={`dropdown-item fs-14 py-2 ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
+                  <div className="dropdown-menu">
+                    <ul>
+                      <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
+                      <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
                     </ul>
                   </div>
                 </div>
@@ -530,8 +530,8 @@ const UserCategoryPage: React.FC = () => {
                     const priorityStyle = priority === "High"
                       ? { bg: "#fff0f0", color: "#e41f07" }
                       : priority === "Medium"
-                      ? { bg: "#fff8e1", color: "#f59e0b" }
-                      : { bg: "#f0fdf4", color: "#16a34a" };
+                        ? { bg: "#fff8e1", color: "#f59e0b" }
+                        : { bg: "#f0fdf4", color: "#16a34a" };
                     const avatarColors = ["#6366f1", "#0891b2", "#059669", "#d97706", "#db2777"];
                     const avatarColor = avatarColors[cat.id % avatarColors.length];
                     return (

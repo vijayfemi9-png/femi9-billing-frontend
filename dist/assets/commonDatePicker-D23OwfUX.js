@@ -1,0 +1,1 @@
+import{j as s}from"./index-BSHcnDrm.js";import{D as a}from"./index-B2h2t6gz.js";const o=({className:o="",icon:c=s.jsx("i",{className:"ti ti-calendar text-dark"}),...e})=>s.jsx("div",{className:`common-datePicker ${o}`,children:s.jsx(a,{className:"form-control",suffixIcon:c,...e})});export{o as C};

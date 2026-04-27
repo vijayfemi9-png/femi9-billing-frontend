@@ -218,6 +218,7 @@ const Locations = lazy(() => import("../feature-module/Pages/billing-application
 const PriceList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/price-list"));
 const CompositeItem = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/composite-item"));
 const AssignLocation = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location"));
+const AssignLocationList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location-list"));
 const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-list"));
 const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
 const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
@@ -1720,6 +1721,13 @@ export const publicRoutes = [
     element: <AssignLocation />,
     route: Route,
     meta_title: "Assign Location",
+  },
+  {
+    id: "211b",
+    path: route.assignLocationList,
+    element: <AssignLocationList />,
+    route: Route,
+    meta_title: "Assign Location List",
   },
   {
     id: "212",

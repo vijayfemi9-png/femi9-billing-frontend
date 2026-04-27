@@ -165,13 +165,13 @@ const SubCategoryPage: React.FC = () => {
               <i className="ti ti-dots-vertical" />
             </button>
             <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
-            <Link 
-              className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" 
-              to={route.newSubCategory} 
-              state={{ record }}
-            >
-              <i className="ti ti-edit fs-15" /> Edit
-            </Link>
+              <Link
+                className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
+                to={route.newSubCategory}
+                state={{ record }}
+              >
+                <i className="ti ti-edit fs-15" /> Edit
+              </Link>
               <Link className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" to="#" onClick={(e) => { e.preventDefault(); handleDelete(record.id); }}>
                 <i className="ti ti-trash fs-15" /> Delete
               </Link>
@@ -196,19 +196,16 @@ const SubCategoryPage: React.FC = () => {
               <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
                 <i className="ti ti-package-export me-2" />Export
               </Link>
-              <div className="dropdown-menu dropdown-menu-end">
-                <ul className="mb-0">
-                  <li>
-                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
-                      <i className="ti ti-file-type-pdf me-1" />Export as PDF
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
-                      <i className="ti ti-file-type-xls me-1" />Export as Excel
-                    </Link>
-                  </li>
-                </ul>
+              <div className="dropdown">
+                <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                  <i className="ti ti-sort-ascending-2 me-2" />Sort By
+                </Link>
+                <div className="dropdown-menu">
+                  <ul>
+                    <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
+                    <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
+                  </ul>
+                </div>
               </div>
             </div>
           }
@@ -327,7 +324,7 @@ const SubCategoryPage: React.FC = () => {
                       <div className="filter-set-view p-2 px-3">
                         <div className="filter-set-content-head mb-2 mt-1 position-relative">
                           <label className="text-dark fw-bold fs-14 mb-2 d-block">Status</label>
-                          <div 
+                          <div
                             className="form-control fs-14 border shadow-sm d-flex align-items-center justify-content-between px-3 cursor-pointer"
                             style={{ height: 38, borderRadius: 6, borderColor: "#ffbaba", background: "#fff" }}
                             onClick={() => setStatusFilterOpen(!statusFilterOpen)}
@@ -338,20 +335,20 @@ const SubCategoryPage: React.FC = () => {
                             <i className={`ti ti-chevron-${statusFilterOpen ? 'up' : 'down'} text-muted fs-12`} />
                           </div>
                           {statusFilterOpen && (
-                            <div 
-                              className="position-absolute w-100 shadow-lg border-0 mt-1 bg-white" 
+                            <div
+                              className="position-absolute w-100 shadow-lg border-0 mt-1 bg-white"
                               style={{ zIndex: 1100, borderRadius: 6, border: '1px solid #e5e9ef', top: '100%', left: 0 }}
                             >
                               <ul className="list-unstyled mb-0 py-1">
-                                <li 
+                                <li
                                   className="px-3 py-2 fs-14 cursor-pointer custom-dropdown-item"
                                   onClick={() => { setFilterStatus([]); setStatusFilterOpen(false); }}
                                 >
                                   All Status
                                 </li>
-                                <li 
+                                <li
                                   className="px-3 py-2 fs-14 cursor-pointer custom-dropdown-item"
-                                  style={{ 
+                                  style={{
                                     background: filterStatus[0] === "active" ? '#e41f07' : 'transparent',
                                     color: filterStatus[0] === "active" ? '#fff' : 'inherit'
                                   }}
@@ -359,9 +356,9 @@ const SubCategoryPage: React.FC = () => {
                                 >
                                   Active
                                 </li>
-                                <li 
+                                <li
                                   className="px-3 py-2 fs-14 cursor-pointer custom-dropdown-item"
-                                  style={{ 
+                                  style={{
                                     background: filterStatus[0] === "inactive" ? '#e41f07' : 'transparent',
                                     color: filterStatus[0] === "inactive" ? '#fff' : 'inherit'
                                   }}
@@ -442,8 +439,8 @@ const SubCategoryPage: React.FC = () => {
                     const priorityStyle = priority === "High"
                       ? { bg: "#fff0f0", color: "#e41f07" }
                       : priority === "Medium"
-                      ? { bg: "#fff8e1", color: "#f59e0b" }
-                      : { bg: "#f0fdf4", color: "#16a34a" };
+                        ? { bg: "#fff8e1", color: "#f59e0b" }
+                        : { bg: "#f0fdf4", color: "#16a34a" };
                     const avatarColors = ["#6366f1", "#0891b2", "#059669", "#d97706", "#db2777"];
                     const avatarColor = avatarColors[item.id % avatarColors.length];
                     return (

@@ -1,46 +1,21 @@
-import { useState, useEffect, useRef } from "react";
-import "../../../billing-application.scss";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { all_routes } from "../../../../../../routes/all_routes";
 import Footer from "../../../../../../components/footer/footer";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-type Country  = { id: number; name: string; code: string;                    isDeleted?: boolean };
-type State    = { id: number; name: string; code: string; countryId: number;  isDeleted?: boolean };
-type District = { id: number; name: string; code: string; stateId: number;    isDeleted?: boolean };
-type Taluk    = { id: number; name: string; code: string; districtId: number; isDeleted?: boolean };
-type Pincode  = { id: number; code: string; talukId: number;                  isDeleted?: boolean };
-type Level    = "country" | "state" | "district" | "taluk" | "pincode";
-// ── Storage Keys ──────────────────────────────────────────────────────────────
-const SK = {
-    country: "asl_countries", state: "asl_states",
-    district: "asl_districts", taluk: "asl_taluks", pincode: "asl_pincodes",
+export type LocationNode = {
+    id: number;
+    parentId: number | null;
+    name: string;
+    code: string;
+    isDeleted?: boolean;
 };
 
-// ── Seed Data ─────────────────────────────────────────────────────────────────
-const SEED_COUNTRIES: Country[] = [
-    { id: 1, name: "India", code: "IN" }, { id: 2, name: "USA", code: "US" }, { id: 3, name: "Canada", code: "CA" },
-];
-const SEED_STATES: State[] = [
-    { id: 1, name: "Tamil Nadu",  code: "TN", countryId: 1 },
-    { id: 2, name: "Karnataka",   code: "KA", countryId: 1 },
-    { id: 3, name: "Maharashtra", code: "MH", countryId: 1 },
-    { id: 4, name: "California",  code: "CA", countryId: 2 },
-];
-const SEED_DISTRICTS: District[] = [
-    { id: 1, name: "Erode",           code: "ERD", stateId: 1 },
-    { id: 2, name: "Coimbatore",      code: "CBE", stateId: 1 },
-    { id: 3, name: "Salem",           code: "SLM", stateId: 1 },
-    { id: 4, name: "Bengaluru Urban", code: "BLR", stateId: 2 },
-];
-const SEED_TALUKS: Taluk[] = [
-    { id: 1, name: "Erode Taluk",      code: "ERD-T", districtId: 1 },
-    { id: 2, name: "Bhavani",          code: "BHV",   districtId: 1 },
-    { id: 3, name: "Coimbatore North", code: "CBN",   districtId: 2 },
-    { id: 4, name: "Coimbatore South", code: "CBS",   districtId: 2 },
-];
-const SEED_PINCODES: Pincode[] = [
-    { id: 1, code: "638001", talukId: 1 }, { id: 2, code: "638102", talukId: 1 },
-    { id: 3, code: "638301", talukId: 2 }, { id: 4, code: "641001", talukId: 3 },
-];
+// ── Constants ─────────────────────────────────────────────────────────────────
+const SK_LOCATIONS = "asl_locations_v3";
+const DEFAULT_LAYER_NAMES = ["Country", "State", "District", "Taluk", "Pincode"];
+const SEED_LOCATIONS: LocationNode[] = [];
+const ACCENT = "#e41f07";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function loadData<T>(key: string, seed: T[]): T[] {
@@ -55,33 +30,16 @@ function saveLS<T>(key: string, data: T[]) {
     try { localStorage.setItem(key, JSON.stringify(data)); } catch { /**/ }
 }
 const nextId = (arr: { id: number }[]) => arr.length ? Math.max(...arr.map(a => a.id)) + 1 : 1;
-const live   = <T extends { isDeleted?: boolean }>(arr: T[]) => arr.filter(x => !x.isDeleted);
+const live = <T extends { isDeleted?: boolean }>(arr: T[]) => arr.filter(x => !x.isDeleted);
+const autoCode = (name: string) => name.trim().slice(0, 3).toUpperCase() || "---";
 
-// ── Level config ──────────────────────────────────────────────────────────────
-const LEVELS: { key: Level; label: string; singular: string; icon: string; color: string }[] = [
-    { key: "country",  label: "Countries", singular: "Country",  icon: "world",              color: "#e41f07" },
-    { key: "state",    label: "States",    singular: "State",    icon: "map-2",              color: "#e41f07" },
-    { key: "district", label: "Districts", singular: "District", icon: "building-community", color: "#e41f07" },
-    { key: "taluk",    label: "Towns",     singular: "Town",     icon: "map-pin",            color: "#e41f07" },
-    { key: "pincode",  label: "Pincodes",  singular: "Pincode",  icon: "hash",               color: "#e41f07" },
-];
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-const inp: React.CSSProperties = {
-    border: "1px solid #e0e0e0", borderRadius: 8, padding: "10px 14px",
-    fontSize: 13, outline: "none", background: "#fff", color: "#333",
-    width: "100%", boxSizing: "border-box",
-};
-const sel: React.CSSProperties = { ...inp, appearance: "auto" as any, cursor: "pointer" };
-const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: "#555", marginBottom: 5, display: "block" };
-
-// ── Delete Confirm ────────────────────────────────────────────────────────────
+// ── Delete Confirm Modal ──────────────────────────────────────────────────────
 const DeleteConfirm = ({ label, onConfirm, onCancel }: { label: string; onConfirm: () => void; onCancel: () => void }) => (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div className="card border-0 shadow-lg" style={{ borderRadius: 14, width: 360, padding: "28px 28px 22px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff0ef", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <i className="ti ti-trash" style={{ color: "#e41f07", fontSize: 22 }} />
+                <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff0ef", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <i className="ti ti-trash" style={{ color: ACCENT, fontSize: 22 }} />
                 </div>
                 <div>
                     <div style={{ fontWeight: 700, fontSize: 15, color: "#222" }}>Delete "{label}"?</div>
@@ -89,8 +47,8 @@ const DeleteConfirm = ({ label, onConfirm, onCancel }: { label: string; onConfir
                 </div>
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-                <button onClick={onCancel} style={{ border: "1px solid #ddd", background: "#fff", color: "#555", borderRadius: 8, padding: "8px 22px", fontSize: 13, cursor: "pointer", fontWeight: 500 }}>Cancel</button>
-                <button onClick={onConfirm} style={{ border: "none", background: "#e41f07", color: "#fff", borderRadius: 8, padding: "8px 24px", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
+                <button onClick={onCancel} style={{ border: "1px solid #ddd", background: "#fff", color: "#555", borderRadius: 8, padding: "8px 22px", fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                <button onClick={onConfirm} style={{ border: "none", background: ACCENT, color: "#fff", borderRadius: 8, padding: "8px 24px", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
                     <i className="ti ti-trash me-1" />Delete
                 </button>
             </div>
@@ -98,306 +56,250 @@ const DeleteConfirm = ({ label, onConfirm, onCancel }: { label: string; onConfir
     </div>
 );
 
-// ── Tag chip ─────────────────────────────────────────────────────────────────
-const Tag = ({ label, sub, color, onDelete, onClick }: { label: string; sub?: string; color: string; onDelete: () => void; onClick?: () => void }) => (
-    <div 
-        onClick={onClick}
-        style={{ 
-            display: "inline-flex", alignItems: "center", gap: 2, background: `${color}12`, border: `1px solid ${color}30`, 
-            borderRadius: 20, padding: "3px 6px 3px 10px", fontSize: 12, color: "#333", fontWeight: 500,
-            cursor: onClick ? "pointer" : "default",
-            transition: "all 0.2s"
-        }}
-        onMouseEnter={e => { if (onClick) (e.currentTarget as HTMLDivElement).style.background = `${color}22`; }}
-        onMouseLeave={e => { if (onClick) (e.currentTarget as HTMLDivElement).style.background = `${color}12`; }}
-    >
-        <span style={{ fontWeight: 600, color: "#111" }}>{label}</span>
-        {sub && <span style={{ color: "#aaa", fontWeight: 400, marginLeft: 2 }}>{sub}</span>}
-        <button 
-            onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-            title="Delete" 
-            style={{ border: "none", background: "transparent", cursor: "pointer", color: "#bbb", fontSize: 16, lineHeight: 1, padding: "0 2px", display: "flex", alignItems: "center" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "#e41f07"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "#bbb"; }}
-        >×</button>
-    </div>
-);
-
 // ── Main Component ────────────────────────────────────────────────────────────
-const AssingLocation = () => {
-    const [countries,  setCountries]  = useState<Country[]> (() => loadData(SK.country,  SEED_COUNTRIES));
-    const [states,     setStates]     = useState<State[]>   (() => loadData(SK.state,    SEED_STATES));
-    const [districts,  setDistricts]  = useState<District[]>(() => loadData(SK.district, SEED_DISTRICTS));
-    const [taluks,     setTaluks]     = useState<Taluk[]>   (() => loadData(SK.taluk,    SEED_TALUKS));
-    const [pincodes,   setPincodes]   = useState<Pincode[]> (() => loadData(SK.pincode,  SEED_PINCODES));
+const AssignLocation: React.FC = () => {
+    const route = all_routes;
 
-    useEffect(() => { saveLS(SK.country,  countries);  }, [countries]);
-    useEffect(() => { saveLS(SK.state,    states);     }, [states]);
-    useEffect(() => { saveLS(SK.district, districts);  }, [districts]);
-    useEffect(() => { saveLS(SK.taluk,    taluks);     }, [taluks]);
-    useEffect(() => { saveLS(SK.pincode,  pincodes);   }, [pincodes]);
+    const [locations, setLocations] = useState<LocationNode[]>(() => loadData(SK_LOCATIONS, SEED_LOCATIONS));
+    const [layerNames, setLayerNames] = useState<string[]>(DEFAULT_LAYER_NAMES);
+    const [showLayerModal, setShowLayerModal] = useState(false);
+    const [newLayerName, setNewLayerName] = useState("");
 
-    // Active level
-    const [level, setLevel] = useState<Level>("country");
-    const cfg = LEVELS.find(l => l.key === level)!;
+    useEffect(() => { saveLS(SK_LOCATIONS, locations); }, [locations]);
 
-    // Form fields
-    const [name,     setName]     = useState("");
-    const [parentId, setParentId] = useState("");
-    
-    const nameRef = useRef<HTMLInputElement>(null);
+    // ── Path navigation ───────────────────────────────────────────────────────
+    type PathNode = { id: number | null; name: string };
+    const [path, setPath] = useState<PathNode[]>([{ id: null, name: layerNames[0] ?? "Country" }]);
+    const currentParentId = path[path.length - 1].id;
+    const currentDepth = path.length - 1;
 
-    useEffect(() => { setName(""); setParentId(""); }, [level]);
-
-    const handleDrillDown = (id: number) => {
-        if (level === "country") {
-            setLevel("state");
-            setParentId(id.toString());
-        } else if (level === "state") {
-            setLevel("district");
-            setParentId(id.toString());
-        } else if (level === "district") {
-            setLevel("taluk");
-            setParentId(id.toString());
-        } else if (level === "taluk") {
-            setLevel("pincode");
-            setParentId(id.toString());
-        }
-        setTimeout(() => nameRef.current?.focus(), 50);
-    };
-
-    // Delete confirm
+    // ── Form state ────────────────────────────────────────────────────────────
+    const [name, setName] = useState("");
+    const [search, setSearch] = useState("");
     const [del, setDel] = useState<{ label: string; onConfirm: () => void } | null>(null);
-    const softDel = <T extends { id: number; isDeleted?: boolean }>(setter: React.Dispatch<React.SetStateAction<T[]>>, id: number) =>
-        setter(p => p.map(x => x.id === id ? { ...x, isDeleted: true } : x));
 
-    // Parent options
-    const parentOptions = () => {
-        if (level === "state")    return live(countries).map(c => ({ id: c.id, label: `${c.name} (${c.code})` }));
-        if (level === "district") return live(states).map(s => ({ id: s.id, label: `${s.name} (${s.code})` }));
-        if (level === "taluk")    return live(districts).map(d => ({ id: d.id, label: `${d.name} (${d.code})` }));
-        if (level === "pincode")  return live(taluks).map(t => ({ id: t.id, label: `${t.name} (${t.code})` }));
-        return [];
-    };
-    const parentLabel: Record<Level, string> = {
-        country: "", state: "Country", district: "State", taluk: "Town", pincode: "Town"
-    };
+    useEffect(() => { setName(""); setSearch(""); }, [currentParentId]);
 
-    // Validation
-    const canAdd = () => {
-        if (level === "pincode") return name.trim() !== "" && parentId !== "";
-        if (level === "country") return name.trim() !== "";
-        return name.trim() !== "" && parentId !== "";
-    };
+    // ── Derived data ──────────────────────────────────────────────────────────
+    const allItems = live(locations).filter(x => x.parentId === currentParentId);
+    const items = !search.trim() ? allItems : allItems.filter(x => x.name.toLowerCase().includes(search.toLowerCase()));
+    const currentLayerName = layerNames[currentDepth] ?? `Layer ${currentDepth + 1}`;
+    const nextLayerName = layerNames[currentDepth + 1] ?? `Layer ${currentDepth + 2}`;
+    const canAdd = name.trim() !== "";
+    const childCount = (itemId: number) => live(locations).filter(x => x.parentId === itemId).length;
 
-    const performAdd = (toAdd?: string) => {
-        const fullString = (toAdd || name).trim();
-        if (fullString === "") return;
+    // ── Handlers ──────────────────────────────────────────────────────────────
+    const drillDown = (item: LocationNode) => setPath(p => [...p, { id: item.id, name: item.name }]);
+    const goToDepth = (depth: number) => setPath(p => p.slice(0, depth + 1));
+    const handleSidebarClick = (depth: number) => { if (depth < path.length) goToDepth(depth); };
 
-        // Support multiple comma-separated items
-        const items = fullString.split(",").map(i => i.trim()).filter(i => i !== "");
-        
-        items.forEach(finalName => {
-            if (level !== "country" && parentId === "") return;
-
-            const pid = parseInt(parentId);
-            const autoCode = (finalName.slice(0, 3).toUpperCase()) || "---";
-            
-            if (level === "country")  setCountries(p => [...p, { id: nextId(p), name: finalName, code: autoCode }]);
-            if (level === "state")    setStates(p => [...p, { id: nextId(p), name: finalName, code: autoCode, countryId: pid }]);
-            if (level === "district") setDistricts(p => [...p, { id: nextId(p), name: finalName, code: autoCode, stateId: pid }]);
-            if (level === "taluk")    setTaluks(p => [...p, { id: nextId(p), name: finalName, code: autoCode, districtId: pid }]);
-            if (level === "pincode")  setPincodes(p => [...p, { id: nextId(p), code: finalName, talukId: pid }]);
-        });
-        
+    const handleAdd = () => {
+        const n = name.trim(); if (!n) return;
+        setLocations(p => [...p, { id: nextId(p), parentId: currentParentId, name: n, code: autoCode(n) }]);
         setName("");
     };
 
-    const handleAdd = () => performAdd();
-
-    const countOf = (l: Level) => {
-        const pid = parseInt(parentId);
-        if (l === "country")  return live(countries).length;
-        if (l === "state")    return live(states).filter(s => !parentId || s.countryId === pid).length;
-        if (l === "district") return live(districts).filter(d => !parentId || d.stateId === pid).length;
-        if (l === "taluk")    return live(taluks).filter(t => !parentId || t.districtId === pid).length;
-        return live(pincodes).filter(p => !parentId || p.talukId === pid).length;
+    const handleDelete = (item: LocationNode) => {
+        setDel({
+            label: item.name,
+            onConfirm: () => { setLocations(p => p.map(x => x.id === item.id ? { ...x, isDeleted: true } : x)); setDel(null); }
+        });
     };
 
-    const currentTags = () => {
-        const pid = parseInt(parentId);
-        if (level === "country")  return live(countries).map(c => ({ id: c.id, label: c.name, sub: c.code }));
-        
-        if (level === "state")    return live(states).filter(s => !parentId || s.countryId === pid).map(s => ({ id: s.id, label: s.name, sub: s.code }));
-        if (level === "district") return live(districts).filter(d => !parentId || d.stateId === pid).map(d => ({ id: d.id, label: d.name, sub: d.code }));
-        if (level === "taluk")    return live(taluks).filter(t => !parentId || t.districtId === pid).map(t => ({ id: t.id, label: t.name, sub: t.code }));
-        
-        return live(pincodes).filter(p => !parentId || p.talukId === pid).map(p => ({ id: p.id, label: p.code, sub: "" }));
+    const handleAddLayerType = () => {
+        const n = newLayerName.trim(); if (!n) return;
+        setLayerNames(p => [...p, n]);
+        setNewLayerName("");
+        setShowLayerModal(false);
     };
 
-    const tags = currentTags();
-    const onEnter = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleAdd(); };
+    const handleDeleteLastLayer = () => {
+        if (layerNames.length <= 1) return;
+        setLayerNames(p => p.slice(0, -1));
+        setPath([{ id: null, name: layerNames[0] ?? "Country" }]);
+    };
 
     return (
         <div className="page-wrapper">
             <div className="content">
 
-                {/* ── Page Header ──────────────────────────────────────────── */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                {/* ── Page Header ───────────────────────────────────────── */}
+                <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                     <div>
-                        <h4 style={{ fontSize: 20, fontWeight: 700, color: "#111", display: "flex", alignItems: "center", gap: 10 }}>
-                            {cfg.label}
-                            <span style={{ background: "#e41f0718", color: "#e41f07", borderRadius: 20, fontSize: 12, padding: "2px 12px", fontWeight: 700 }}>
-                                {countOf(level)}
-                            </span>
-                        </h4>
-                        <nav style={{ fontSize: 13, color: "#888", display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                            <span style={{ color: "#e41f07", fontWeight: 500 }}>Home</span>
-                            <span>›</span>
-                            <span> Assign Location</span>
+                        <h4 className="fw-bold fs-20 mb-1">Assign Location</h4>
+                        <nav aria-label="breadcrumb">
+                            <ol className="breadcrumb mb-0 fs-13">
+                                <li className="breadcrumb-item">
+                                    <Link to="/" className="text-muted">Home</Link>
+                                </li>
+                                <li className="breadcrumb-item active text-dark fw-medium">
+                                    Assign Location
+                                </li>
+                            </ol>
                         </nav>
                     </div>
-
-                    <div style={{ display: "flex", gap: 10, marginTop: 2 }}>
+                    <div className="d-flex align-items-center gap-2">
                         <button
-                            onClick={() => {
-                                setLevel("country");
-                                setName("");
-                                setParentId("");
-                                setTimeout(() => nameRef.current?.focus(), 50);
-                            }}
-                            style={{
-                                border: "none", background: "#e41f07",
-                                color: "#fff", borderRadius: 8, padding: "8px 20px",
-                                fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                display: "flex", alignItems: "center", gap: 6,
-                                boxShadow: "0 4px 12px rgba(228,31,7,0.2)",
-                                transition: "all 0.2s"
-                            }}
+                            onClick={() => setShowLayerModal(true)}
+                            className="btn d-flex align-items-center gap-2"
+                            style={{ background: ACCENT, color: "#fff", border: "none", borderRadius: 6, fontSize: 14, fontWeight: 600, height: 36, padding: "0 16px", boxShadow: "0 4px 12px rgba(228,31,7,0.22)" }}
                         >
-                            <i className="ti ti-plus" style={{ fontSize: 12 }} /> Add Layer
+                            <i className="ti ti-plus fs-15" /> Add Layer
                         </button>
-
                         <button
-                            onClick={() => {
-                                setLevel("country");
-                                setName("");
-                                setParentId("");
-                                setTimeout(() => nameRef.current?.focus(), 50);
-                            }}
-                            style={{
-                                border: "1px solid #ddd", background: "#fff",
-                                color: "#555", borderRadius: 8, padding: "8px 20px",
-                                fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                display: "flex", alignItems: "center", gap: 6,
-                                transition: "all 0.2s"
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = "#e41f07"; e.currentTarget.style.color = "#e41f07"; e.currentTarget.style.background = "#fff0ef"; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = "#ddd"; e.currentTarget.style.color = "#555"; e.currentTarget.style.background = "#fff"; }}
+                            onClick={handleDeleteLastLayer}
+                            disabled={layerNames.length <= 1}
+                            className="btn d-flex align-items-center gap-2"
+                            style={{ border: "1px solid #e0e0e0", background: "#fff", color: layerNames.length > 1 ? "#555" : "#ccc", borderRadius: 6, fontSize: 14, fontWeight: 500, height: 36, padding: "0 16px", cursor: layerNames.length > 1 ? "pointer" : "not-allowed" }}
+                            onMouseEnter={e => { if (layerNames.length > 1) { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; e.currentTarget.style.background = "#fff0ef"; } }}
+                            onMouseLeave={e => { if (layerNames.length > 1) { e.currentTarget.style.borderColor = "#e0e0e0"; e.currentTarget.style.color = "#555"; e.currentTarget.style.background = "#fff"; } }}
                         >
-                            <i className="ti ti-trash" style={{ fontSize: 12 }} /> Delete Country
+                            <i className="ti ti-trash fs-15" /> Delete Layer
                         </button>
                     </div>
                 </div>
 
-                {/* ── Unified Single Box UI ─────────────────────────────────── */}
-                <div className="card border-0 shadow-sm" style={{ borderRadius: 12, overflow: "hidden" }}>
-                    
-                    <div style={{ padding: "18px 24px", borderBottom: "1px solid #f0f0f0" }}>
-                        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end", maxWidth: 1000 }}>
+                {/* ── Main Layout: Sidebar + Content ───────────────────── */}
+                <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
 
-
-                            {/* parent display */}
-                            {level !== "country" && parentId && (
-                                <div style={{ flex: "0 0 200px" }}>
-                                    <label style={lbl}>{parentLabel[level]}</label>
-                                    <div style={{ 
-                                        ...inp, 
-                                        background: "#f8f9fa", 
-                                        color: "#000", 
-                                        fontWeight: 700,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 8,
-                                        border: "1px dashed #e41f0740"
-                                    }}>
-                                        <i className="ti ti-link" style={{ color: "#e41f07", fontSize: 12 }} />
-                                        {parentOptions().find(o => o.id.toString() === parentId)?.label || "Select Parent"}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* name input */}
-                            <div style={{ flex: "1 1 200px" }}>
-                                <label style={lbl}>{level === "pincode" ? "Pincode" : `${cfg.singular} Name`} <span style={{ color: "#e41f07" }}>*</span></label>
-                                <input
-                                    ref={nameRef}
-                                    value={name}
-                                    onChange={e => setName(e.target.value)}
-                                    onKeyDown={onEnter}
-                                    placeholder={level === "pincode" ? "e.g. 638001" : `e.g. ${cfg.singular === "State" ? "Tamil Nadu" : "India"}`}
-                                    style={inp}
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div style={{ flexShrink: 0 }}>
-                                <button
-                                    onClick={handleAdd}
-                                    disabled={!canAdd()}
-                                    style={{
-                                        border: "none",
-                                        background: canAdd() ? "#e41f07" : "#e41f07",
-                                        color: "#fff",
-                                        borderRadius: 8, padding: "10px 24px",
-                                        fontSize: 14, fontWeight: 700,
-                                        cursor: canAdd() ? "pointer" : "default",
-                                        display: "flex", alignItems: "center", gap: 7,
-                                        height: 40,
-                                        boxShadow: canAdd() ? "0 4px 12px rgba(228, 31, 7, 0.2)" : "none",
-                                        transition: "all 0.2s"
-                                    }}
-                                >
-                                    Submit
-                                </button>
-                            </div>
+                    {/* LEFT SIDEBAR */}
+                    <div className="card border-0 shadow-sm" style={{ borderRadius: 12, width: 220, flexShrink: 0, overflow: "hidden" }}>
+                        <div style={{ padding: "14px 16px", borderBottom: "1px solid #f0f0f0", background: "#fafafa" }}>
+                            <div style={{ fontSize: 11, fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: 1 }}>Layers</div>
                         </div>
+                        {layerNames.map((ln, idx) => {
+                            const isActive = idx === currentDepth;
+                            const isReachable = idx < path.length;
+                            return (
+                                <button key={idx}
+                                    onClick={() => isReachable ? handleSidebarClick(idx) : undefined}
+                                    style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", border: "none", textAlign: "left", padding: "13px 16px", background: isActive ? `${ACCENT}10` : "transparent", borderLeft: isActive ? `3px solid ${ACCENT}` : "3px solid transparent", cursor: isReachable ? "pointer" : "default", borderBottom: "1px solid #f5f5f5", transition: "all 0.15s" }}
+                                    onMouseEnter={e => { if (isReachable && !isActive) e.currentTarget.style.background = "#f9f9f9"; }}
+                                    onMouseLeave={e => { if (isReachable && !isActive) e.currentTarget.style.background = "transparent"; }}
+                                >
+                                    <div style={{ width: 30, height: 30, borderRadius: 8, background: isActive ? ACCENT : isReachable ? `${ACCENT}12` : "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                        <i className="ti ti-layers-intersect" style={{ fontSize: 14, color: isActive ? "#fff" : isReachable ? ACCENT : "#bbb" }} />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 500, color: isActive ? ACCENT : isReachable ? "#333" : "#bbb", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ln}</div>
+                                        {isActive && <div style={{ fontSize: 11, color: "#aaa", marginTop: 1 }}>{allItems.length} item{allItems.length !== 1 ? "s" : ""}</div>}
+                                    </div>
+                                    {isActive && <i className="ti ti-chevron-right" style={{ fontSize: 12, color: ACCENT }} />}
+                                </button>
+                            );
+                        })}
                     </div>
 
-                    {/* Chips section */}
-                    <div style={{ padding: "16px 24px", minHeight: 100, background: "#fafafa" }}>
-                        <div style={{ marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: "#666" }}>Existing {cfg.label}</span>
-                        </div>
-                        {tags.length === 0 ? (
-                            <div style={{ color: "#bbb", fontSize: 13 }}>No {level}s added yet.</div>
-                        ) : (
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                {tags.map(t => (
-                                    <Tag
-                                        key={t.id}
-                                        label={t.label}
-                                        sub={t.sub}
-                                        color={cfg.color}
-                                        onClick={level !== "pincode" ? () => handleDrillDown(t.id) : undefined}
-                                        onDelete={() => setDel({
-                                            label: t.label,
-                                            onConfirm: () => {
-                                                if (level === "country")  softDel(setCountries, t.id);
-                                                if (level === "state")    softDel(setStates, t.id);
-                                                if (level === "district") softDel(setDistricts, t.id);
-                                                if (level === "taluk")    softDel(setTaluks, t.id);
-                                                if (level === "pincode")  softDel(setPincodes, t.id);
-                                                setDel(null);
-                                            }
-                                        })}
-                                    />
-                                ))}
+                    {/* RIGHT CONTENT */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="card border-0 shadow-sm" style={{ borderRadius: 12, overflow: "hidden" }}>
+
+                            {/* Breadcrumb */}
+                            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f0f0f0", background: "#fefefe", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                                {path.map((crumb, i) => {
+                                    const isLast = i === path.length - 1;
+                                    const ln = layerNames[i] ?? `Layer ${i + 1}`;
+                                    return (
+                                        <span key={`${crumb.id}-${i}`} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                                            {i > 0 && <i className="ti ti-chevron-right" style={{ fontSize: 10, color: "#ccc" }} />}
+                                            <span onClick={() => !isLast && handleSidebarClick(i)} style={{ fontSize: 13, fontWeight: isLast ? 700 : 400, color: isLast ? "#222" : ACCENT, cursor: isLast ? "default" : "pointer" }}>
+                                                {i === 0 ? ln : crumb.name}
+                                            </span>
+                                        </span>
+                                    );
+                                })}
+                                <span style={{ marginLeft: "auto", fontSize: 12, color: "#aaa", background: "#f5f5f5", borderRadius: 20, padding: "2px 10px" }}>
+                                    {allItems.length} {currentLayerName}{allItems.length !== 1 ? "s" : ""}
+                                </span>
                             </div>
-                        )}
+
+                            {/* Search + Add */}
+                            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f0f0", display: "flex", gap: 10, background: "#fff", alignItems: "center" }}>
+                                <div style={{ flex: 1, display: "flex", alignItems: "center", border: "1px solid #e0e0e0", borderRadius: 8, padding: "0 12px", height: 40, background: "#fafafa", gap: 8 }}>
+                                    <i className="ti ti-search" style={{ color: "#aaa", fontSize: 14 }} />
+                                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search ${currentLayerName}...`} style={{ flex: 1, border: "none", outline: "none", fontSize: 13, background: "transparent", color: "#333" }} />
+                                    {search && <button onClick={() => setSearch("")} style={{ border: "none", background: "none", cursor: "pointer", color: "#aaa", fontSize: 16, padding: 0 }}>×</button>}
+                                </div>
+                                <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && canAdd) handleAdd(); }} placeholder={`Add new ${currentLayerName}...`} style={{ width: 200, border: "1px solid #e0e0e0", borderRadius: 8, padding: "10px 14px", fontSize: 13, outline: "none", height: 40 }} />
+                                <button onClick={handleAdd} disabled={!canAdd} style={{ border: "none", background: canAdd ? ACCENT : "#e0e0e0", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, fontWeight: 700, cursor: canAdd ? "pointer" : "not-allowed", height: 40, boxShadow: canAdd ? "0 4px 12px rgba(228,31,7,0.2)" : "none", transition: "all 0.2s", whiteSpace: "nowrap" }}>Submit</button>
+                            </div>
+
+                            {/* Items table */}
+                            <div style={{ background: "#fff" }}>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px 130px", padding: "10px 20px", background: "#f8f8f8", borderBottom: "1px solid #f0f0f0", fontSize: 11, fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                                    <span>{currentLayerName} Name</span>
+                                    <span>Code</span>
+                                    <span style={{ textAlign: "center" }}>Children</span>
+                                    <span style={{ textAlign: "center" }}>Action</span>
+                                </div>
+                                {items.length === 0 ? (
+                                    <div style={{ padding: "50px 20px", textAlign: "center" }}>
+                                        <i className="ti ti-map-pin-off" style={{ fontSize: 36, color: "#ddd", display: "block", marginBottom: 10 }} />
+                                        <div style={{ fontSize: 14, color: "#bbb" }}>No {currentLayerName.toLowerCase()}s added yet.</div>
+                                        {search && <div style={{ fontSize: 12, color: "#ccc", marginTop: 4 }}>Try a different search term.</div>}
+                                    </div>
+                                ) : items.map(item => {
+                                    const cc = childCount(item.id);
+                                    return (
+                                        <div key={item.id} style={{ display: "grid", gridTemplateColumns: "1fr 80px 100px 130px", padding: "12px 20px", alignItems: "center", borderBottom: "1px solid #f5f5f5", background: "#fff", transition: "background 0.15s" }}
+                                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#fdf8f8"; }}
+                                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}
+                                        >
+                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                <div style={{ width: 36, height: 36, borderRadius: 8, background: `${ACCENT}12`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                    <span style={{ fontSize: 15, fontWeight: 700, color: ACCENT }}>{item.name.charAt(0).toUpperCase()}</span>
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontSize: 14, fontWeight: 600, color: "#222" }}>{item.name}</div>
+                                                    {cc > 0 && <div style={{ fontSize: 11, color: "#aaa" }}>{cc} {nextLayerName}{cc > 1 ? "s" : ""}</div>}
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: 13, color: "#777" }}>{item.code}</div>
+                                            <div style={{ textAlign: "center" }}>
+                                                {cc > 0
+                                                    ? <span style={{ background: `${ACCENT}12`, color: ACCENT, borderRadius: 20, fontSize: 12, padding: "3px 12px", fontWeight: 600 }}>{cc}</span>
+                                                    : <span style={{ color: "#ccc", fontSize: 12 }}>—</span>}
+                                            </div>
+                                            <div style={{ display: "flex", gap: 6, justifyContent: "center" }}>
+                                                <button onClick={() => drillDown(item)} style={{ border: `1px solid ${ACCENT}30`, background: `${ACCENT}08`, color: ACCENT, borderRadius: 6, padding: "5px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, transition: "all 0.15s" }}
+                                                    onMouseEnter={e => { e.currentTarget.style.background = ACCENT; e.currentTarget.style.color = "#fff"; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.background = `${ACCENT}08`; e.currentTarget.style.color = ACCENT; }}
+                                                >
+                                                    <i className="ti ti-chevron-right" style={{ fontSize: 12 }} /> Open
+                                                </button>
+                                                <button onClick={() => handleDelete(item)} style={{ border: "1px solid #eee", background: "#fff", color: "#ccc", borderRadius: 6, width: 30, height: 30, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
+                                                    onMouseEnter={e => { e.currentTarget.style.borderColor = ACCENT; e.currentTarget.style.color = ACCENT; e.currentTarget.style.background = "#fff0ef"; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#eee"; e.currentTarget.style.color = "#ccc"; e.currentTarget.style.background = "#fff"; }}
+                                                >
+                                                    <i className="ti ti-trash" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Add Layer Modal */}
+            {showLayerModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.35)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div className="card border-0 shadow-lg" style={{ borderRadius: 14, width: 380, padding: "28px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: "#222" }}>Add New Layer</div>
+                            <button onClick={() => setShowLayerModal(false)} style={{ border: "none", background: "none", cursor: "pointer", color: "#aaa", fontSize: 20, lineHeight: 1 }}>×</button>
+                        </div>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "#555", display: "block", marginBottom: 8 }}>Layer Name <span style={{ color: ACCENT }}>*</span></label>
+                        <input autoFocus value={newLayerName} onChange={e => setNewLayerName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleAddLayerType(); }} placeholder="e.g. Village, Zone, Ward..." style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 8, padding: "11px 14px", fontSize: 14, outline: "none", boxSizing: "border-box", marginBottom: 16 }} />
+                        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+                            <button onClick={() => setShowLayerModal(false)} style={{ border: "1px solid #ddd", background: "#fff", color: "#555", borderRadius: 8, padding: "9px 22px", fontSize: 13, cursor: "pointer" }}>Cancel</button>
+                            <button onClick={handleAddLayerType} disabled={!newLayerName.trim()} style={{ border: "none", background: newLayerName.trim() ? ACCENT : "#e0e0e0", color: "#fff", borderRadius: 8, padding: "9px 24px", fontSize: 13, fontWeight: 700, cursor: newLayerName.trim() ? "pointer" : "not-allowed" }}>Add Layer</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {del && <DeleteConfirm label={del.label} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
             <Footer />
@@ -405,4 +307,4 @@ const AssingLocation = () => {
     );
 };
 
-export default AssingLocation;
+export default AssignLocation;

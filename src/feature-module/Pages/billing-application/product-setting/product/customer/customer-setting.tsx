@@ -124,8 +124,7 @@ const AddressFormatBox: React.FC<{
             { label: 'Company Name', tag: '${CONTACT.COMPANY_NAME}' },
             { label: 'Website', tag: '${CONTACT.WEBSITE}' },
             { label: 'Salutation', tag: '${CONTACT.SALUTATION}' },
-            { label: 'First Name', tag: '${CONTACT.FIRST_NAME}' },
-            { label: 'Last Name', tag: '${CONTACT.LAST_NAME}' },
+            { label: 'Name', tag: '${CONTACT.NAME}' },
             { label: 'Contact Email', tag: '${CONTACT.CONTACT_EMAIL}' },
             { label: 'Mobile Phone', tag: '${CONTACT.MOBILE}' },
             { label: 'Phone Label', tag: '${CONTACT.PHONE_LABEL}' },
@@ -380,28 +379,19 @@ const CustomerSetting: React.FC = () => {
                     <div className="row">
                         <div className="col-12">
                             <div className="card border-0 shadow-sm">
-                                <div className="card-header bg-white pt-3 pb-0 px-3 px-md-4" style={{ borderBottom: '2px solid #dee2e6' }}>
-                                    <div className="d-flex align-items-center gap-3 pref-tab-bar" style={{ overflowX: 'auto' }}>
+                                <div className="card-header bg-white pt-4 pb-0 px-4 border-0">
+                                    <div className="tab-bar-custom m-0">
                                         {(['general', 'field-customization'] as const).map(tab => (
-                                            <button key={tab} onClick={() => setActiveTab(tab)}
-                                                className="btn btn-sm fw-bold py-3 px-1 flex-shrink-0"
-                                                style={{
-                                                    fontSize: '14px',
-                                                    color: activeTab === tab ? '#e41f07' : '#6b7280',
-                                                    whiteSpace: 'nowrap',
-                                                    border: 'none',
-                                                    borderBottom: activeTab === tab ? '2px solid #e41f07' : '2px solid transparent',
-                                                    marginBottom: '-2px',
-                                                    borderRadius: 0,
-                                                    background: 'transparent',
-                                                }}>
+                                            <div key={tab} 
+                                                className={`tab-item-custom ${activeTab === tab ? "active" : ""}`} 
+                                                onClick={() => setActiveTab(tab)}>
                                                 {tab === 'general' ? 'General' : 'Field Customization'}
-                                            </button>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="card-body px-3 px-md-4 py-2">
+                                <div className="card-body px-4 py-4">
                                     {/* ══ TAB 1 — GENERAL ══ */}
                                     {activeTab === 'general' && (
                                         <form onSubmit={handleSaveGeneral} className="py-2" style={{ maxWidth: '820px' }}>

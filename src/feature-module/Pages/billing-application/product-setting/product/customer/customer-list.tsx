@@ -226,18 +226,11 @@ const CustomerList: React.FC = () => {
             sorter: (a: Customer, b: Customer) => a.companyName.localeCompare(b.companyName),
             render: (v: string) =>
                 v ? (
-                    <span
-                        className="fs-14 fw-semibold px-2 py-1 rounded-pill"
-                        style={{
-                            background: "#ede9fe", color: "#5b21b6",
-                            border: "1px solid #c4b5fd", display: "inline-block",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
+                    <span className="fs-14 text-dark">
                         {v}
                     </span>
                 ) : (
-                    <span className="fs-15 text-muted">—</span>
+                    <span className="fs-14 text-muted">—</span>
                 ),
         },
         {
@@ -291,22 +284,32 @@ const CustomerList: React.FC = () => {
             title: "Action",
             key: "action",
             render: (_: any, record: Customer) => (
-                <div className="dropup table-action">
+                <div className="dropdown table-action">
                     <Link
                         to="#"
                         data-bs-toggle="dropdown"
-                        className="btn-action d-inline-flex align-items-center justify-content-center"
-                        style={{ width: 32, height: 32 }}
+                        aria-expanded="false"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                         }}
+                        style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            border: '1px solid #dee2e6',
+                            background: '#fff',
+                            boxShadow: 'none',
+                        }}
                     >
-                        <i className="ti ti-dots-vertical fs-16" />
+                        <i className="ti ti-dots-vertical" style={{ fontSize: 16, color: '#6c757d' }} />
                     </Link>
-                    <div className="dropdown-menu dropdown-menu-right shadow border-0" onClick={(e) => e.stopPropagation()}>
+                    <div className="dropdown-menu dropdown-menu-right">
                         <Link
-                            className="dropdown-item py-2 px-3 d-flex align-items-center gap-2"
+                            className="dropdown-item"
                             to="#"
                             onClick={(e) => {
                                 e.preventDefault();
@@ -314,10 +317,10 @@ const CustomerList: React.FC = () => {
                                 openEdit(record);
                             }}
                         >
-                            <i className="ti ti-edit text-primary fs-15" /> Edit
+                            <i className="ti ti-edit text-blue" /> Edit
                         </Link>
                         <Link
-                            className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 text-danger"
+                            className="dropdown-item text-danger"
                             to="#"
                             onClick={(e) => {
                                 e.preventDefault();
@@ -325,7 +328,7 @@ const CustomerList: React.FC = () => {
                                 handleDelete(record);
                             }}
                         >
-                            <i className="ti ti-trash fs-15" /> Delete
+                            <i className="ti ti-trash" /> Delete
                         </Link>
                     </div>
                 </div>
@@ -406,245 +409,243 @@ const CustomerList: React.FC = () => {
                     settingsLink={route.customerPreference}
                 />
 
-                <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column">
-                            <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
-                                <div className="d-flex align-items-center rounded bg-white" style={{
-                                    width: 220,
-                                    border: searchFocused ? '1px solid #e41f07' : '1px solid #dee2e6',
-                                    boxShadow: searchFocused ? '0 0 0 0.2rem rgba(228,31,7,0.15)' : 'none',
-                                    transition: 'border-color 0.15s, box-shadow 0.15s',
-                                }}>
-                                    <span className="px-2 d-flex align-items-center text-muted">
-                                        <i className="ti ti-search fs-14" />
-                                    </span>
-                                    <input className="form-control border-0 ps-0 fs-14 bg-transparent"
-                                        style={{ outline: 'none', boxShadow: 'none', height: '36px' }}
-                                        placeholder="Search..."
-                                        value={searchText}
-                                        onChange={e => setSearchText(e.target.value)}
-                                        onFocus={() => setSearchFocused(true)}
-                                        onBlur={() => setSearchFocused(false)} />
-                                </div>
-                                <button className="btn text-white d-flex align-items-center" style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }} onClick={openAdd}>
-                                    <i className="ti ti-plus me-2 fs-16" /> Add New Customer
-                                </button>
-                            </div>
+                <div className="card border-0 rounded-0 flex-grow-1 mb-4 d-flex flex-column">
+                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
+                        <div className="d-flex align-items-center rounded bg-white" style={{
+                            width: 220,
+                            border: searchFocused ? '1px solid #e41f07' : '1px solid #dee2e6',
+                        }}>
+                            <span className="px-2 d-flex align-items-center text-muted">
+                                <i className="ti ti-search fs-14" />
+                            </span>
+                            <input className="form-control border-0 ps-0 fs-14 bg-transparent"
+                                style={{ outline: 'none', boxShadow: 'none', height: '36px' }}
+                                placeholder="Search..."
+                                value={searchText}
+                                onChange={e => setSearchText(e.target.value)}
+                                onFocus={() => setSearchFocused(true)}
+                                onBlur={() => setSearchFocused(false)} />
+                        </div>
+                        <button className="btn text-white d-flex align-items-center" style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }} onClick={openAdd}>
+                            <i className="ti ti-plus me-2 fs-16" /> Add New Customer
+                        </button>
+                    </div>
 
-                            <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
-                                <div className="toolbar-custom py-3 px-4">
-                                    <div className="d-flex align-items-center gap-2 flex-wrap">
-                                        <div className="dropdown">
-                                            <Link to="#" className="dropdown-toggle btn-secondary-white px-3 fs-14" data-bs-toggle="dropdown">
-                                                <i className="ti ti-sort-ascending-2 me-2" />Sort By
-                                            </Link>
-                                            <div className="dropdown-menu shadow">
-                                                <ul>
-                                                    <li><Link to="#" className={`dropdown-item fs-14 ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
-                                                    <li><Link to="#" className={`dropdown-item fs-14 ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        <PredefinedDatePicker />
-                                    </div>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <div style={{ position: "relative" }}>
-                                            <button
-                                                className={`btn btn-outline-light shadow px-2 ${filterStatus.length > 0 ? 'border-primary text-primary' : ''}`}
-                                                style={{ height: 36, fontSize: 14 }}
-                                                onClick={() => setShowFilter(!showFilter)}
-                                            >
-                                                <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
-                                            </button>
-                                            {showFilter && (
-                                                <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
-                                                    <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
-                                                        <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
-                                                        <button
-                                                            type="button"
-                                                            className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                            onClick={() => setShowFilter(false)}
-                                                            aria-label="Close"
-                                                        >
-                                                            <i className="ti ti-x" />
-                                                        </button>
-                                                    </div>
-                                                    <div className="filter-set-view p-2 px-3">
-                                                        <div className="accordion" id="filterAccordion">
-                                                            <div className="filter-set-content">
-                                                                <div className="filter-set-content-head mb-2 mt-1">
-                                                                    <Link
-                                                                        to="#"
-                                                                        className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
-                                                                        onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
-                                                                    >
-                                                                        Status
-                                                                    </Link>
-                                                                </div>
-                                                                {statusFilterOpen && (
-                                                                    <div className="filter-set-contents">
-                                                                        <div className="filter-content-list ps-4">
-                                                                            {["Active", "Inactive"].map(status => (
-                                                                                <div className="form-check mb-2" key={status}>
-                                                                                    <input
-                                                                                        className="form-check-input primary-checkbox"
-                                                                                        type="checkbox"
-                                                                                        id={`filter-${status}`}
-                                                                                        checked={pendingFilter.includes(status)}
-                                                                                        style={{ width: 20, height: 20, cursor: "pointer" }}
-                                                                                        onChange={(e) => {
-                                                                                            if (e.target.checked) setPendingFilter([...pendingFilter, status]);
-                                                                                            else setPendingFilter(pendingFilter.filter(s => s !== status));
-                                                                                        }}
-                                                                                    />
-                                                                                    <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
-                                                                                        {status}
-                                                                                    </label>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
-                                                            <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
-                                                            <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {viewMode === "list" && (
-                                            <div className="dropdown">
-                                                <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                                    <i className="ti ti-columns-3 me-2" />Manage Columns
-                                                </Link>
-                                                <div className="dropdown-menu dropdown-md p-3">
-                                                    <ul>
-                                                        {ALL_COLS.map(col => (
-                                                            <li className="gap-1 d-flex align-items-center mb-2" key={col}>
-                                                                <i className="ti ti-columns me-1" />
-                                                                <div className="form-check form-switch w-100 ps-0">
-                                                                    <label className="form-check-label d-flex align-items-center gap-2 w-100">
-                                                                        <span>{col}</span>
-                                                                        <input
-                                                                            className="form-check-input switchCheckDefault ms-auto"
-                                                                            type="checkbox"
-                                                                            role="switch"
-                                                                            checked={visibleCols[col] !== false}
-                                                                            onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
-                                                                        />
-                                                                    </label>
-                                                                </div>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div className="d-flex align-items-center gap-1" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
-                                            <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                                <i className="ti ti-list fs-14" />
-                                            </button>
-                                            <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                                <i className="ti ti-grid-dots fs-14" />
-                                            </button>
-                                        </div>
+                    <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
+                        <div className="toolbar-custom py-3 px-4">
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <div className="dropdown">
+                                    <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                                        <i className="ti ti-sort-ascending-2 me-2" />Sort By
+                                    </Link>
+                                    <div className="dropdown-menu">
+                                        <ul>
+                                            <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
+                                            <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
+                                        </ul>
                                     </div>
                                 </div>
-                                <div className="flex-grow-1 overflow-auto" style={{ minWidth: 0 }}>
-                                    {viewMode === "list" ? (
-                                        <div className="custom-table table-nowrap px-4 flex-grow-1 border-0">
-                                            <Datatable
-                                                columns={visibleColumns}
-                                                dataSource={tableData}
-                                                Selection={true}
-                                                searchText={searchText}
-                                                onRow={(record) => ({
-                                                    onClick: () => navigate(route.customerView.replace(":id", String(record.id))),
-                                                    style: { cursor: "pointer" }
-                                                })}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="p-4"><div className="row g-3">
-                                            {tableData.map(c => (
-                                                <div className="col-xxl-3 col-xl-4 col-md-6" key={c.id}>
-                                                    <div className="card border shadow-sm h-100 hover-shadow transition-all" style={{ borderRadius: 10 }}>
-                                                        <div className="card-body p-3">
-                                                            <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-3 border-bottom pb-3">
-                                                                <div className="d-flex align-items-center">
-                                                                    <div className="avatar avatar-md border rounded-circle flex-shrink-0 me-2 d-flex align-items-center justify-content-center bg-soft-primary" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))} style={{ cursor: "pointer", width: 42, height: 42 }}>
-                                                                        <span className="fs-16 fw-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
-                                                                    </div>
-                                                                    <div>
-                                                                        <h6 className="mb-0">
-                                                                            <span className="cursor-pointer text-dark fs-14" style={{ fontSize: '14px' }} onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
-                                                                                {c.name}
-                                                                            </span>
-                                                                        </h6>
-                                                                        <div className="fs-12 text-muted mt-1">
-                                                                            {c.companyName || "No Company"}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="dropdown table-action">
-                                                                    <button className="btn btn-icon btn-sm btn-outline-light shadow-sm bg-white" data-bs-toggle="dropdown">
-                                                                        <i className="ti ti-dots-vertical" />
-                                                                    </button>
-                                                                    <div className="dropdown-menu dropdown-menu-right">
-                                                                        <button className="dropdown-item" onClick={() => openEdit(c)}>
-                                                                            <i className="ti ti-edit text-blue me-2" /> Edit
-                                                                        </button>
-                                                                        <button className="dropdown-item text-danger" onClick={() => handleDelete(c)}>
-                                                                            <i className="ti ti-trash me-2" /> Delete
-                                                                        </button>
-                                                                        <button className="dropdown-item" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
-                                                                            <i className="ti ti-eye text-blue-light me-2" /> Preview
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div className="d-block pt-1">
-                                                                <div className="d-flex flex-column mb-3">
-                                                                    <p className="text-default d-inline-flex align-items-center mb-2 fs-14" style={{ fontSize: '14px' }}>
-                                                                        <i className="ti ti-mail text-dark me-2 fs-15" />
-                                                                        {c.email || "No Email"}
-                                                                    </p>
-                                                                    <p className="text-default d-inline-flex align-items-center mb-0 fs-14" style={{ fontSize: '14px' }}>
-                                                                        <i className="ti ti-phone text-dark me-2 fs-15" />
-                                                                        {c.workPhone || "No Phone"}
-                                                                    </p>
-                                                                </div>
-                                                                <div className="d-flex align-items-center">
-                                                                    <span className={`badge badge-tag ${c.status === "Active" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`} style={{ padding: "4px 8px" }}>
-                                                                        <i className="ti ti-point-filled me-1" />{c.status}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 border-top pt-3 mt-3">
-                                                                <div>
-                                                                    <span className="fs-11 text-muted text-uppercase d-block mb-1">Receivables</span>
-                                                                    <span className="fs-14 fw-bold text-dark">{fmt(c.receivables)}</span>
-                                                                </div>
-                                                                <div className="text-end">
-                                                                    <span className="fs-11 text-muted text-uppercase d-block mb-1">Unused Credits</span>
-                                                                    <span className="fs-14 fw-bold text-dark">{fmt(c.unusedCredits)}</span>
-                                                                </div>
-                                                            </div>
+                                <PredefinedDatePicker />
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                                <div style={{ position: "relative" }}>
+                                    <button
+                                        className={`btn btn-outline-light shadow px-2 ${filterStatus.length > 0 ? 'border-primary text-primary' : ''}`}
+                                        style={{ height: 36, fontSize: 14 }}
+                                        onClick={() => setShowFilter(!showFilter)}
+                                    >
+                                        <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
+                                    </button>
+                                    {showFilter && (
+                                        <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
+                                            <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
+                                                <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
+                                                <button
+                                                    type="button"
+                                                    className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
+                                                    onClick={() => setShowFilter(false)}
+                                                    aria-label="Close"
+                                                >
+                                                    <i className="ti ti-x" />
+                                                </button>
+                                            </div>
+                                            <div className="filter-set-view p-2 px-3">
+                                                <div className="accordion" id="filterAccordion">
+                                                    <div className="filter-set-content">
+                                                        <div className="filter-set-content-head mb-2 mt-1">
+                                                            <Link
+                                                                to="#"
+                                                                className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
+                                                                onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
+                                                            >
+                                                                Status
+                                                            </Link>
                                                         </div>
+                                                        {statusFilterOpen && (
+                                                            <div className="filter-set-contents">
+                                                                <div className="filter-content-list ps-4">
+                                                                    {["Active", "Inactive"].map(status => (
+                                                                        <div className="form-check mb-2" key={status}>
+                                                                            <input
+                                                                                className="form-check-input primary-checkbox"
+                                                                                type="checkbox"
+                                                                                id={`filter-${status}`}
+                                                                                checked={pendingFilter.includes(status)}
+                                                                                style={{ width: 20, height: 20, cursor: "pointer" }}
+                                                                                onChange={(e) => {
+                                                                                    if (e.target.checked) setPendingFilter([...pendingFilter, status]);
+                                                                                    else setPendingFilter(pendingFilter.filter(s => s !== status));
+                                                                                }}
+                                                                            />
+                                                                            <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
+                                                                                {status}
+                                                                            </label>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div></div>
+                                                <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
+                                                    <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
+                                                    <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
+                                {viewMode === "list" && (
+                                    <div className="dropdown">
+                                        <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                            <i className="ti ti-columns-3 me-2" />Manage Columns
+                                        </Link>
+                                        <div className="dropdown-menu dropdown-md p-3">
+                                            <ul>
+                                                {ALL_COLS.map(col => (
+                                                    <li className="gap-1 d-flex align-items-center mb-2" key={col}>
+                                                        <i className="ti ti-columns me-1" />
+                                                        <div className="form-check form-switch w-100 ps-0">
+                                                            <label className="form-check-label d-flex align-items-center gap-2 w-100">
+                                                                <span>{col}</span>
+                                                                <input
+                                                                    className="form-check-input switchCheckDefault ms-auto"
+                                                                    type="checkbox"
+                                                                    role="switch"
+                                                                    checked={visibleCols[col] !== false}
+                                                                    onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="d-flex align-items-center gap-1" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
+                                    <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                        <i className="ti ti-list fs-14" />
+                                    </button>
+                                    <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                        <i className="ti ti-grid-dots fs-14" />
+                                    </button>
+                                </div>
                             </div>
+                        </div>
+                        <div className="flex-grow-1 overflow-auto" style={{ minWidth: 0 }}>
+                            {viewMode === "list" ? (
+                                <div className="custom-table table-nowrap px-4 flex-grow-1 border-0">
+                                    <Datatable
+                                        columns={visibleColumns}
+                                        dataSource={tableData}
+                                        Selection={true}
+                                        searchText={searchText}
+                                        onRow={(record) => ({
+                                            onClick: () => navigate(route.customerView.replace(":id", String(record.id))),
+                                            style: { cursor: "pointer" }
+                                        })}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="p-4"><div className="row g-3">
+                                    {tableData.map(c => (
+                                        <div className="col-xxl-3 col-xl-4 col-md-6" key={c.id}>
+                                            <div className="card border shadow-sm h-100 hover-shadow transition-all" style={{ borderRadius: 10 }}>
+                                                <div className="card-body p-3">
+                                                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-3 border-bottom pb-3">
+                                                        <div className="d-flex align-items-center">
+                                                            <div className="avatar avatar-md border rounded-circle flex-shrink-0 me-2 d-flex align-items-center justify-content-center bg-soft-primary" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))} style={{ cursor: "pointer", width: 42, height: 42 }}>
+                                                                <span className="fs-16 fw-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
+                                                            </div>
+                                                            <div>
+                                                                <h6 className="mb-0">
+                                                                    <span className="cursor-pointer text-dark fs-14" style={{ fontSize: '14px' }} onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
+                                                                        {c.name}
+                                                                    </span>
+                                                                </h6>
+                                                                <div className="fs-12 text-muted mt-1">
+                                                                    {c.companyName || "No Company"}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="dropdown table-action">
+                                                            <button className="btn btn-icon btn-sm btn-outline-light shadow-sm bg-white" data-bs-toggle="dropdown">
+                                                                <i className="ti ti-dots-vertical text-muted" />
+                                                            </button>
+                                                            <div className="dropdown-menu dropdown-menu-right">
+                                                                <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                                                                    <i className="ti ti-edit text-blue me-2" /> Edit
+                                                                </button>
+                                                                <button className="dropdown-item text-danger" onClick={(e) => { e.stopPropagation(); handleDelete(c); }}>
+                                                                    <i className="ti ti-trash me-2" /> Delete
+                                                                </button>
+                                                                <button className="dropdown-item" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
+                                                                    <i className="ti ti-eye text-blue-light me-2" /> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="d-block pt-1">
+                                                        <div className="d-flex flex-column mb-3">
+                                                            <p className="text-default d-inline-flex align-items-center mb-2 fs-14" style={{ fontSize: '14px' }}>
+                                                                <i className="ti ti-mail text-dark me-2 fs-15" />
+                                                                {c.email || "No Email"}
+                                                            </p>
+                                                            <p className="text-default d-inline-flex align-items-center mb-0 fs-14" style={{ fontSize: '14px' }}>
+                                                                <i className="ti ti-phone text-dark me-2 fs-15" />
+                                                                {c.workPhone || "No Phone"}
+                                                            </p>
+                                                        </div>
+                                                        <div className="d-flex align-items-center">
+                                                            <span className={`badge badge-tag ${c.status === "Active" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`} style={{ padding: "4px 8px" }}>
+                                                                <i className="ti ti-point-filled me-1" />{c.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 border-top pt-3 mt-3">
+                                                        <div>
+                                                            <span className="fs-11 text-muted text-uppercase d-block mb-1">Receivables</span>
+                                                            <span className="fs-14 fw-bold text-dark">{fmt(c.receivables)}</span>
+                                                        </div>
+                                                        <div className="text-end">
+                                                            <span className="fs-11 text-muted text-uppercase d-block mb-1">Unused Credits</span>
+                                                            <span className="fs-14 fw-bold text-dark">{fmt(c.unusedCredits)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div></div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
-                <Footer />
             </div>
+            <Footer />
         </div>
     );
 };

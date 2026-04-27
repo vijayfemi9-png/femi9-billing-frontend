@@ -1,0 +1,1 @@
+import{R as e,j as s}from"./index-BSHcnDrm.js";import{D as t}from"./index.es-B2_grV0f.js";const n=()=>{const[n,a]=e.useState();return s.jsx("div",{children:s.jsx(t,{value:n,onChange:function(e){a(e.target.value)}})})};export{n as T};

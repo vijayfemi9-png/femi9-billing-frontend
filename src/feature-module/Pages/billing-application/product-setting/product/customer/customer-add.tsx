@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "./customer.scss";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
+import Footer from "../../../../../../components/footer/footer";
 import { all_routes } from "../../../../../../routes/all_routes";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
@@ -183,17 +184,14 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
     // Dynamic Display Name Options
     const getDisplayNameOptions = () => {
         const options: string[] = [];
-        const { salutation, firstName, lastName, companyName } = formData;
+        const { salutation, firstName, companyName } = formData;
 
-        const full = `${salutation} ${firstName} ${lastName}`.trim();
-        const short = `${firstName} ${lastName}`.trim();
-        const reversed = lastName && firstName ? `${lastName}, ${firstName}` : "";
-        const onlyLast = `${lastName} ${firstName}`.trim();
+        const name = firstName || "";
+        const full = `${salutation} ${name}`.trim();
+        const short = name.trim();
 
         if (full) options.push(full);
         if (short && short !== full) options.push(short);
-        if (reversed) options.push(reversed);
-        if (onlyLast && onlyLast !== short) options.push(onlyLast);
         if (companyName) options.push(companyName);
 
         return Array.from(new Set(options)).filter(Boolean);
@@ -223,6 +221,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                     ...prev,
                     ...existing,
                     // Ensure these are explicitly set if they exist in the raw data
+                    firstName: existing.firstName || existing.name || "",
                     displayName: existing.displayName || existing.name || "",
                     billingAddress: existing.billingAddress || prev.billingAddress,
                     shippingAddress: existing.shippingAddress || prev.shippingAddress,
@@ -238,12 +237,11 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
         }
     }, [id, isEdit]);
 
-    // Auto-populate Display Name if empty
     useEffect(() => {
         if (!formData.displayName && displayNameOptions.length > 0) {
             handleBaseChange("displayName", displayNameOptions[0]);
         }
-    }, [formData.firstName, formData.lastName, formData.companyName]);
+    }, [formData.firstName, formData.companyName]);
 
     const handleFetchGst = () => {
         if (!gstin) return;
@@ -279,7 +277,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
 
     return (
         <div className="page-wrapper">
-            <div className="content">
+            <div className="content mb-4">
                 <PageHeader
                     title={isEdit ? "Edit Customer" : "New Customer"}
                     badgeCount={false}
@@ -341,8 +339,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                                 <option value="Dr.">Dr.</option>
                                             </select>
                                         </div>
-                                        <input type="text" className="form-control-custom" style={{ width: "240px" }} placeholder="First Name" value={formData.firstName} onChange={(e) => handleBaseChange("firstName", e.target.value)} />
-                                        <input type="text" className="form-control-custom" style={{ width: "240px" }} placeholder="Last Name" value={formData.lastName} onChange={(e) => handleBaseChange("lastName", e.target.value)} />
+                                        <input type="text" className="form-control-custom flex-grow-1" placeholder="Name" value={formData.firstName} onChange={(e) => handleBaseChange("firstName", e.target.value)} />
                                     </div>
                                 </div>
 
@@ -559,8 +556,8 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                     )}
 
                                     {activeTab === "Address" && (
-                                        <div className="pane-content">
-                                            <div className="row gy-4 gx-0">
+                                        <div className="pane-content address-pane">
+                                            <div className="row gy-4 gx-5">
                                                 <div className="col-md-6">
                                                     <h6 className="fw-bold mb-4 fs-14 text-dark letter-spacing-1">BILLING ADDRESS</h6>
                                                     <div className="mb-3">
@@ -701,21 +698,19 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                     )}
 
                                     {activeTab === "Contact Persons" && (
-                                        <div className="pane-content pe-4">
+                                        <div className="pane-content">
                                             <div className="contact-table-wrapper">
                                                 <table className="contact-table">
                                                     <thead>
                                                         <tr>
-                                                            <th style={{ width: "100px" }}>SALUTATION</th>
-                                                            <th style={{ width: "150px" }}>FIRST NAME</th>
-                                                            <th style={{ width: "150px" }}>LAST NAME</th>
-                                                            <th style={{ width: "200px" }}>EMAIL ADDRESS</th>
-                                                            <th style={{ width: "160px" }}>WORK PHONE</th>
-                                                            <th style={{ width: "160px" }}>MOBILE</th>
-                                                            {showExtraCols && <th style={{ width: "160px" }}>SKYPE NAME/NUMBER</th>}
-                                                            {showExtraCols && <th style={{ width: "150px" }}>DESIGNATION</th>}
-                                                            {showExtraCols && <th style={{ width: "150px" }}>DEPARTMENT</th>}
-                                                            <th style={{ width: "60px" }}></th>
+                                                            <th style={{ width: "90px" }}>SALUTATION</th>
+                                                            <th>NAME</th>
+                                                            <th>EMAIL ADDRESS</th>
+                                                            <th style={{ width: "190px" }}>MOBILE</th>
+                                                            {showExtraCols && <th style={{ width: "140px" }}>SKYPE</th>}
+                                                            {showExtraCols && <th style={{ width: "130px" }}>DESIGNATION</th>}
+                                                            {showExtraCols && <th style={{ width: "130px" }}>DEPARTMENT</th>}
+                                                            <th style={{ width: "50px" }}></th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -735,10 +730,27 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                                                     </select>
                                                                 </td>
                                                                 <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.firstName} onChange={(e) => handleContactChange(index, "firstName", e.target.value)} /></td>
-                                                                <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.lastName} onChange={(e) => handleContactChange(index, "lastName", e.target.value)} /></td>
                                                                 <td><input type="email" className="form-control-custom white-input" placeholder="" value={contact.email} onChange={(e) => handleContactChange(index, "email", e.target.value)} /></td>
-                                                                <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.workPhoneLine} onChange={(e) => handleContactChange(index, "workPhoneLine", e.target.value)} /></td>
-                                                                <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.mobileLine} onChange={(e) => handleContactChange(index, "mobileLine", e.target.value)} /></td>
+                                                                <td>
+                                                                    <div className="phone-group-cell">
+                                                                        <select
+                                                                            value={contact.mobilePrefix || "+91"}
+                                                                            onChange={(e) => handleContactChange(index, "mobilePrefix", e.target.value)}
+                                                                        >
+                                                                            <option value="+91">+91</option>
+                                                                            <option value="+1">+1</option>
+                                                                            <option value="+44">+44</option>
+                                                                            <option value="+971">+971</option>
+                                                                            <option value="+65">+65</option>
+                                                                        </select>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="Mobile No."
+                                                                            value={contact.mobileLine}
+                                                                            onChange={(e) => handleContactChange(index, "mobileLine", e.target.value)}
+                                                                        />
+                                                                    </div>
+                                                                </td>
                                                                 {showExtraCols && <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.skype || ""} onChange={(e) => handleContactChange(index, "skype", e.target.value)} /></td>}
                                                                 {showExtraCols && <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.designation || ""} onChange={(e) => handleContactChange(index, "designation", e.target.value)} /></td>}
                                                                 {showExtraCols && <td><input type="text" className="form-control-custom white-input" placeholder="" value={contact.department || ""} onChange={(e) => handleContactChange(index, "department", e.target.value)} /></td>}
@@ -767,12 +779,12 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
 
                                     {activeTab === "Remarks" && (
                                         <div className="pane-content">
-                                            <div className="form-row align-top">
-                                                <div className="form-label">Remarks</div>
-                                                <div className="form-field-container">
+                                            <div className="form-row flex-column align-items-start">
+                                                <div className="form-label mb-2" style={{ paddingTop: 0 }}>Remarks</div>
+                                                <div className="form-field-container w-100" style={{ maxWidth: 800 }}>
                                                     <textarea
-                                                        className="form-control-custom"
-                                                        style={{ height: 150, paddingTop: 10 }}
+                                                        className="form-control-custom p-3"
+                                                        style={{ height: 150, resize: "vertical" }}
                                                         placeholder="Internal notes about this customer..."
                                                         value={formData.remarks}
                                                         onChange={(e) => handleBaseChange("remarks", e.target.value)}
@@ -784,7 +796,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                                 </div>
                             </div>
 
-                            <div className="d-flex align-items-center gap-3 border-top w-100 bg-white" style={{ padding: "24px 32px", borderBottomLeftRadius: "12px", borderBottomRightRadius: "12px" }}>
+                            <div className="d-flex align-items-center gap-3 border-top w-100 bg-white" style={{ padding: "20px 60px" }}>
                                 <button type="button" className="btn text-white" style={{ backgroundColor: "#e41f07", padding: "8px 24px", fontWeight: 500, borderRadius: "6px" }} onClick={handleSave}>Save</button>
                                 <button type="button" className="btn btn-light" style={{ backgroundColor: "#f8fafc", padding: "8px 24px", fontWeight: 500, borderRadius: "6px", border: "1px solid #e2e8f0", color: "#0f172a" }} onClick={handleBack}>Cancel</button>
                             </div>
@@ -797,7 +809,9 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                             <div className="gst-modal-content">
                                 <div className="gst-modal-header">
                                     <h5>Prefill Customer Details From the GST Portal</h5>
-                                    <button className="btn-close-custom" onClick={() => setShowGstModal(false)}>&times;</button>
+                                    <button className="btn-close-custom" onClick={() => setShowGstModal(false)}>
+                                        <i className="ti ti-x" />
+                                    </button>
                                 </div>
                                 <div className="gst-modal-body text-start">
                                     <label className="form-label-gst">GSTIN/UIN*</label>
@@ -824,6 +838,7 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                     )}
                 </div>
             </div>
+            <Footer />
         </div>
     );
 

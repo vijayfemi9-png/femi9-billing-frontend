@@ -61,7 +61,7 @@ $sidebar-dark: #1e293b;
 
 .form-header-title {
     padding: 20px 30px;
-    border-bottom: 1px solid #f0f2f4;
+    border-bottom: 1px solid #d0d5dd;
     font-size: 16px;
     font-weight: 700;
     color: #000;
@@ -69,6 +69,13 @@ $sidebar-dark: #1e293b;
 
 .zoho-form-content {
     padding: 40px 60px;
+
+    .tab-bar-custom {
+        margin-left: -70px;
+        margin-right: -70px;
+        padding-left: 70px;
+        padding-right: 70px;
+    }
 }
 
 /* Form Layout */
@@ -91,6 +98,13 @@ $sidebar-dark: #1e293b;
         content: "*";
         color: $primary-red;
         margin-left: 3px;
+    }
+}
+
+.address-pane {
+    .form-label {
+        width: 140px;
+        min-width: 140px;
     }
 }
 
@@ -207,7 +221,7 @@ $sidebar-dark: #1e293b;
 .tab-bar-custom {
     display: flex;
     gap: 35px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #d0d5dd;
     margin-top: 40px;
     margin-bottom: 30px;
 }
@@ -215,7 +229,7 @@ $sidebar-dark: #1e293b;
 .tab-item-custom {
     font-size: 14px;
     font-weight: 600;
-    color: #666;
+    color: #484848;
     padding-bottom: 12px;
     cursor: pointer;
     position: relative;
@@ -4327,20 +4341,25 @@ select.form-control-custom {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
-        background: #fee2e2;
-        border: none;
+        width: 24px;
+        height: 24px;
+        background: #fff5f5;
+        border: 1px solid #fecaca;
         color: #ef4444;
-        font-size: 10px;
+        font-size: 14px;
         cursor: pointer;
         padding: 0;
         border-radius: 50%;
-        font-weight: bold;
-        transition: background 0.2s;
+        transition: all 0.2s;
 
         &:hover {
-            background: #fecaca;
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        &:focus {
+            outline: none;
+            box-shadow: none;
         }
     }
 }
@@ -4412,11 +4431,18 @@ select.form-control-custom {
 .contact-table-wrapper {
     overflow-x: auto;
     width: 100%;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 .contact-table {
     margin-bottom: 0;
     width: 100%;
+    table-layout: auto;
     border-collapse: collapse;
     border: 1px solid #eee;
     background: #fff;
@@ -4501,6 +4527,53 @@ select.form-control-custom {
         input {
             flex-grow: 1;
             padding-left: 8px;
+        }
+    }
+}
+
+/* Phone group cell: +91 dropdown + number input side-by-side */
+.phone-group-cell {
+    display: flex;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    height: 38px;
+    overflow: hidden;
+
+    &:focus-within {
+        border-color: #e41f07;
+        box-shadow: 0 0 0 2px rgba(228, 31, 7, 0.05);
+    }
+
+    select {
+        flex-shrink: 0;
+        width: 68px;
+        height: 100%;
+        border: none;
+        border-right: 1px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 13px;
+        color: #1e293b;
+        padding: 0 4px;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+        text-align: center;
+    }
+
+    input {
+        flex: 1;
+        height: 100%;
+        border: none;
+        outline: none;
+        padding: 0 10px;
+        font-size: 14px;
+        color: #1e293b;
+        background: #fff;
+
+        &::placeholder {
+            color: #94a3b8;
         }
     }
 }
