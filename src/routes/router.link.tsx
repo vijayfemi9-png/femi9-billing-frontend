@@ -217,8 +217,8 @@ const ProductList = lazy(() => import("../feature-module/Pages/billing-applicati
 const Locations = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/location"));
 const PriceList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/price-list"));
 const CompositeItem = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/composite-item"));
-const AssignLocation = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location"));
 const AssignLocationList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location-list"));
+
 const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-list"));
 const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
 const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
@@ -1715,13 +1715,7 @@ export const publicRoutes = [
     route: Route,
     meta_title: "Edit Composite Item",
   },
-  {
-    id: "211",
-    path: route.assignLocation,
-    element: <AssignLocation />,
-    route: Route,
-    meta_title: "Assign Location",
-  },
+
   {
     id: "211b",
     path: route.assignLocationList,

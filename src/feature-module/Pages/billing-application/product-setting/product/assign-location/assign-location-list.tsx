@@ -1,39 +1,36 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../../../../../components/footer/footer";
 import Datatable from "../../../../../../components/dataTable";
 import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../../../routes/all_routes";
-import type { LocationNode } from "./assign-location";
 
-interface LocationRow {
+interface LocationNode {
     id: number;
-    rowKey: string;
-    itemId: number;
-    levelNum: number;
+    parentId: number | null;
     name: string;
     code: string;
+    currency?: string;
+    isDeleted?: boolean;
+}
+
+interface LocationRow {
+    id: string;
+    rowKey: string;
+    itemId: string;
+    levelNum: string;
+    name: string;
+    code: string;
+    currency: string;
     parent: string;
     status: "Active";
 }
 
-// ── Storage Keys ──────────────────────────────────────────────────────────────
-const SK_LOCATIONS = "asl_locations";
+const SK_LOCATIONS = "asl_locations_v11";
+const SEED_LOCATIONS: LocationNode[] = [];
+const ACCENT = "#e41f07";
 
-// ── Seed Data ─────────────────────────────────────────────────────────────────
-const SEED_LOCATIONS: LocationNode[] = [
-    { id: 1, parentId: null, name: "India", code: "IN" },
-    { id: 2, parentId: null, name: "USA", code: "US" },
-    { id: 3, parentId: 1, name: "Tamil Nadu", code: "TN" },
-    { id: 4, parentId: 3, name: "Erode", code: "ERD" },
-    { id: 5, parentId: 4, name: "Erode Taluk", code: "ERD" },
-    { id: 6, parentId: 5, name: "638001", code: "638" },
-];
-
-const ALL_COLS = ["Code", "Level", "Parent", "Portal Access"];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function loadLS<T>(key: string, seed: T[]): T[] {
     try {
         const s = localStorage.getItem(key);
@@ -42,23 +39,21 @@ function loadLS<T>(key: string, seed: T[]): T[] {
             if (Array.isArray(p) && p.length) return p;
         }
     } catch { /**/ }
-    try { localStorage.setItem(key, JSON.stringify(seed)); } catch { /**/ }
     return seed;
 }
 
-function saveLS<T>(key: string, data: T[]) {
-    try { localStorage.setItem(key, JSON.stringify(data)); } catch { /**/ }
+function saveLS(key: string, data: any) {
+    localStorage.setItem(key, JSON.stringify(data));
 }
-
-const live = <T extends { isDeleted?: boolean }>(arr: T[]) => arr.filter(x => !x.isDeleted);
 
 function buildRows(nodes: LocationNode[]): LocationRow[] {
     const rows: LocationRow[] = [];
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
+    const liveNodes = nodes.filter(x => !x.isDeleted);
 
-    const getDepthAndParentName = (node: LocationNode) => {
+    liveNodes.forEach(n => {
         let depth = 1;
-        let pId = node.parentId;
+        let pId = n.parentId;
         let pName = "—";
         if (pId !== null) {
             const p = nodeMap.get(pId);
@@ -70,222 +65,116 @@ function buildRows(nodes: LocationNode[]): LocationRow[] {
             depth++;
             pId = parent.parentId;
         }
-        return { depth, parentName: pName };
-    };
-
-    let seq = 0;
-    live(nodes).forEach(n => {
-        const { depth, parentName } = getDepthAndParentName(n);
         rows.push({
-            id: ++seq, rowKey: `n-${n.id}`, itemId: n.id,
-            levelNum: depth,
-            name: n.name, code: n.code, parent: parentName, status: "Active",
+            id: String(rows.length + 1), 
+            rowKey: `n-${n.id}`, 
+            itemId: String(n.id || 0),
+            levelNum: String(depth || 0),
+            name: String(n.name || ""), 
+            code: String(n.code || ""), 
+            currency: String(n.currency || ""), 
+            parent: String(pName || ""), 
+            status: "Active",
         });
     });
-
     return rows;
 }
 
-// ── Delete Confirm ────────────────────────────────────────────────────────────
-const DeleteConfirm: React.FC<{
-    name: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-}> = ({ name, onConfirm, onCancel }) => (
-    <div
-        style={{
-            position: "fixed", inset: 0, zIndex: 2100,
-            background: "rgba(0,0,0,0.45)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-        }}
-        onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
-    >
-        <div
-            className="bg-white shadow-lg text-center"
-            style={{ borderRadius: 12, width: "100%", maxWidth: 380, padding: "32px 28px" }}
-        >
-            <div
-                className="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
-                style={{ width: 60, height: 60, background: "#fff0ef" }}
-            >
-                <i className="ti ti-trash text-danger" style={{ fontSize: 26 }} />
-            </div>
-            <h6 className="fw-bold fs-16 mb-1">Delete Location?</h6>
-            <p className="text-muted fs-14 mb-4">
-                "<strong>{name}</strong>" will be permanently removed.
-            </p>
-            <div className="d-flex justify-content-center gap-3">
-                <button className="btn bg-transparent fs-14 px-4" style={{ color: "#555" }} onClick={onCancel}>Cancel</button>
-                <button className="btn bg-transparent fs-14 px-4" style={{ border: "1px solid #e41f07", color: "#e41f07" }} onClick={onConfirm}>
-                    <i className="ti ti-trash me-1" />Delete
-                </button>
-            </div>
-        </div>
-    </div>
-);
-
-// ── Main Component ────────────────────────────────────────────────────────────
 const AssignLocationList: React.FC = () => {
-    const route = all_routes;
     const navigate = useNavigate();
+    const route = all_routes;
 
     const [locations, setLocations] = useState<LocationNode[]>(() => loadLS(SK_LOCATIONS, SEED_LOCATIONS));
-
     const [searchText, setSearchText] = useState("");
-    const [searchFocused, setSearchFocused] = useState(false);
-    const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
-    const [filterLevel, setFilterLevel] = useState<number[]>([]);
-    const [pendingLevel, setPendingLevel] = useState<number[]>([]);
+    const [sortBy, setSortBy] = useState("newest");
     const [showFilter, setShowFilter] = useState(false);
-    const [levelFilterOpen, setLevelFilterOpen] = useState(false);
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-    const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>(
-        Object.fromEntries(ALL_COLS.map((c) => [c, true]))
-    );
-    const [del, setDel] = useState<{ name: string; onConfirm: () => void } | null>(null);
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newLocName, setNewLocName] = useState("");
+    const [path, setPath] = useState<{ id: number | null; name: string }[]>([{ id: null, name: "Home" }]);
+    const [layerNames, setLayerNames] = useState<string[]>(["Country", "State", "District", "Taluk", "Pincode"]);
+    const [showSubModal, setShowSubModal] = useState(false);
+    const [modalPath, setModalPath] = useState<{ id: number | null; name: string }[]>([]);
 
-    const allRows = useMemo(
-        () => buildRows(locations),
-        [locations]
-    );
+    const [visibleColumns, setVisibleColumns] = useState(["name", "code", "currency", "action"]);
+
+    useEffect(() => {
+        const yraw = localStorage.getItem("asl_layers_v11");
+        if (yraw) { try { setLayerNames(JSON.parse(yraw)); } catch { /* ignore */ } }
+    }, []);
+
+    const allRows = useMemo(() => buildRows(locations), [locations]);
+
+    const currentParentId = path[path.length - 1].id;
+    const currentLayerName = layerNames[path.length - 1] || "Location";
+
+    const drillDown = (item: LocationNode) => {
+        setModalPath([{ id: item.id, name: item.name }]);
+        setShowSubModal(true);
+    };
 
     const tableData = useMemo(() => {
-        let d = [...allRows];
-        if (filterLevel.length) d = d.filter((r) => filterLevel.includes(r.levelNum));
-        d.sort((a, b) => (sortBy === "oldest" ? a.itemId - b.itemId : b.itemId - a.itemId));
-        return d;
-    }, [allRows, filterLevel, sortBy]);
-
-    const gridData = useMemo(() => {
-        if (!searchText.trim()) return tableData;
-        const q = searchText.toLowerCase();
-        return tableData.filter(r =>
-            r.name.toLowerCase().includes(q) ||
-            r.code.toLowerCase().includes(q) ||
-            r.parent.toLowerCase().includes(q)
-        );
-    }, [tableData, searchText]);
-
-    const handleDelete = (row: LocationRow) => {
-        setDel({
-            name: row.name,
-            onConfirm: () => {
-                const u = locations.map(x => x.id === row.itemId ? { ...x, isDeleted: true } : x);
-                setLocations(u);
-                saveLS(SK_LOCATIONS, u);
-                setDel(null);
-            },
+        // Filter by current parent for drill-down
+        let data = allRows.filter(r => {
+            const node = locations.find(l => String(l.id) === r.itemId);
+            return node ? node.parentId === currentParentId : false;
         });
-    };
 
-    const handleApplyFilter = () => {
-        setFilterLevel(pendingLevel);
-        setShowFilter(false);
-    };
-
-    const handleResetFilter = () => {
-        setPendingLevel([]);
-        setFilterLevel([]);
-        setShowFilter(false);
-    };
-
-    const handleExportCSV = () => {
-        const headers = ["Name", "Code", "Level", "Parent", "Status"];
-        const rows = tableData.map(r => [r.name, r.code, `Level ${r.levelNum}`, r.parent, r.status]);
-        const csv = [headers, ...rows]
-            .map(row => row.map(c => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
-            .join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "assign-location.csv";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    const handleExportPDF = () => {
-        const rows = tableData.map(r =>
-            `<tr><td>${r.name}</td><td>${r.code}</td><td>Level ${r.levelNum}</td><td>${r.parent}</td><td>${r.status}</td></tr>`
-        ).join("");
-        const html = `<html><head><title>Assign Location</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f5f5f5;font-weight:600}</style></head><body><h2>Assign Location</h2><table><thead><tr><th>Name</th><th>Code</th><th>Level</th><th>Parent</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
-        const win = window.open("", "_blank");
-        if (win) { win.document.write(html); win.document.close(); win.print(); }
-    };
+        if (searchText) {
+            data = data.filter(r => 
+                (r.name?.toLowerCase() || "").includes(searchText.toLowerCase()) || 
+                (r.code?.toLowerCase() || "").includes(searchText.toLowerCase())
+            );
+        }
+        if (sortBy === "newest") data.sort((a, b) => Number(b.itemId) - Number(a.itemId));
+        else data.sort((a, b) => Number(a.itemId) - Number(b.itemId));
+        return data;
+    }, [allRows, searchText, sortBy, currentParentId, locations]);
 
     const columns = [
         {
-            title: "Name",
+            title: "Country",
             dataIndex: "name",
             key: "name",
             sorter: (a: LocationRow, b: LocationRow) => a.name.localeCompare(b.name),
-            render: (_: any, r: LocationRow) => (
-                <span className="fw-semibold fs-14" style={{ color: "#333" }}>{r.name}</span>
+            render: (v: string, r: LocationRow) => (
+                <button 
+                    className="btn p-0 border-0 bg-transparent fw-bold text-dark fs-14"
+                    onClick={() => {
+                        const original = locations.find(l => String(l.id) === r.itemId);
+                        if (original) drillDown(original);
+                    }}
+                >{v}</button>
             ),
         },
         {
-            title: "Code",
+            title: "Country Code",
             dataIndex: "code",
             key: "code",
             render: (v: string) => <span className="fs-14 text-dark">{v}</span>,
         },
         {
-            title: "Level",
-            dataIndex: "levelNum",
-            key: "level",
-            render: (_: any, r: LocationRow) => (
-                <span className="d-flex align-items-center gap-2 fs-14 text-dark">
-                    <i className="ti ti-layers-intersect fs-14 text-muted flex-shrink-0" />
-                    Level {r.levelNum}
-                </span>
-            ),
-        },
-        {
-            title: "Parent",
-            dataIndex: "parent",
-            key: "parent",
-            render: (v: string) => (
-                <span className="fs-14" style={{ color: v === "—" ? "#bbb" : "#555" }}>{v}</span>
-            ),
-        },
-        {
-            title: "Portal Access",
-            dataIndex: "status",
-            key: "status",
-            render: () => (
-                <span style={{
-                    background: "#e8f5e9", color: "#2e7d32", border: "1px solid #a5d6a7",
-                    borderRadius: 20, fontSize: 12, padding: "3px 12px", fontWeight: 600,
-                }}>Enabled</span>
-            ),
+            title: "Currency",
+            dataIndex: "currency",
+            key: "currency",
+            render: (v: string) => <span className="fs-14 text-dark">{v || "—"}</span>,
         },
         {
             title: "Action",
             key: "action",
             render: (_: any, r: LocationRow) => (
                 <div className="dropdown table-action">
-                    <Link
-                        to="#"
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        style={{
-                            display: "inline-flex", alignItems: "center", justifyContent: "center",
-                            width: 28, height: 28, borderRadius: 6,
-                            border: "1px solid #dee2e6", background: "#fff", boxShadow: "none",
-                        }}
-                    >
-                        <i className="ti ti-dots-vertical" style={{ fontSize: 16, color: "#6c757d" }} />
+                    <Link to="#" data-bs-toggle="dropdown" className="btn btn-icon btn-sm btn-outline-light">
+                        <i className="ti ti-dots-vertical" />
                     </Link>
                     <div className="dropdown-menu dropdown-menu-right">
-                        <Link
-                            className="dropdown-item text-danger"
-                            to="#"
-                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(r); }}
-                        >
-                            <i className="ti ti-trash" /> Delete
+                        <Link to="#" className="dropdown-item text-danger" onClick={() => {
+                            const updated = locations.map(l => String(l.id) === r.itemId ? { ...l, isDeleted: true } : l);
+                            setLocations(updated);
+                            localStorage.setItem(SK_LOCATIONS, JSON.stringify(updated));
+                        }}>
+                            <i className="ti ti-trash me-2" /> Delete
                         </Link>
                     </div>
                 </div>
@@ -293,278 +182,395 @@ const AssignLocationList: React.FC = () => {
         },
     ];
 
-    const visibleColumns = columns.filter((c) => {
-        if (c.title === "Name" || c.title === "Action") return true;
-        return visibleCols[c.title as string] !== false;
-    });
-
-    const titleDropdown = (
-        <div className="d-flex align-items-center gap-2">
-            <h4 className="mb-0 fw-bold" style={{ fontSize: "18px", color: "#111" }}>Assign Location</h4>
-            <span className="badge badge-soft-primary ms-1">{tableData.length}</span>
-        </div>
-    );
-
-    const maxDepth = Math.max(1, ...allRows.map(r => r.levelNum));
-    const depthOptions = Array.from({ length: maxDepth }, (_, i) => i + 1);
-
     return (
-        <div className="page-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            <div className="content pb-0 flex-grow-1 d-flex flex-column mb-4">
-                <PageHeader
-                    title="Assign Location"
-                    titleDropdown={titleDropdown}
-                    showModuleTile={false}
-                    moduleLink={route.assignLocationList}
-                    exportComponent={
-                        <div className="dropdown">
-                            <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
-                                <i className="ti ti-package-export me-2" />Export
-                            </Link>
-                            <div className="dropdown-menu dropdown-menu-end">
-                                <ul>
-                                    <li>
-                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
-                                            <i className="ti ti-file-type-pdf me-1" />Export as PDF
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
-                                            <i className="ti ti-file-type-xls me-1" />Export as Excel
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
+        <div className="page-wrapper" style={{ minHeight: "100vh", background: "#f8f9fa" }}>
+            <div className="content pb-0 flex-grow-1 d-flex flex-column">
+                {/* ── Page Header ── */}
+                <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
+                    <div>
+                        <h4 className="fw-bold mb-1">
+                            Assign Location <span className="badge bg-soft-danger text-danger fs-12 ms-2 px-2 py-1" style={{ borderRadius: "50%" }}>{tableData.length}</span>
+                        </h4>
+                        <div className="d-flex align-items-center gap-2 fs-13 text-muted">
+                            <span>Home</span> <i className="ti ti-chevron-right fs-10" /> <span className="text-dark fw-medium">Assign Location</span>
                         </div>
-                    }
-                    onRefresh={() => {
-                        setSearchText("");
-                        setFilterLevel([]);
-                        setSortBy("newest");
-                        setLocations(loadLS(SK_LOCATIONS, SEED_LOCATIONS));
-                    }}
-                />
+                    </div>
+                    <div className="d-flex align-items-center gap-2">
+                        <div className="dropdown">
+                            <button className="btn btn-white border d-flex align-items-center gap-2 fs-13 fw-bold shadow-none h-40" data-bs-toggle="dropdown">
+                                <i className="ti ti-package-export fs-16" /> Export <i className="ti ti-chevron-down fs-12 ms-1" />
+                            </button>
+                        </div>
+                        <button className="btn btn-white border h-40 w-40 d-flex align-items-center justify-content-center shadow-none" onClick={() => setLocations(loadLS(SK_LOCATIONS, SEED_LOCATIONS))}>
+                            <i className="ti ti-refresh fs-16" />
+                        </button>
+                        <button className="btn btn-white border h-40 w-40 d-flex align-items-center justify-content-center shadow-none">
+                            <i className="ti ti-settings fs-16" />
+                        </button>
+                    </div>
+                </div>
 
-                <div className="card border-0 rounded-0 flex-grow-1 mb-0 d-flex flex-column">
-                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
-                        <div className="d-flex align-items-center rounded bg-white" style={{
-                            width: 220,
-                            border: searchFocused ? "1px solid #e41f07" : "1px solid #dee2e6", transition: "border-color 0.15s, box-shadow 0.15s",
-                        }}>
-                            <span className="px-2 d-flex align-items-center text-muted">
-                                <i className="ti ti-search fs-14" />
-                            </span>
+                <div className="card border-0 shadow-sm mb-4">
+                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap border-0 pt-4 px-4 pb-0">
+                        <div 
+                            className="d-flex align-items-center border rounded px-3 bg-white shadow-none" 
+                            style={{
+                                width: 250,
+                                borderColor: isSearchFocused ? ACCENT : "#e5e7eb",
+                                borderRadius: 8,
+                                transition: "all 0.2s ease"
+                            }}
+                        >
+                            <i className="ti ti-search text-muted fs-15" />
                             <input
-                                className="form-control border-0 ps-0 fs-14 bg-transparent"
-                                style={{ outline: "none", boxShadow: "none", height: "36px" }}
+                                className="form-control border-0 fs-14 ps-2"
                                 placeholder="Search..."
                                 value={searchText}
                                 onChange={e => setSearchText(e.target.value)}
-                                onFocus={() => setSearchFocused(true)}
-                                onBlur={() => setSearchFocused(false)}
+                                onFocus={() => setIsSearchFocused(true)}
+                                onBlur={() => setIsSearchFocused(false)}
+                                style={{ height: 44, boxShadow: "none" }}
                             />
                         </div>
                         <button
-                            className="btn text-white d-flex align-items-center btn-primary-custom"
-                            style={{ background: "#e41f07", border: "none", borderRadius: "4px", height: "36px", padding: "0 14px" }}
-                            onClick={() => navigate(route.assignLocation)}
-                            onMouseEnter={(e) => e.currentTarget.style.background = "#cc1b06"}
-                            onMouseLeave={(e) => e.currentTarget.style.background = "#e41f07"}
+                            className="btn btn-danger d-flex align-items-center gap-2 fw-bold"
+                            onClick={() => setShowAddModal(true)}
+                            style={{ background: ACCENT, border: "none", height: 44, padding: "0 25px", borderRadius: 8, fontSize: 14 }}
                         >
-                            <i className="ti ti-plus me-2 fs-16" /> Add New Location
+                            <i className="ti ti-plus fs-16" /> {path.length > 1 ? "Add Value" : "Add New Country"}
                         </button>
                     </div>
 
-                    <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
-                        <div className="toolbar-custom py-3 px-4">
+                    {/* ── Sub-Location Management Modal ── */}
+                    {showSubModal && (
+                        <div className="gst-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowSubModal(false); }}>
+                            <div className="gst-modal-content" style={{ maxWidth: 800 }}>
+                                <div className="gst-modal-header">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <h5 className="fw-bold mb-0"><i className="ti ti-stack-2 me-2 text-danger" />Manage Layer</h5>
+                                    </div>
+                                    <button className="btn-close-custom" onClick={() => setShowSubModal(false)}>
+                                        <i className="ti ti-x" />
+                                    </button>
+                                </div>
+                                <div className="gst-modal-body p-4" style={{ minHeight: 400 }}>
+                                    {/* Modal Breadcrumbs */}
+                                    <div className="mb-3 d-flex align-items-center gap-2 flex-wrap">
+                                        <i className="ti ti-world text-muted fs-14" />
+                                        {modalPath.map((p, i) => (
+                                            <React.Fragment key={i}>
+                                                {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
+                                                <button 
+                                                    className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === modalPath.length - 1 ? "text-danger" : "text-muted"}`}
+                                                    onClick={() => setModalPath(modalPath.slice(0, i + 1))}
+                                                >
+                                                    {p.name}
+                                                </button>
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+
+                                    {/* Modal Toolbar */}
+                                    <div className="d-flex align-items-center justify-content-between mb-3">
+                                        <div className="fs-15 fw-bold text-dark">
+                                            Layer list for <span className="text-danger">{modalPath[modalPath.length - 1]?.name}</span>
+                                        </div>
+                                        <button 
+                                            className="btn btn-danger btn-sm d-flex align-items-center gap-2 fw-bold"
+                                            onClick={() => setShowAddModal(true)}
+                                            style={{ background: ACCENT, borderRadius: 6, padding: "8px 16px" }}
+                                        >
+                                            <i className="ti ti-plus fs-14" /> Add Value
+                                        </button>
+                                    </div>
+
+                                    {/* Modal Table */}
+                                    <div className="border rounded">
+                                        <Datatable 
+                                            columns={[
+                                                {
+                                                    title: "Layer",
+                                                    dataIndex: "name",
+                                                    render: (v: string, r: any) => (
+                                                        <button 
+                                                            className="btn p-0 border-0 bg-transparent fw-bold text-dark fs-14"
+                                                            onClick={() => {
+                                                                const original = locations.find(l => String(l.id) === r.itemId);
+                                                                if (original) setModalPath(prev => [...prev, { id: original.id, name: original.name }]);
+                                                            }}
+                                                        >{v}</button>
+                                                    )
+                                                },
+                                                { title: "Code", dataIndex: "code" },
+                                                {
+                                                    title: "Action",
+                                                    dataIndex: "action",
+                                                    render: (_: any, r: any) => (
+                                                        <button 
+                                                            className="btn text-danger p-0 border-0 bg-transparent"
+                                                            onClick={() => {
+                                                                const updated = locations.map(l => String(l.id) === r.itemId ? { ...l, isDeleted: true } : l);
+                                                                setLocations(updated);
+                                                                localStorage.setItem(SK_LOCATIONS, JSON.stringify(updated));
+                                                            }}
+                                                        ><i className="ti ti-trash" /></button>
+                                                    )
+                                                }
+                                            ]}
+                                            dataSource={allRows.filter(r => {
+                                                const node = locations.find(l => String(l.id) === r.itemId);
+                                                return node?.parentId === modalPath[modalPath.length - 1]?.id && !node?.isDeleted;
+                                            })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Add Location Modal ── */}
+                    {showAddModal && (
+                        <div className="gst-modal-overlay" style={{ zIndex: 1100 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
+                            <div className="gst-modal-content" style={{ maxWidth: 500 }}>
+                                <div className="gst-modal-header">
+                                    <h5 className="fw-bold"><i className="ti ti-map-pin me-2 text-danger" />{showSubModal ? "Add New Value" : "Add New Country"}</h5>
+                                    <button className="btn-close-custom" onClick={() => setShowAddModal(false)}>
+                                        <i className="ti ti-x" />
+                                    </button>
+                                </div>
+                                <div className="gst-modal-body p-4">
+                                    <div className="mb-3">
+                                         <label className="form-label fs-14 fw-bold">New Layer <span className="text-danger">*</span></label>
+                                         <input 
+                                             type="text" 
+                                             className="form-control" 
+                                             placeholder={`e.g. ${showSubModal ? modalPath[modalPath.length-1].name + ' Area' : 'India'}`}
+                                             value={newLocName}
+                                             onChange={e => setNewLocName(e.target.value)}
+                                             style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                         />
+                                     </div>
+                                     {!showSubModal && (
+                                         <div className="mb-3">
+                                             <label className="form-label fs-14 fw-bold">Currency</label>
+                                             <input 
+                                                 type="text" 
+                                                 className="form-control" 
+                                                 placeholder="e.g. INR, USD"
+                                                 id="new-loc-currency"
+                                                 style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                             />
+                                         </div>
+                                     )}
+                                     <div className="d-flex gap-2 mt-4">
+                                         <button 
+                                             className="btn btn-danger flex-grow-1 fw-bold" 
+                                             style={{ background: ACCENT, height: 44, borderRadius: 8 }}
+                                             onClick={() => {
+                                                 if (!newLocName.trim()) return;
+                                                 const pId = showSubModal ? modalPath[modalPath.length - 1].id : path[path.length - 1].id;
+                                                 const curr = (document.getElementById("new-loc-currency") as HTMLInputElement)?.value || "";
+                                                 const newEntry = {
+                                                     id: Date.now(),
+                                                     parentId: pId,
+                                                     name: newLocName.trim(),
+                                                     code: newLocName.trim().substring(0, 3).toUpperCase(),
+                                                     currency: curr
+                                                 };
+                                                 const updated = [...locations, newEntry];
+                                                 setLocations(updated);
+                                                 localStorage.setItem(SK_LOCATIONS, JSON.stringify(updated));
+                                                 setNewLocName("");
+                                                 setShowAddModal(false);
+                                             }}
+                                         >
+                                             SAVE
+                                         </button>
+                                        <button 
+                                            className="btn btn-light flex-grow-1 fw-medium border" 
+                                            style={{ height: 44, borderRadius: 8 }}
+                                            onClick={() => {
+                                                setNewLocName("");
+                                                setShowAddModal(false);
+                                            }}
+                                        >
+                                            CANCEL
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="card-body p-0">
+                        {/* Breadcrumbs */}
+                        <div className="px-4 pt-3 d-flex align-items-center gap-2 flex-wrap">
+                            {path.map((p, i) => (
+                                <React.Fragment key={i}>
+                                    {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
+                                    <button 
+                                        className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === path.length - 1 ? "text-danger" : "text-muted"}`}
+                                        onClick={() => setPath(path.slice(0, i + 1))}
+                                    >
+                                        {p.name === "Home" ? <><i className="ti ti-world me-1" />Global</> : p.name}
+                                    </button>
+                                </React.Fragment>
+                            ))}
+                        </div>
+
+                        <div className="toolbar-custom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
                             <div className="d-flex align-items-center gap-2 flex-wrap">
                                 <div className="dropdown">
-                                    <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
-                                        <i className="ti ti-sort-ascending-2 me-2" />Sort By
-                                    </Link>
-                                    <div className="dropdown-menu">
-                                        <ul>
-                                            <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
-                                            <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
-                                        </ul>
-                                    </div>
+                                    <button className="btn btn-white border d-flex align-items-center gap-2 shadow-none text-dark fs-14 fw-medium" data-bs-toggle="dropdown" style={{ height: 40, borderRadius: 6, borderColor: "#e5e7eb" }}>
+                                        <i className="ti ti-sort-ascending-2 fs-16" /> Sort By <i className="ti ti-chevron-down fs-12 ms-1" />
+                                    </button>
+                                    <ul className="dropdown-menu shadow-sm border-0">
+                                        <li><button className="dropdown-item" onClick={() => setSortBy("newest")}>Newest</button></li>
+                                        <li><button className="dropdown-item" onClick={() => setSortBy("oldest")}>Oldest</button></li>
+                                    </ul>
                                 </div>
                                 <PredefinedDatePicker />
                             </div>
-                            <div className="d-flex align-items-center gap-2">
-                                <div style={{ position: "relative" }}>
+
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <div className="dropdown">
                                     <button
-                                        className={`btn btn-outline-light shadow px-2 ${filterLevel.length > 0 ? "border-primary text-primary" : ""}`}
-                                        style={{ height: 36, fontSize: 14 }}
+                                        className="btn btn-white border d-flex align-items-center gap-2 shadow-none text-dark fs-14 fw-medium"
                                         onClick={() => setShowFilter(!showFilter)}
+                                        style={{ height: 40, borderRadius: 6, borderColor: "#e5e7eb" }}
                                     >
-                                        <i className="ti ti-filter me-2" />Filter {filterLevel.length > 0 && <span className="badge bg-primary ms-1">{filterLevel.length}</span>} <i className="ti ti-chevron-down ms-1" />
+                                        <i className="ti ti-filter fs-16" /> Filter <i className="ti ti-chevron-down fs-12 ms-1" />
                                     </button>
-                                    {showFilter && (
-                                        <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: "absolute", right: 0, top: "100%", minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
-                                            <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
-                                                <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
-                                                <button
-                                                    type="button"
-                                                    className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                    onClick={() => setShowFilter(false)}
-                                                    aria-label="Close"
-                                                >
-                                                    <i className="ti ti-x" />
-                                                </button>
-                                            </div>
-                                            <div className="filter-set-view p-2 px-3">
-                                                <div className="accordion" id="filterAccordion">
-                                                    <div className="filter-set-content">
-                                                        <div className="filter-set-content-head mb-2 mt-1">
-                                                            <Link
-                                                                to="#"
-                                                                className={levelFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
-                                                                onClick={(e) => { e.preventDefault(); setLevelFilterOpen(!levelFilterOpen); }}
-                                                            >
-                                                                Level
-                                                            </Link>
-                                                        </div>
-                                                        {levelFilterOpen && (
-                                                            <div className="filter-set-contents">
-                                                                <div className="filter-content-list ps-4">
-                                                                    {depthOptions.map(lvl => (
-                                                                        <div className="form-check mb-2" key={lvl}>
-                                                                            <input
-                                                                                className="form-check-input primary-checkbox"
-                                                                                type="checkbox"
-                                                                                id={`filter-${lvl}`}
-                                                                                checked={pendingLevel.includes(lvl)}
-                                                                                style={{ width: 20, height: 20, cursor: "pointer" }}
-                                                                                onChange={(e) => {
-                                                                                    if (e.target.checked) setPendingLevel([...pendingLevel, lvl]);
-                                                                                    else setPendingLevel(pendingLevel.filter(x => x !== lvl));
-                                                                                }}
-                                                                            />
-                                                                            <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${lvl}`}>
-                                                                                {lvl === 1 ? "Level 1 (Countries)" : `Level ${lvl}`}
-                                                                            </label>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                </div>
+
+                                <div className="dropdown">
+                                    <button
+                                        className="btn d-flex align-items-center gap-2 fs-14 fw-bold"
+                                        data-bs-toggle="dropdown"
+                                        style={{ height: 40, borderRadius: 6, padding: "0 15px", background: "#eef2ff", color: "#4f46e5", border: "none" }}
+                                    >
+                                        <i className="ti ti-layout-columns fs-16" /> Manage Columns
+                                    </button>
+                                    <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3" style={{ minWidth: 220, borderRadius: 12 }}>
+                                        {["name", "code", "currency", "action"].map((col, index, arr) => (
+                                            <li key={col} className={index === arr.length - 1 ? "mb-0" : "mb-3"}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span className="fs-14 fw-medium text-dark text-capitalize">
+                                                        {col === "name" ? "Name" : col === "code" ? "Code" : col === "action" ? "Action" : col}
+                                                    </span>
+                                                    <div className="form-check form-switch p-0 m-0">
+                                                        <input
+                                                            className="form-check-input ms-0"
+                                                            type="checkbox"
+                                                            role="switch"
+                                                            checked={visibleColumns.includes(col)}
+                                                            onChange={() => {
+                                                                if (visibleColumns.includes(col)) setVisibleColumns(visibleColumns.filter(c => c !== col));
+                                                                else setVisibleColumns([...visibleColumns, col]);
+                                                            }}
+                                                            style={{
+                                                                width: 35,
+                                                                height: 20,
+                                                                cursor: "pointer",
+                                                                backgroundColor: visibleColumns.includes(col) ? "#e41f07" : "#dee2e6",
+                                                                borderColor: visibleColumns.includes(col) ? "#e41f07" : "#dee2e6",
+                                                                boxShadow: "none"
+                                                            }}
+                                                        />
                                                     </div>
                                                 </div>
-                                                <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
-                                                    <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
-                                                    <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
-                                {viewMode === "list" && (
-                                    <div className="dropdown">
-                                        <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                            <i className="ti ti-columns-3 me-2" />Manage Columns
-                                        </Link>
-                                        <div className="dropdown-menu dropdown-md p-3">
-                                            <ul>
-                                                {ALL_COLS.map(col => (
-                                                    <li className="gap-1 d-flex align-items-center mb-2" key={col}>
-                                                        <i className="ti ti-columns me-1" />
-                                                        <div className="form-check form-switch w-100 ps-0">
-                                                            <label className="form-check-label d-flex align-items-center gap-2 w-100">
-                                                                <span>{col}</span>
-                                                                <input
-                                                                    className="form-check-input switchCheckDefault ms-auto"
-                                                                    type="checkbox"
-                                                                    role="switch"
-                                                                    checked={visibleCols[col] !== false}
-                                                                    onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
-                                                                />
-                                                            </label>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="d-flex align-items-center gap-1" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
-                                    <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                        <i className="ti ti-list fs-14" />
+
+                                <div className="d-flex align-items-center gap-1 p-1 border rounded bg-white shadow-none" style={{ borderColor: "#e5e7eb" }}>
+                                    <button onClick={() => setViewMode("list")} className="btn btn-sm d-flex align-items-center justify-content-center rounded" style={{ width: 34, height: 30, background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", border: "none" }}>
+                                        <i className="ti ti-list fs-16" />
                                     </button>
-                                    <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                        <i className="ti ti-grid-dots fs-14" />
+                                    <button onClick={() => setViewMode("grid")} className="btn btn-sm d-flex align-items-center justify-content-center rounded" style={{ width: 34, height: 30, background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#6c757d", border: "none" }}>
+                                        <i className="ti ti-layout-grid fs-16" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex-grow-1 overflow-auto" style={{ minWidth: 0 }}>
+
+                        <div className="p-4 pt-0">
                             {viewMode === "list" ? (
-                                <div className="custom-table table-nowrap px-4 flex-grow-1 border-0">
-                                    <Datatable
-                                        columns={visibleColumns}
-                                        dataSource={tableData}
-                                        Selection={true}
-                                        searchText={searchText}
-                                    />
+                                <div className="border rounded bg-white overflow-hidden shadow-none">
+                                    <Datatable columns={columns} dataSource={tableData} Selection={true} searchText={searchText} />
                                 </div>
                             ) : (
-                                <div className="p-4"><div className="row g-3">
-                                    {gridData.map(r => (
-                                        <div className="col-xxl-3 col-xl-4 col-md-6" key={r.rowKey}>
-                                            <div className="card border shadow-sm h-100 hover-shadow transition-all" style={{ borderRadius: 10 }}>
+                                <div className="row g-3">
+                                    {tableData.map(r => (
+                                        <div className="col-md-4" key={r.rowKey}>
+                                            <div className="card border shadow-none h-100 mb-0" style={{ borderRadius: 8 }}>
                                                 <div className="card-body p-3">
-                                                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-3 border-bottom pb-3">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="avatar avatar-md border rounded-circle flex-shrink-0 me-2 d-flex align-items-center justify-content-center bg-soft-primary" style={{ width: 42, height: 42 }}>
-                                                                <span className="fs-16 fw-bold text-primary">{r.name.charAt(0).toUpperCase()}</span>
-                                                            </div>
-                                                            <div>
-                                                                <h6 className="mb-0 fs-14 text-dark">{r.name}</h6>
-                                                                <div className="fs-12 text-muted mt-1">{r.code !== "—" ? r.code : "No Code"}</div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="dropdown table-action">
-                                                            <button className="btn btn-icon btn-sm btn-outline-light shadow-sm bg-white" data-bs-toggle="dropdown">
-                                                                <i className="ti ti-dots-vertical text-muted" />
-                                                            </button>
-                                                            <div className="dropdown-menu dropdown-menu-right">
-                                                                <button className="dropdown-item text-danger" onClick={(e) => { e.stopPropagation(); handleDelete(r); }}>
-                                                                    <i className="ti ti-trash me-2" /> Delete
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                                        <h6 className="fw-bold mb-0 text-dark fs-14">{r.name}</h6>
+                                                        <span className="badge bg-soft-secondary text-secondary fs-11">{r.code}</span>
                                                     </div>
-                                                    <div className="d-block pt-1">
-                                                        <div className="d-flex flex-column mb-3">
-                                                            <p className="text-default d-inline-flex align-items-center mb-2 fs-14">
-                                                                <i className="ti ti-layers-intersect text-dark me-2 fs-15" />
-                                                                Level {r.levelNum}
-                                                            </p>
-                                                            <p className="text-default d-inline-flex align-items-center mb-0 fs-14">
-                                                                <i className="ti ti-sitemap text-dark me-2 fs-15" />
-                                                                {r.parent !== "—" ? r.parent : "No Parent"}
-                                                            </p>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <span style={{ background: "#e8f5e9", color: "#2e7d32", border: "1px solid #a5d6a7", borderRadius: 20, fontSize: 11, padding: "3px 10px", fontWeight: 600 }}>
-                                                                Enabled
-                                                            </span>
-                                                        </div>
-                                                    </div>
+                                                    <div className="fs-13 text-muted mb-1"><span className="fw-medium text-dark">Currency:</span> {r.currency || "—"}</div>
+                                                    <div className="fs-13 text-muted"><span className="fw-medium text-dark">Parent:</span> {r.parent}</div>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
-                                    {tableData.length === 0 && (
-                                        <div className="col-12 text-center text-muted py-5 fs-14">No locations found.</div>
-                                    )}
-                                </div></div>
+                                    {tableData.length === 0 && <div className="text-center py-5 text-muted border rounded bg-white w-100">No locations found.</div>}
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
-
-                {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
+                <style>{`
+                    .gst-modal-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 1050;
+                        backdrop-filter: blur(2px);
+                    }
+                    .gst-modal-content {
+                        background: #fff;
+                        border-radius: 12px;
+                        width: 100%;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                        animation: modalFadeIn 0.3s ease;
+                    }
+                    .gst-modal-header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 20px 24px;
+                        border-bottom: 1px solid #f0f0f0;
+                    }
+                    .btn-close-custom {
+                        border: none;
+                        background: #f8f9fa;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 6px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #666;
+                        transition: 0.2s;
+                    }
+                    .btn-close-custom:hover {
+                        background: #fee2e2;
+                        color: #dc2626;
+                    }
+                    @keyframes modalFadeIn {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                `}</style>
             </div>
             <Footer />
         </div>

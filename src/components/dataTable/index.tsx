@@ -41,7 +41,7 @@ const Datatable: React.FC<DatatableProps> = ({
   useEffect(() => {
     const filteredData = dataSource.filter((record) =>
       Object.values(record).some((field) =>
-        String(field).toLowerCase().includes(debouncedSearchText.toLowerCase())
+        String(field).toLowerCase().includes((debouncedSearchText || "").toLowerCase())
       )
     );
     setFilteredDataSource(filteredData);
