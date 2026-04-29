@@ -13,6 +13,7 @@ interface LocationNode {
     code: string;
     currency?: string;
     isDeleted?: boolean;
+    childLayerName?: string;
 }
 
 interface LocationRow {
@@ -66,14 +67,14 @@ function buildRows(nodes: LocationNode[]): LocationRow[] {
             pId = parent.parentId;
         }
         rows.push({
-            id: String(rows.length + 1), 
-            rowKey: `n-${n.id}`, 
+            id: String(rows.length + 1),
+            rowKey: `n-${n.id}`,
             itemId: String(n.id || 0),
             levelNum: String(depth || 0),
-            name: String(n.name || ""), 
-            code: String(n.code || ""), 
-            currency: String(n.currency || ""), 
-            parent: String(pName || ""), 
+            name: String(n.name || ""),
+            code: String(n.code || ""),
+            currency: String(n.currency || ""),
+            parent: String(pName || ""),
             status: "Active",
         });
     });
@@ -91,13 +92,22 @@ const AssignLocationList: React.FC = () => {
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showLayerModal, setShowLayerModal] = useState(false);
+    const [newLayerName, setNewLayerName] = useState("");
     const [newLocName, setNewLocName] = useState("");
+    const [newLocCode, setNewLocCode] = useState("");
+    const [newLocCurrency, setNewLocCurrency] = useState("");
     const [path, setPath] = useState<{ id: number | null; name: string }[]>([{ id: null, name: "Home" }]);
-    const [layerNames, setLayerNames] = useState<string[]>(["Country", "State", "District", "Taluk", "Pincode"]);
+    const [layerNames, setLayerNames] = useState<string[]>(() => {
+        const raw = localStorage.getItem("asl_layers_v11");
+        if (raw) { try { return JSON.parse(raw); } catch { } }
+        return ["Country"];
+    });
     const [showSubModal, setShowSubModal] = useState(false);
     const [modalPath, setModalPath] = useState<{ id: number | null; name: string }[]>([]);
 
-    const [visibleColumns, setVisibleColumns] = useState(["name", "code", "currency", "action"]);
+    const [visibleColumns, setVisibleColumns] = useState(["name", "currency", "action"]);
+    const [applyLayerToAll, setApplyLayerToAll] = useState(false);
 
     useEffect(() => {
         const yraw = localStorage.getItem("asl_layers_v11");
@@ -107,11 +117,12 @@ const AssignLocationList: React.FC = () => {
     const allRows = useMemo(() => buildRows(locations), [locations]);
 
     const currentParentId = path[path.length - 1].id;
-    const currentLayerName = layerNames[path.length - 1] || "Location";
+    const currentParentNode = locations.find(l => l.id === currentParentId);
+    // Use node-specific layer name if available. Fall back to global only at root level (depth 0)
+    const currentLayerName = currentParentNode?.childLayerName || (path.length === 1 ? layerNames[0] : "");
 
     const drillDown = (item: LocationNode) => {
-        setModalPath([{ id: item.id, name: item.name }]);
-        setShowSubModal(true);
+        setPath([...path, { id: item.id, name: item.name }]);
     };
 
     const tableData = useMemo(() => {
@@ -122,8 +133,8 @@ const AssignLocationList: React.FC = () => {
         });
 
         if (searchText) {
-            data = data.filter(r => 
-                (r.name?.toLowerCase() || "").includes(searchText.toLowerCase()) || 
+            data = data.filter(r =>
+                (r.name?.toLowerCase() || "").includes(searchText.toLowerCase()) ||
                 (r.code?.toLowerCase() || "").includes(searchText.toLowerCase())
             );
         }
@@ -134,12 +145,12 @@ const AssignLocationList: React.FC = () => {
 
     const columns = [
         {
-            title: "Country",
+            title: currentLayerName || "Location",
             dataIndex: "name",
             key: "name",
             sorter: (a: LocationRow, b: LocationRow) => a.name.localeCompare(b.name),
             render: (v: string, r: LocationRow) => (
-                <button 
+                <button
                     className="btn p-0 border-0 bg-transparent fw-bold text-dark fs-14"
                     onClick={() => {
                         const original = locations.find(l => String(l.id) === r.itemId);
@@ -148,12 +159,7 @@ const AssignLocationList: React.FC = () => {
                 >{v}</button>
             ),
         },
-        {
-            title: "Country Code",
-            dataIndex: "code",
-            key: "code",
-            render: (v: string) => <span className="fs-14 text-dark">{v}</span>,
-        },
+
         {
             title: "Currency",
             dataIndex: "currency",
@@ -180,7 +186,13 @@ const AssignLocationList: React.FC = () => {
                 </div>
             ),
         },
-    ];
+    ].filter(col => {
+        if (!visibleColumns.includes(col.key || "")) return false;
+        if (path.length > 1) {
+            return col.key === "name" || col.key === "action";
+        }
+        return true;
+    });
 
     return (
         <div className="page-wrapper" style={{ minHeight: "100vh", background: "#f8f9fa" }}>
@@ -212,33 +224,69 @@ const AssignLocationList: React.FC = () => {
 
                 <div className="card border-0 shadow-sm mb-4">
                     <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap border-0 pt-4 px-4 pb-0">
-                        <div 
-                            className="d-flex align-items-center border rounded px-3 bg-white shadow-none" 
-                            style={{
-                                width: 250,
-                                borderColor: isSearchFocused ? ACCENT : "#e5e7eb",
-                                borderRadius: 8,
-                                transition: "all 0.2s ease"
-                            }}
-                        >
-                            <i className="ti ti-search text-muted fs-15" />
-                            <input
-                                className="form-control border-0 fs-14 ps-2"
-                                placeholder="Search..."
-                                value={searchText}
-                                onChange={e => setSearchText(e.target.value)}
-                                onFocus={() => setIsSearchFocused(true)}
-                                onBlur={() => setIsSearchFocused(false)}
-                                style={{ height: 44, boxShadow: "none" }}
-                            />
+                        <div className="d-flex align-items-center gap-3">
+                            {path.length > 1 && (
+                                <h4 className="fw-bold mb-0 text-dark">
+                                    {path[path.length - 1].name}
+                                </h4>
+                            )}
+                            <div
+                                className="d-flex align-items-center border rounded px-3 bg-white shadow-none"
+                                style={{
+                                    width: 250,
+                                    borderColor: isSearchFocused ? ACCENT : "#e5e7eb",
+                                    borderRadius: 8,
+                                    transition: "all 0.2s ease"
+                                }}
+                            >
+                                <i className="ti ti-search text-muted fs-15" />
+                                <input
+                                    className="form-control border-0 fs-14 ps-2"
+                                    placeholder="Search..."
+                                    value={searchText}
+                                    onChange={e => setSearchText(e.target.value)}
+                                    onFocus={() => setIsSearchFocused(true)}
+                                    onBlur={() => setIsSearchFocused(false)}
+                                    style={{ height: 44, boxShadow: "none" }}
+                                />
+                            </div>
                         </div>
-                        <button
-                            className="btn btn-danger d-flex align-items-center gap-2 fw-bold"
-                            onClick={() => setShowAddModal(true)}
-                            style={{ background: ACCENT, border: "none", height: 44, padding: "0 25px", borderRadius: 8, fontSize: 14 }}
-                        >
-                            <i className="ti ti-plus fs-16" /> {path.length > 1 ? "Add Value" : "Add New Country"}
-                        </button>
+                        <div className="d-flex align-items-center gap-2">
+                            {currentLayerName && (
+                                <button
+                                    className="btn btn-white border d-flex align-items-center gap-2 fw-bold text-danger"
+                                    onClick={() => {
+                                        // Clear node-specific layer name
+                                        const updatedLocs = locations.map(l => 
+                                            l.id === currentParentId ? { ...l, childLayerName: "" } : l
+                                        );
+                                        setLocations(updatedLocs);
+                                        localStorage.setItem(SK_LOCATIONS, JSON.stringify(updatedLocs));
+
+                                        // Clear global fallback if at root
+                                        if (path.length === 1) {
+                                            const updatedLayers = [...layerNames];
+                                            updatedLayers[0] = "";
+                                            setLayerNames(updatedLayers);
+                                            localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
+                                        }
+                                    }}
+                                    style={{ height: 44, padding: "0 20px", borderRadius: 8, fontSize: 14 }}
+                                >
+                                    <i className="ti ti-trash fs-16" /> Delete Layer
+                                </button>
+                            )}
+                            <button
+                                className="btn btn-danger d-flex align-items-center gap-2 fw-bold"
+                                onClick={() => {
+                                    if (currentLayerName) setShowAddModal(true);
+                                    else setShowLayerModal(true);
+                                }}
+                                style={{ background: ACCENT, border: "none", height: 44, padding: "0 25px", borderRadius: 8, fontSize: 14 }}
+                            >
+                                <i className="ti ti-plus fs-16" /> {currentLayerName ? `Add ${currentLayerName}` : (path.length === 1 ? "Add Country" : "Add Layer")}
+                            </button>
+                        </div>
                     </div>
 
                     {/* ── Sub-Location Management Modal ── */}
@@ -260,7 +308,7 @@ const AssignLocationList: React.FC = () => {
                                         {modalPath.map((p, i) => (
                                             <React.Fragment key={i}>
                                                 {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
-                                                <button 
+                                                <button
                                                     className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === modalPath.length - 1 ? "text-danger" : "text-muted"}`}
                                                     onClick={() => setModalPath(modalPath.slice(0, i + 1))}
                                                 >
@@ -275,7 +323,7 @@ const AssignLocationList: React.FC = () => {
                                         <div className="fs-15 fw-bold text-dark">
                                             Layer list for <span className="text-danger">{modalPath[modalPath.length - 1]?.name}</span>
                                         </div>
-                                        <button 
+                                        <button
                                             className="btn btn-danger btn-sm d-flex align-items-center gap-2 fw-bold"
                                             onClick={() => setShowAddModal(true)}
                                             style={{ background: ACCENT, borderRadius: 6, padding: "8px 16px" }}
@@ -286,13 +334,13 @@ const AssignLocationList: React.FC = () => {
 
                                     {/* Modal Table */}
                                     <div className="border rounded">
-                                        <Datatable 
+                                        <Datatable
                                             columns={[
                                                 {
-                                                    title: "Layer",
+                                                    title: layerNames[modalPath.length] || "Layer",
                                                     dataIndex: "name",
                                                     render: (v: string, r: any) => (
-                                                        <button 
+                                                        <button
                                                             className="btn p-0 border-0 bg-transparent fw-bold text-dark fs-14"
                                                             onClick={() => {
                                                                 const original = locations.find(l => String(l.id) === r.itemId);
@@ -306,7 +354,7 @@ const AssignLocationList: React.FC = () => {
                                                     title: "Action",
                                                     dataIndex: "action",
                                                     render: (_: any, r: any) => (
-                                                        <button 
+                                                        <button
                                                             className="btn text-danger p-0 border-0 bg-transparent"
                                                             onClick={() => {
                                                                 const updated = locations.map(l => String(l.id) === r.itemId ? { ...l, isDeleted: true } : l);
@@ -321,6 +369,7 @@ const AssignLocationList: React.FC = () => {
                                                 const node = locations.find(l => String(l.id) === r.itemId);
                                                 return node?.parentId === modalPath[modalPath.length - 1]?.id && !node?.isDeleted;
                                             })}
+                                            Selection={true}
                                         />
                                     </div>
                                 </div>
@@ -333,69 +382,154 @@ const AssignLocationList: React.FC = () => {
                         <div className="gst-modal-overlay" style={{ zIndex: 1100 }} onClick={(e) => { if (e.target === e.currentTarget) setShowAddModal(false); }}>
                             <div className="gst-modal-content" style={{ maxWidth: 500 }}>
                                 <div className="gst-modal-header">
-                                    <h5 className="fw-bold"><i className="ti ti-map-pin me-2 text-danger" />{showSubModal ? "Add New Value" : "Add New Country"}</h5>
-                                    <button className="btn-close-custom" onClick={() => setShowAddModal(false)}>
+                                    <h5 className="fw-bold"><i className="ti ti-map-pin me-2 text-danger" />Add New {currentLayerName || (path.length === 1 ? 'Country' : 'Layer')}</h5>
+                                    <button className="btn-close-custom" onClick={() => { setShowAddModal(false); setNewLocName(""); setNewLocCode(""); setNewLocCurrency(""); }}>
                                         <i className="ti ti-x" />
                                     </button>
                                 </div>
                                 <div className="gst-modal-body p-4">
                                     <div className="mb-3">
-                                         <label className="form-label fs-14 fw-bold">New Layer <span className="text-danger">*</span></label>
-                                         <input 
-                                             type="text" 
-                                             className="form-control" 
-                                             placeholder={`e.g. ${showSubModal ? modalPath[modalPath.length-1].name + ' Area' : 'India'}`}
-                                             value={newLocName}
-                                             onChange={e => setNewLocName(e.target.value)}
-                                             style={{ height: 44, borderRadius: 8, fontSize: 14 }}
-                                         />
-                                     </div>
-                                     {!showSubModal && (
-                                         <div className="mb-3">
-                                             <label className="form-label fs-14 fw-bold">Currency</label>
-                                             <input 
-                                                 type="text" 
-                                                 className="form-control" 
-                                                 placeholder="e.g. INR, USD"
-                                                 id="new-loc-currency"
-                                                 style={{ height: 44, borderRadius: 8, fontSize: 14 }}
-                                             />
-                                         </div>
-                                     )}
-                                     <div className="d-flex gap-2 mt-4">
-                                         <button 
-                                             className="btn btn-danger flex-grow-1 fw-bold" 
-                                             style={{ background: ACCENT, height: 44, borderRadius: 8 }}
-                                             onClick={() => {
-                                                 if (!newLocName.trim()) return;
-                                                 const pId = showSubModal ? modalPath[modalPath.length - 1].id : path[path.length - 1].id;
-                                                 const curr = (document.getElementById("new-loc-currency") as HTMLInputElement)?.value || "";
-                                                 const newEntry = {
-                                                     id: Date.now(),
-                                                     parentId: pId,
-                                                     name: newLocName.trim(),
-                                                     code: newLocName.trim().substring(0, 3).toUpperCase(),
-                                                     currency: curr
-                                                 };
-                                                 const updated = [...locations, newEntry];
-                                                 setLocations(updated);
-                                                 localStorage.setItem(SK_LOCATIONS, JSON.stringify(updated));
-                                                 setNewLocName("");
-                                                 setShowAddModal(false);
-                                             }}
-                                         >
-                                             SAVE
-                                         </button>
-                                        <button 
-                                            className="btn btn-light flex-grow-1 fw-medium border" 
+                                        <label className="form-label fs-14 fw-bold">{currentLayerName || (path.length === 1 ? 'Country' : 'Layer')} Name <span className="text-danger">*</span></label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder={`e.g. ${path.length === 1 ? 'India' : 'New Layer'}`}
+                                            value={newLocName}
+                                            onChange={e => setNewLocName(e.target.value)}
+                                            style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                        />
+                                    </div>
+
+
+                                    <div className="d-flex gap-2 mt-4">
+                                        <button
+                                            className="btn btn-danger flex-grow-1 fw-bold"
+                                            style={{ background: ACCENT, height: 44, borderRadius: 8 }}
+                                            onClick={() => {
+                                                if (!newLocName.trim()) return;
+                                                const pId = path[path.length - 1].id;
+                                                const newEntry = {
+                                                    id: Date.now(),
+                                                    parentId: pId,
+                                                    name: newLocName.trim(),
+                                                    code: newLocName.trim().substring(0, 3).toUpperCase(),
+                                                    currency: ""
+                                                };
+                                                const updated = [...locations, newEntry];
+                                                setLocations(updated);
+                                                localStorage.setItem(SK_LOCATIONS, JSON.stringify(updated));
+                                                setNewLocName("");
+                                                setShowAddModal(false);
+                                            }}
+                                        >
+                                            SAVE
+                                        </button>
+                                        <button
+                                            className="btn btn-light flex-grow-1 fw-medium border"
                                             style={{ height: 44, borderRadius: 8 }}
                                             onClick={() => {
                                                 setNewLocName("");
+                                                setNewLocCode("");
+                                                setNewLocCurrency("");
                                                 setShowAddModal(false);
                                             }}
                                         >
                                             CANCEL
                                         </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Add Layer Modal ── */}
+                    {showLayerModal && (
+                        <div className="gst-modal-overlay" style={{ zIndex: 1100 }} onClick={(e) => { if (e.target === e.currentTarget) setShowLayerModal(false); }}>
+                            <div className="gst-modal-content" style={{ maxWidth: 450 }}>
+                                <div className="gst-modal-header">
+                                    <h5 className="fw-bold"><i className="ti ti-layers-intersect me-2 text-danger" />Add New Layer</h5>
+                                    <button className="btn-close-custom" onClick={() => setShowLayerModal(false)}>
+                                        <i className="ti ti-x" />
+                                    </button>
+                                </div>
+                                <div className="gst-modal-body p-4">
+                                    <div className="mb-3">
+                                        <label className="form-label fs-14 fw-bold">Layer Name <span className="text-danger">*</span></label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="e.g. Zone, Region, City"
+                                            value={newLayerName}
+                                            onChange={e => setNewLayerName(e.target.value)}
+                                            style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                        />
+                                        <div className="fs-12 text-muted mt-2">
+                                            Define the type of sub-locations for <strong>{path[path.length - 1].name}</strong>.
+                                        </div>
+                                    </div>
+                                    <div className="mb-3 d-flex align-items-center gap-2">
+                                        <input
+                                            type="checkbox"
+                                            id="applyLayerToAll"
+                                            checked={applyLayerToAll}
+                                            onChange={e => setApplyLayerToAll(e.target.checked)}
+                                            className="form-check-input mt-0"
+                                            style={{ width: 18, height: 18, cursor: "pointer" }}
+                                        />
+                                        <label htmlFor="applyLayerToAll" className="form-label fs-14 fw-medium mb-0" style={{ cursor: "pointer" }}>
+                                            Apply for all layer
+                                        </label>
+                                    </div>
+                                    <div className="d-flex gap-2 mt-4">
+                                        <button
+                                            className="btn btn-danger flex-grow-1 fw-bold"
+                                            style={{ background: ACCENT, height: 44, borderRadius: 8 }}
+                                            onClick={() => {
+                                                if (!newLayerName.trim()) return;
+                                                const layerName = newLayerName.trim();
+                                                let updatedLocs = [...locations];
+
+                                                if (applyLayerToAll) {
+                                                    const parentIdOfSiblings = path.length > 1 ? path[path.length - 2].id : null;
+                                                    
+                                                    updatedLocs = updatedLocs.map(l => {
+                                                        if (l.parentId === parentIdOfSiblings) {
+                                                            return { ...l, childLayerName: layerName };
+                                                        }
+                                                        return l;
+                                                    });
+
+                                                    if (path.length === 1) {
+                                                        const updatedLayers = [...layerNames];
+                                                        updatedLayers[0] = layerName;
+                                                        setLayerNames(updatedLayers);
+                                                        localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
+                                                    }
+                                                } else {
+                                                    if (currentParentId === null) {
+                                                        const updatedLayers = [...layerNames];
+                                                        updatedLayers[0] = layerName;
+                                                        setLayerNames(updatedLayers);
+                                                        localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
+                                                    } else {
+                                                        updatedLocs = updatedLocs.map(l => 
+                                                            l.id === currentParentId ? { ...l, childLayerName: layerName } : l
+                                                        );
+                                                    }
+                                                }
+
+                                                setLocations(updatedLocs);
+                                                localStorage.setItem(SK_LOCATIONS, JSON.stringify(updatedLocs));
+
+                                                setNewLayerName("");
+                                                setApplyLayerToAll(false);
+                                                setShowLayerModal(false);
+                                                setShowAddModal(true);
+                                            }}
+                                        >
+                                            DEFINE LAYER
+                                        </button>
+                                        <button className="btn btn-light flex-grow-1 fw-medium border" style={{ height: 44, borderRadius: 8 }} onClick={() => setShowLayerModal(false)}>CANCEL</button>
                                     </div>
                                 </div>
                             </div>
@@ -408,7 +542,7 @@ const AssignLocationList: React.FC = () => {
                             {path.map((p, i) => (
                                 <React.Fragment key={i}>
                                     {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
-                                    <button 
+                                    <button
                                         className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === path.length - 1 ? "text-danger" : "text-muted"}`}
                                         onClick={() => setPath(path.slice(0, i + 1))}
                                     >
@@ -452,11 +586,11 @@ const AssignLocationList: React.FC = () => {
                                         <i className="ti ti-layout-columns fs-16" /> Manage Columns
                                     </button>
                                     <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3" style={{ minWidth: 220, borderRadius: 12 }}>
-                                        {["name", "code", "currency", "action"].map((col, index, arr) => (
+                                        {["name", "currency", "action"].map((col, index, arr) => (
                                             <li key={col} className={index === arr.length - 1 ? "mb-0" : "mb-3"}>
                                                 <div className="d-flex align-items-center justify-content-between">
                                                     <span className="fs-14 fw-medium text-dark text-capitalize">
-                                                        {col === "name" ? "Name" : col === "code" ? "Code" : col === "action" ? "Action" : col}
+                                                        {col === "name" ? (currentLayerName || "Name") : col === "action" ? "Action" : col}
                                                     </span>
                                                     <div className="form-check form-switch p-0 m-0">
                                                         <input
@@ -516,7 +650,7 @@ const AssignLocationList: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    {tableData.length === 0 && <div className="text-center py-5 text-muted border rounded bg-white w-100">No locations found.</div>}
+                                    {tableData.length === 0 && <div className="text-center py-5 text-muted border rounded bg-white w-100">No {currentLayerName || 'locations'} found.</div>}
                                 </div>
                             )}
                         </div>
