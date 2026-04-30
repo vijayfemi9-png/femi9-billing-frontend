@@ -223,6 +223,9 @@ const CustomerList = lazy(() => import("../feature-module/Pages/billing-applicat
 const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
 const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
 const CustomerSetting = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-setting"));
+const BillingInvoiceSetting = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-setting"));
+const BillingInvoiceList = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-list"));
+const BillingInvoiceView = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-view"));
 
 const route = all_routes;
 
@@ -1757,6 +1760,27 @@ export const publicRoutes = [
     element: <CustomerSetting />,
     route: Route,
     meta_title: "Customer & Vendor Preference",
+  },
+  {
+    id: "217",
+    path: route.billingInvoiceSetting,
+    element: <BillingInvoiceSetting />,
+    route: Route,
+    meta_title: "Invoice Setting",
+  },
+  {
+    id: "218",
+    path: route.billingInvoiceList,
+    element: <BillingInvoiceList />,
+    route: Route,
+    meta_title: "Invoices",
+  },
+  {
+    id: "219",
+    path: route.billingInvoiceView,
+    element: <BillingInvoiceView />,
+    route: Route,
+    meta_title: "Invoice Details",
   },
   {
     id: "216",

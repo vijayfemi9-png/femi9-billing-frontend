@@ -11,6 +11,94 @@ $primary-bg: #fff8f7;
 $border: #f0f0f0;
 $text-muted: #999;
 
+// ── Tab Bar (shared across billing pages) ───────────────────────
+.tab-bar-custom {
+  display: flex;
+  gap: 35px;
+  border-bottom: 1px solid #d0d5dd;
+  margin-bottom: 30px;
+}
+
+.tab-item-custom {
+  font-size: 14px;
+  font-weight: 600;
+  color: #484848;
+  padding-bottom: 12px;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+
+  &.active {
+    color: #e41f07;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #e41f07;
+      border-radius: 2px 2px 0 0;
+    }
+  }
+
+  &:hover:not(.active) {
+    color: #222;
+  }
+}
+
+// ── Checkbox & Radio ────────────────────────────────────────────
+.form-check-input {
+  box-shadow: 0 0 8px rgba(228, 31, 7, 0.1);
+  border-color: #d9d9d9;
+
+  &:checked {
+    background-color: #e41f07 !important;
+    border-color: #e41f07 !important;
+  }
+}
+
+.form-radio-input {
+  width: 16px;
+  height: 16px;
+  accent-color: #e41f07;
+}
+
+// ── Toggle switch (pref-toggle) ─────────────────────────────────
+.pref-toggle {
+  width: 44px;
+  height: 22px;
+  cursor: pointer;
+  appearance: none;
+  background: #d9d9d9;
+  border-radius: 20px;
+  position: relative;
+  transition: .3s;
+  outline: none;
+  flex-shrink: 0;
+
+  &:checked {
+    background: #e41f07;
+
+    &::after {
+      left: calc(100% - 20px);
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+  }
+}
+
 // ── Shared UI Styles ────────────────────────────────────────────
 
 // Composite Items grid card hover

@@ -2,9 +2,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../../../../../components/footer/footer";
 import Datatable from "../../../../../../components/dataTable";
+import SearchInput from "../../../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../../../routes/all_routes";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 interface LocationNode {
     id: number;
@@ -89,8 +92,6 @@ const AssignLocationList: React.FC = () => {
     const [searchText, setSearchText] = useState("");
     const [sortBy, setSortBy] = useState("newest");
     const [showFilter, setShowFilter] = useState(false);
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-    const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showLayerModal, setShowLayerModal] = useState(false);
     const [newLayerName, setNewLayerName] = useState("");
@@ -171,9 +172,9 @@ const AssignLocationList: React.FC = () => {
             key: "action",
             render: (_: any, r: LocationRow) => (
                 <div className="dropdown table-action">
-                    <Link to="#" data-bs-toggle="dropdown" className="btn btn-icon btn-sm btn-outline-light">
+                    <button type="button" className="table-action-btn" data-bs-toggle="dropdown" aria-expanded="false">
                         <i className="ti ti-dots-vertical" />
-                    </Link>
+                    </button>
                     <div className="dropdown-menu dropdown-menu-right">
                         <Link to="#" className="dropdown-item text-danger" onClick={() => {
                             const updated = locations.map(l => String(l.id) === r.itemId ? { ...l, isDeleted: true } : l);
@@ -194,97 +195,116 @@ const AssignLocationList: React.FC = () => {
         return true;
     });
 
+    // ── Export Handlers ──────────────────────────────────────────────────────
+    const handleExportCSV = async () => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Locations");
+        worksheet.columns = [
+            { header: "Name", key: "name", width: 30 },
+            { header: "Code", key: "code", width: 15 },
+            { header: "Currency", key: "currency", width: 15 },
+            { header: "Parent", key: "parent", width: 25 },
+        ];
+        tableData.forEach(row => {
+            worksheet.addRow({
+                name: row.name,
+                code: row.code,
+                currency: row.currency,
+                parent: row.parent,
+            });
+        });
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer]), `locations_${new Date().getTime()}.xlsx`);
+    };
+
+    const handleExportPDF = () => {
+        const rows = tableData.map(r =>
+            `<tr><td>${r.name}</td><td>${r.code}</td><td>${r.currency || "—"}</td><td>${r.parent || "—"}</td></tr>`
+        ).join("");
+        const html = `
+      <html>
+        <head>
+          <title>Assign Location List</title>
+          <style>
+            body{font-family:sans-serif;padding:20px}
+            table{width:100%;border-collapse:collapse}
+            th,td{border:1px solid #ddd;padding:8px;text-align:left}
+            th{background:#f5f5f5;font-weight:600}
+            h2{margin-bottom:16px}
+          </style>
+        </head>
+        <body>
+          <h2>Assign Location List</h2>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Code</th><th>Currency</th><th>Parent</th></tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>`;
+        const win = window.open("", "_blank");
+        if (win) { win.document.write(html); win.document.close(); win.print(); }
+    };
+
+    const handleRefresh = () => {
+        setLocations(loadLS(SK_LOCATIONS, SEED_LOCATIONS));
+        setSearchText("");
+    };
+
     return (
         <div className="page-wrapper" style={{ minHeight: "100vh", background: "#f8f9fa" }}>
             <div className="content pb-0 flex-grow-1 d-flex flex-column">
-                {/* ── Page Header ── */}
-                <div className="d-flex align-items-center justify-content-between mb-4 mt-2">
-                    <div>
-                        <h4 className="fw-bold mb-1">
-                            Assign Location <span className="badge bg-soft-danger text-danger fs-12 ms-2 px-2 py-1" style={{ borderRadius: "50%" }}>{tableData.length}</span>
-                        </h4>
-                        <div className="d-flex align-items-center gap-2 fs-13 text-muted">
-                            <span>Home</span> <i className="ti ti-chevron-right fs-10" /> <span className="text-dark fw-medium">Assign Location</span>
-                        </div>
-                    </div>
-                    <div className="d-flex align-items-center gap-2">
+                <PageHeader
+                    title="Assign Location"
+                    showModuleTile={false}
+                    badgeCount={tableData.length}
+                    exportComponent={
                         <div className="dropdown">
-                            <button className="btn btn-white border d-flex align-items-center gap-2 fs-13 fw-bold shadow-none h-40" data-bs-toggle="dropdown">
-                                <i className="ti ti-package-export fs-16" /> Export <i className="ti ti-chevron-down fs-12 ms-1" />
-                            </button>
+                            <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
+                                <i className="ti ti-package-export me-2" />Export
+                            </Link>
+                            <div className="dropdown-menu dropdown-menu-end">
+                                <ul className="mb-0">
+                                    <li>
+                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
+                                            <i className="ti ti-file-type-pdf me-1" />Export as PDF
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
+                                            <i className="ti ti-file-type-xls me-1" />Export as Excel
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <button className="btn btn-white border h-40 w-40 d-flex align-items-center justify-content-center shadow-none" onClick={() => setLocations(loadLS(SK_LOCATIONS, SEED_LOCATIONS))}>
-                            <i className="ti ti-refresh fs-16" />
-                        </button>
-                        <button className="btn btn-white border h-40 w-40 d-flex align-items-center justify-content-center shadow-none">
-                            <i className="ti ti-settings fs-16" />
-                        </button>
-                    </div>
-                </div>
-
-                <div className="card border-0 shadow-sm mb-4">
-                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap border-0 pt-4 px-4 pb-0">
+                    }
+                    onRefresh={handleRefresh}
+                    settingsLink="#"
+                />
+                <div className="card border-0 shadow-none mb-4">
+                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
                         <div className="d-flex align-items-center gap-3">
-                            {path.length > 1 && (
-                                <h4 className="fw-bold mb-0 text-dark">
-                                    {path[path.length - 1].name}
-                                </h4>
-                            )}
-                            <div
-                                className="d-flex align-items-center border rounded px-3 bg-white shadow-none"
-                                style={{
-                                    width: 250,
-                                    borderColor: isSearchFocused ? ACCENT : "#e5e7eb",
-                                    borderRadius: 8,
-                                    transition: "all 0.2s ease"
-                                }}
-                            >
-                                <i className="ti ti-search text-muted fs-15" />
-                                <input
-                                    className="form-control border-0 fs-14 ps-2"
-                                    placeholder="Search..."
-                                    value={searchText}
-                                    onChange={e => setSearchText(e.target.value)}
-                                    onFocus={() => setIsSearchFocused(true)}
-                                    onBlur={() => setIsSearchFocused(false)}
-                                    style={{ height: 44, boxShadow: "none" }}
-                                />
+
+                            <div className="input-icon input-icon-start position-relative" style={{ width: 250 }}>
+                                <span className="input-icon-addon text-dark"><i className="ti ti-search" /></span>
+                                <SearchInput value={searchText} onChange={setSearchText} />
                             </div>
                         </div>
                         <div className="d-flex align-items-center gap-2">
-                            {currentLayerName && (
-                                <button
-                                    className="btn btn-white border d-flex align-items-center gap-2 fw-bold text-danger"
-                                    onClick={() => {
-                                        // Clear node-specific layer name
-                                        const updatedLocs = locations.map(l => 
-                                            l.id === currentParentId ? { ...l, childLayerName: "" } : l
-                                        );
-                                        setLocations(updatedLocs);
-                                        localStorage.setItem(SK_LOCATIONS, JSON.stringify(updatedLocs));
-
-                                        // Clear global fallback if at root
-                                        if (path.length === 1) {
-                                            const updatedLayers = [...layerNames];
-                                            updatedLayers[0] = "";
-                                            setLayerNames(updatedLayers);
-                                            localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
-                                        }
-                                    }}
-                                    style={{ height: 44, padding: "0 20px", borderRadius: 8, fontSize: 14 }}
-                                >
-                                    <i className="ti ti-trash fs-16" /> Delete Layer
-                                </button>
-                            )}
                             <button
                                 className="btn btn-danger d-flex align-items-center gap-2 fw-bold"
                                 onClick={() => {
                                     if (currentLayerName) setShowAddModal(true);
-                                    else setShowLayerModal(true);
+                                    else {
+                                        setNewLayerName("");
+                                        setShowLayerModal(true);
+                                    }
                                 }}
-                                style={{ background: ACCENT, border: "none", height: 44, padding: "0 25px", borderRadius: 8, fontSize: 14 }}
+                                style={{ background: ACCENT, border: "none", height: 38, padding: "0 15px", borderRadius: 3, fontSize: 14 }}
                             >
-                                <i className="ti ti-plus fs-16" /> {currentLayerName ? `Add ${currentLayerName}` : (path.length === 1 ? "Add Country" : "Add Layer")}
+                                <i className="ti ti-plus fs-14" /> {currentLayerName ? `Add ${currentLayerName}` : (path.length === 1 ? "Add Country" : "Add Layer")}
                             </button>
                         </div>
                     </div>
@@ -309,7 +329,7 @@ const AssignLocationList: React.FC = () => {
                                             <React.Fragment key={i}>
                                                 {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
                                                 <button
-                                                    className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === modalPath.length - 1 ? "text-danger" : "text-muted"}`}
+                                                    className={`btn p-0 border-0 bg-transparent fs-14 fw-bold ${i === modalPath.length - 1 ? "text-danger" : "text-muted"}`}
                                                     onClick={() => setModalPath(modalPath.slice(0, i + 1))}
                                                 >
                                                     {p.name}
@@ -333,7 +353,7 @@ const AssignLocationList: React.FC = () => {
                                     </div>
 
                                     {/* Modal Table */}
-                                    <div className="border rounded">
+                                    <div className="rounded bg-white">
                                         <Datatable
                                             columns={[
                                                 {
@@ -370,6 +390,7 @@ const AssignLocationList: React.FC = () => {
                                                 return node?.parentId === modalPath[modalPath.length - 1]?.id && !node?.isDeleted;
                                             })}
                                             Selection={true}
+                                            searchText=""
                                         />
                                     </div>
                                 </div>
@@ -396,7 +417,7 @@ const AssignLocationList: React.FC = () => {
                                             placeholder={`e.g. ${path.length === 1 ? 'India' : 'New Layer'}`}
                                             value={newLocName}
                                             onChange={e => setNewLocName(e.target.value)}
-                                            style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                            style={{ height: 38, borderRadius: 3, fontSize: 14 }}
                                         />
                                     </div>
 
@@ -404,7 +425,7 @@ const AssignLocationList: React.FC = () => {
                                     <div className="d-flex gap-2 mt-4">
                                         <button
                                             className="btn btn-danger flex-grow-1 fw-bold"
-                                            style={{ background: ACCENT, height: 44, borderRadius: 8 }}
+                                            style={{ background: ACCENT, height: 38, borderRadius: 3 }}
                                             onClick={() => {
                                                 if (!newLocName.trim()) return;
                                                 const pId = path[path.length - 1].id;
@@ -426,7 +447,7 @@ const AssignLocationList: React.FC = () => {
                                         </button>
                                         <button
                                             className="btn btn-light flex-grow-1 fw-medium border"
-                                            style={{ height: 44, borderRadius: 8 }}
+                                            style={{ height: 38, borderRadius: 3 }}
                                             onClick={() => {
                                                 setNewLocName("");
                                                 setNewLocCode("");
@@ -461,7 +482,7 @@ const AssignLocationList: React.FC = () => {
                                             placeholder="e.g. Zone, Region, City"
                                             value={newLayerName}
                                             onChange={e => setNewLayerName(e.target.value)}
-                                            style={{ height: 44, borderRadius: 8, fontSize: 14 }}
+                                            style={{ height: 38, borderRadius: 3, fontSize: 14 }}
                                         />
                                         <div className="fs-12 text-muted mt-2">
                                             Define the type of sub-locations for <strong>{path[path.length - 1].name}</strong>.
@@ -483,7 +504,7 @@ const AssignLocationList: React.FC = () => {
                                     <div className="d-flex gap-2 mt-4">
                                         <button
                                             className="btn btn-danger flex-grow-1 fw-bold"
-                                            style={{ background: ACCENT, height: 44, borderRadius: 8 }}
+                                            style={{ background: ACCENT, height: 38, borderRadius: 3 }}
                                             onClick={() => {
                                                 if (!newLayerName.trim()) return;
                                                 const layerName = newLayerName.trim();
@@ -491,7 +512,7 @@ const AssignLocationList: React.FC = () => {
 
                                                 if (applyLayerToAll) {
                                                     const parentIdOfSiblings = path.length > 1 ? path[path.length - 2].id : null;
-                                                    
+
                                                     updatedLocs = updatedLocs.map(l => {
                                                         if (l.parentId === parentIdOfSiblings) {
                                                             return { ...l, childLayerName: layerName };
@@ -512,7 +533,7 @@ const AssignLocationList: React.FC = () => {
                                                         setLayerNames(updatedLayers);
                                                         localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
                                                     } else {
-                                                        updatedLocs = updatedLocs.map(l => 
+                                                        updatedLocs = updatedLocs.map(l =>
                                                             l.id === currentParentId ? { ...l, childLayerName: layerName } : l
                                                         );
                                                     }
@@ -529,7 +550,7 @@ const AssignLocationList: React.FC = () => {
                                         >
                                             DEFINE LAYER
                                         </button>
-                                        <button className="btn btn-light flex-grow-1 fw-medium border" style={{ height: 44, borderRadius: 8 }} onClick={() => setShowLayerModal(false)}>CANCEL</button>
+                                        <button className="btn btn-light flex-grow-1 fw-medium border" style={{ height: 38, borderRadius: 3 }} onClick={() => setShowLayerModal(false)}>CANCEL</button>
                                     </div>
                                 </div>
                             </div>
@@ -543,7 +564,7 @@ const AssignLocationList: React.FC = () => {
                                 <React.Fragment key={i}>
                                     {i > 0 && <i className="ti ti-chevron-right text-muted fs-10" />}
                                     <button
-                                        className={`btn p-0 border-0 bg-transparent fs-13 fw-bold ${i === path.length - 1 ? "text-danger" : "text-muted"}`}
+                                        className={`btn p-0 border-0 bg-transparent fs-14 fw-bold ${i === path.length - 1 ? "text-danger" : "text-muted"}`}
                                         onClick={() => setPath(path.slice(0, i + 1))}
                                     >
                                         {p.name === "Home" ? <><i className="ti ti-world me-1" />Global</> : p.name}
@@ -552,11 +573,11 @@ const AssignLocationList: React.FC = () => {
                             ))}
                         </div>
 
-                        <div className="toolbar-custom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div className="toolbar-custom py-2 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
                             <div className="d-flex align-items-center gap-2 flex-wrap">
                                 <div className="dropdown">
-                                    <button className="btn btn-white border d-flex align-items-center gap-2 shadow-none text-dark fs-14 fw-medium" data-bs-toggle="dropdown" style={{ height: 40, borderRadius: 6, borderColor: "#e5e7eb" }}>
-                                        <i className="ti ti-sort-ascending-2 fs-16" /> Sort By <i className="ti ti-chevron-down fs-12 ms-1" />
+                                    <button className="btn btn-white btn-sm border d-flex align-items-center gap-2 text-dark fs-14 sort-by-btn" data-bs-toggle="dropdown" style={{ height: 38, borderRadius: 3, borderColor: "#ebe7e5ff", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+                                        <i className="ti ti-sort-ascending-2 fs-14 " /> Sort By <i className="ti ti-chevron-down fs-10 ms-1" />
                                     </button>
                                     <ul className="dropdown-menu shadow-sm border-0">
                                         <li><button className="dropdown-item" onClick={() => setSortBy("newest")}>Newest</button></li>
@@ -569,21 +590,144 @@ const AssignLocationList: React.FC = () => {
                             <div className="d-flex align-items-center gap-2 flex-wrap">
                                 <div className="dropdown">
                                     <button
-                                        className="btn btn-white border d-flex align-items-center gap-2 shadow-none text-dark fs-14 fw-medium"
-                                        onClick={() => setShowFilter(!showFilter)}
-                                        style={{ height: 40, borderRadius: 6, borderColor: "#e5e7eb" }}
+                                        className="btn btn-white btn-sm border d-flex align-items-center gap-2 shadow-none text-dark fs-14 fw-medium filter-btn"
+                                        data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside"
+                                        style={{ height: 38, borderRadius: 3, borderColor: "#ebe7e5ff", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
                                     >
-                                        <i className="ti ti-filter fs-16" /> Filter <i className="ti ti-chevron-down fs-12 ms-1" />
+                                        <i className="ti ti-filter fs-14" /> Filter <i className="ti ti-chevron-down fs-10 ms-1" />
                                     </button>
+                                    <div className="filter-dropdown-menu dropdown-menu dropdown-menu-lg p-0">
+                                        <div className="filter-header d-flex align-items-center justify-content-between border-bottom">
+                                            <h6 className="mb-0">
+                                                <i className="ti ti-filter me-1" />
+                                                Filter
+                                            </h6>
+                                            <button
+                                                type="button"
+                                                className="btn-close close-filter-btn"
+                                                data-bs-dismiss="dropdown"
+                                                aria-label="Close"
+                                            />
+                                        </div>
+                                        <div className="filter-set-view p-3">
+                                            <div className="accordion" id="filterAccordion">
+                                                {/* Location Name Filter */}
+                                                <div className="filter-set-content">
+                                                    <div className="filter-set-content-head">
+                                                        <a
+                                                            href="#"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#collapseName"
+                                                            aria-expanded="true"
+                                                            aria-controls="collapseName"
+                                                        >
+                                                            Location Name
+                                                        </a>
+                                                    </div>
+                                                    <div
+                                                        className="filter-set-contents accordion-collapse collapse show"
+                                                        id="collapseName"
+                                                        data-bs-parent="#filterAccordion"
+                                                    >
+                                                        <div className="filter-content-list bg-light rounded border p-2 shadow-none">
+                                                            <div className="mb-2 position-relative">
+                                                                <i className="ti ti-search position-absolute text-muted" style={{ left: 10, top: "50%", transform: "translateY(-50%)", fontSize: 14, pointerEvents: "none" }} />
+                                                                <input
+                                                                    type="text"
+                                                                    className="form-control form-control-sm"
+                                                                    placeholder="Search..."
+                                                                    style={{ paddingLeft: 30 }}
+                                                                />
+                                                            </div>
+                                                            <ul className="mb-0 list-unstyled" style={{ maxHeight: 150, overflowY: "auto" }}>
+                                                                {[...new Set(locations.map(l => l.name))].slice(0, 5).map((name, idx) => (
+                                                                    <li key={idx} className="mb-1">
+                                                                        <label className="dropdown-item px-2 d-flex align-items-center fs-14">
+                                                                            <input className="form-check-input m-0 me-2" type="checkbox" />
+                                                                            {name}
+                                                                        </label>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Code Filter */}
+                                                <div className="filter-set-content">
+                                                    <div className="filter-set-content-head">
+                                                        <a
+                                                            href="#"
+                                                            className="collapsed"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#collapseCode"
+                                                            aria-expanded="false"
+                                                            aria-controls="collapseCode"
+                                                        >
+                                                            Location Code
+                                                        </a>
+                                                    </div>
+                                                    <div
+                                                        className="filter-set-contents accordion-collapse collapse"
+                                                        id="collapseCode"
+                                                        data-bs-parent="#filterAccordion"
+                                                    >
+                                                        <div className="filter-content-list bg-light rounded border p-2 shadow-none mt-2">
+                                                            <input
+                                                                type="text"
+                                                                className="form-control form-control-sm"
+                                                                placeholder="Enter Code"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Currency Filter */}
+                                                <div className="filter-set-content">
+                                                    <div className="filter-set-content-head">
+                                                        <a
+                                                            href="#"
+                                                            className="collapsed"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#collapseCurrency"
+                                                            aria-expanded="false"
+                                                            aria-controls="collapseCurrency"
+                                                        >
+                                                            Currency
+                                                        </a>
+                                                    </div>
+                                                    <div
+                                                        className="filter-set-contents accordion-collapse collapse"
+                                                        id="collapseCurrency"
+                                                        data-bs-parent="#filterAccordion"
+                                                    >
+                                                        <div className="filter-content-list bg-light rounded border p-2 shadow-none mt-2">
+                                                            <select className="form-select form-select-sm">
+                                                                <option value="">Select Currency</option>
+                                                                <option value="INR">INR</option>
+                                                                <option value="USD">USD</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="filter-reset-btns d-flex align-items-center gap-2 mt-4">
+                                                <button type="button" className="btn btn-light w-100 fs-14">Reset</button>
+                                                <button type="button" className="btn btn-danger w-100 fs-14" style={{ background: ACCENT, border: "none" }}>Apply Filter</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="dropdown">
                                     <button
-                                        className="btn d-flex align-items-center gap-2 fs-14 fw-bold"
+                                        className="btn btn-sm d-flex align-items-center gap-2 fs-14 fw-bold"
                                         data-bs-toggle="dropdown"
-                                        style={{ height: 40, borderRadius: 6, padding: "0 15px", background: "#eef2ff", color: "#4f46e5", border: "none" }}
+                                        style={{ height: 38, borderRadius: 6, padding: "0 15px", background: "#eef2ff", color: "#4f46e5", border: "none" }}
                                     >
-                                        <i className="ti ti-layout-columns fs-16" /> Manage Columns
+                                        <i className="ti ti-layout-columns fs-14" /> Manage Columns
                                     </button>
                                     <ul className="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3" style={{ minWidth: 220, borderRadius: 12 }}>
                                         {["name", "currency", "action"].map((col, index, arr) => (
@@ -618,41 +762,56 @@ const AssignLocationList: React.FC = () => {
                                     </ul>
                                 </div>
 
-                                <div className="d-flex align-items-center gap-1 p-1 border rounded bg-white shadow-none" style={{ borderColor: "#e5e7eb" }}>
-                                    <button onClick={() => setViewMode("list")} className="btn btn-sm d-flex align-items-center justify-content-center rounded" style={{ width: 34, height: 30, background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", border: "none" }}>
-                                        <i className="ti ti-list fs-16" />
+                                <div className="dropdown">
+                                    <button
+                                        className="btn btn-white btn-sm border d-flex align-items-center justify-content-center shadow-none text-muted more-action-btn"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        style={{ height: 36, width: 36, borderRadius: 3, borderColor: "#ebe7e5ff" }}
+                                    >
+                                        <i className="ti ti-dots-vertical fs-14" />
                                     </button>
-                                    <button onClick={() => setViewMode("grid")} className="btn btn-sm d-flex align-items-center justify-content-center rounded" style={{ width: 34, height: 30, background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#6c757d", border: "none" }}>
-                                        <i className="ti ti-layout-grid fs-16" />
-                                    </button>
+                                    <div className="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 6 }}>
+                                        <button
+                                            className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 fw-medium"
+                                            onClick={() => {
+                                                setNewLayerName(currentLayerName || "");
+                                                setShowLayerModal(true);
+                                            }}
+                                            disabled={!currentLayerName && path.length > 1}
+                                        >
+                                            <i className="ti ti-edit fs-15 text-muted" /> Edit Layer
+                                        </button>
+                                        <button
+                                            className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger fw-medium"
+                                            onClick={() => {
+                                                if (!currentLayerName && path.length > 1) return;
+                                                const updatedLocs = locations.map(l =>
+                                                    l.id === currentParentId ? { ...l, childLayerName: "" } : l
+                                                );
+                                                setLocations(updatedLocs);
+                                                localStorage.setItem(SK_LOCATIONS, JSON.stringify(updatedLocs));
+
+                                                if (path.length === 1) {
+                                                    const updatedLayers = [...layerNames];
+                                                    updatedLayers[0] = "";
+                                                    setLayerNames(updatedLayers);
+                                                    localStorage.setItem("asl_layers_v11", JSON.stringify(updatedLayers));
+                                                }
+                                            }}
+                                            disabled={!currentLayerName && path.length > 1}
+                                        >
+                                            <i className="ti ti-trash fs-15" /> Delete Layer
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="p-4 pt-0">
-                            {viewMode === "list" ? (
-                                <div className="border rounded bg-white overflow-hidden shadow-none">
-                                    <Datatable columns={columns} dataSource={tableData} Selection={true} searchText={searchText} />
-                                </div>
-                            ) : (
-                                <div className="row g-3">
-                                    {tableData.map(r => (
-                                        <div className="col-md-4" key={r.rowKey}>
-                                            <div className="card border shadow-none h-100 mb-0" style={{ borderRadius: 8 }}>
-                                                <div className="card-body p-3">
-                                                    <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
-                                                        <h6 className="fw-bold mb-0 text-dark fs-14">{r.name}</h6>
-                                                        <span className="badge bg-soft-secondary text-secondary fs-11">{r.code}</span>
-                                                    </div>
-                                                    <div className="fs-13 text-muted mb-1"><span className="fw-medium text-dark">Currency:</span> {r.currency || "—"}</div>
-                                                    <div className="fs-13 text-muted"><span className="fw-medium text-dark">Parent:</span> {r.parent}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {tableData.length === 0 && <div className="text-center py-5 text-muted border rounded bg-white w-100">No {currentLayerName || 'locations'} found.</div>}
-                                </div>
-                            )}
+                            <div className="rounded bg-white shadow-none">
+                                <Datatable columns={columns} dataSource={tableData} Selection={true} searchText={searchText} size="small" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -669,6 +828,9 @@ const AssignLocationList: React.FC = () => {
                         justify-content: center;
                         z-index: 1050;
                         backdrop-filter: blur(2px);
+                    }
+                    .footer {
+                        border-top: none !important;
                     }
                     .gst-modal-content {
                         background: #fff;
@@ -703,6 +865,163 @@ const AssignLocationList: React.FC = () => {
                     @keyframes modalFadeIn {
                         from { opacity: 0; transform: translateY(-20px); }
                         to { opacity: 1; transform: translateY(0); }
+                    }
+                    /* Page Header Styles */
+                    .page-wrapper .content .mb-4.flex-wrap {
+                        margin-bottom: 2rem !important;
+                    }
+                    .page-wrapper .content h4 {
+                        font-size: 20px !important;
+                        margin-bottom: 6px !important;
+                        display: flex;
+                        align-items: center;
+                    }
+                    .page-wrapper .content h4 .badge {
+                        font-size: 13px !important;
+                        padding: 2px 10px !important;
+                        border-radius: 6px !important;
+                        background: #fff1f0 !important;
+                        color: #e41f07 !important;
+                        font-weight: 700 !important;
+                        border: 1px solid #ffccc7 !important;
+                        border-bottom: 2px solid #ffa39e !important;
+                        display: inline-flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        min-width: 20px !important;
+                    }
+                    .page-wrapper .content .breadcrumb {
+                        font-size: 14px !important;
+                        color: #64748b !important;
+                    }
+                    .page-wrapper .content .breadcrumb-item a {
+                        color: #64748b !important;
+                        text-decoration: none !important;
+                    }
+                    .page-wrapper .content .breadcrumb-item.active {
+                        color: #000 !important;
+                        font-weight: 600 !important;
+                    }
+                    .page-wrapper .content .breadcrumb-item + .breadcrumb-item::before {
+                        content: "" !important;
+                        font-family: "tabler-icons" !important;
+                        font-size: 12px !important;
+                        color: #94a3b8 !important;
+                        vertical-align: middle !important;
+                        padding-right: 8px !important;
+                    }
+                    /* Standardizing all header buttons to SMALL template size (38px) */
+                    .page-wrapper .content .btn-outline-light {
+                        height: 38px !important;
+                        display: inline-flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        font-size: 14px !important;
+                        padding: 0 12px !important;
+                        border-color: #e5e7eb !important;
+                        color: #374151 !important;
+                        background: #fff !important;
+                        box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+                        border-radius: 3px !important;
+                    }
+                    .page-wrapper .content .btn-outline-light:hover {
+                        background: #fff1f0 !important;
+                        border-color: #ffccc7 !important;
+                        color: #e41f07 !important;
+                    }
+                    .page-wrapper .content .btn-outline-light i {
+                        font-size: 16px !important;
+                    }
+                    .page-wrapper .content .btn-icon {
+                        width: 38px !important;
+                        height: 38px !important;
+                        padding: 0 !important;
+                    }
+                    .page-wrapper .content .dropdown-toggle::after {
+                        font-size: 12px !important;
+                        margin-left: 6px !important;
+                    }
+                    .sort-by-btn {
+                        transition: all 0.2s ease !important;
+                    }
+                    .sort-by-btn:hover {
+                        background: #fff7f6 !important;
+                        border-color: #fde0dd !important;
+                        color: #e41f07 !important;
+                        box-shadow: 0 2px 6px rgba(228, 31, 7, 0.07) !important;
+                    }
+                    .filter-btn {
+                        transition: all 0.2s ease !important;
+                    }
+                    .filter-btn:hover {
+                        background: #fff7f6 !important;
+                        border-color: #fde0dd !important;
+                        color: #e41f07 !important;
+                        box-shadow: 0 2px 6px rgba(228, 31, 7, 0.07) !important;
+                    }
+                    .delete-layer-btn {
+                        transition: all 0.2s ease !important;
+                    }
+                    .delete-layer-btn:hover {
+                        background: #fff7f6 !important;
+                        border-color: #fde0dd !important;
+                        box-shadow: 0 2px 6px rgba(228, 31, 7, 0.07) !important;
+                    }
+
+                    /* Standard Table Action Button (Dark Hover) */
+                    .page-wrapper .content .table-action-btn {
+                        width: 28px !important;
+                        height: 28px !important;
+                        border-radius: 6px !important;
+                        border: 1px solid #dee2e6 !important;
+                        background: #fff !important;
+                        color: #6c757d !important;
+                        display: inline-flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        padding: 0 !important;
+                        box-shadow: none !important;
+                        transition: all 0.2s ease !important;
+                        cursor: pointer;
+                    }
+                    .page-wrapper .content .table-action-btn i {
+                        font-size: 15px !important;
+                    }
+                    .page-wrapper .content .table-action-btn:hover {
+                        background: #fff1f0 !important;
+                        border-color: #ffccc7 !important;
+                        color: #e41f07 !important;
+                    }
+                    .page-wrapper .content .table-action-btn:hover i {
+                        color: #e41f07 !important;
+                    }
+                    .more-action-btn:hover {
+                        background: #fff1f0 !important;
+                        border-color: #ffccc7 !important;
+                        color: #e41f07 !important;
+                    }
+                    /* Template Table Styles */
+                    .ant-table-thead > tr > th {
+                        background-color: #f8f9fa !important;
+                        border-bottom: 1px solid #eef0f2 !important;
+                        border-top: none !important;
+                        font-weight: 600 !important;
+                        color: #334155 !important;
+                    }
+                    .ant-table-tbody > tr > td {
+                        border-bottom: 1px solid #eef0f2 !important;
+                    }
+                    .ant-table-wrapper .ant-table-container {
+                        border: none !important;
+                    }
+                    /* Remove Card Border and Shadow (Corner fix) */
+                    .card {
+                        border: none !important;
+                        box-shadow: none !important;
+                        outline: none !important;
+                    }
+                    .card-header {
+                        border-bottom: 1px solid #e2e6e8ff !important;
                     }
                 `}</style>
             </div>

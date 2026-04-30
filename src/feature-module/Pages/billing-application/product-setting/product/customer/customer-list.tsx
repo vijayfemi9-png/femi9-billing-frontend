@@ -451,7 +451,7 @@ const CustomerList: React.FC = () => {
                                 <div style={{ position: "relative" }}>
                                     <button
                                         className={`btn btn-outline-light shadow px-2 ${filterStatus.length > 0 ? 'border-primary text-primary' : ''}`}
-                                        style={{ height: 36, fontSize: 14 }}
+                                        style={{ height: 38, fontSize: 14, borderRadius: 3 }}
                                         onClick={() => setShowFilter(!showFilter)}
                                     >
                                         <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />

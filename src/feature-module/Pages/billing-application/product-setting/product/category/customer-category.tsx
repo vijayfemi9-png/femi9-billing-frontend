@@ -51,7 +51,7 @@ const DeleteConfirm: React.FC<{
   >
     <div
       className="bg-white shadow-lg text-center"
-      style={{ borderRadius: 12, width: "100%", maxWidth: 380, padding: "32px 28px" }}
+      style={{ borderRadius: 3, width: "100%", maxWidth: 380, padding: "32px 28px" }}
     >
       <div
         className="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
@@ -64,8 +64,8 @@ const DeleteConfirm: React.FC<{
         "<strong>{name}</strong>" will be permanently removed.
       </p>
       <div className="d-flex justify-content-center gap-3">
-        <button className="btn btn-light fs-14 px-4" onClick={onCancel} style={{ borderRadius: 8 }}>Cancel</button>
-        <button className="btn btn-danger fs-14 px-4" onClick={onConfirm} style={{ borderRadius: 8, background: '#E41F07' }}>
+        <button className="btn btn-light fs-14 px-4" onClick={onCancel} style={{ borderRadius: 3 }}>Cancel</button>
+        <button className="btn btn-danger fs-14 px-4" onClick={onConfirm} style={{ borderRadius: 3, background: '#E41F07' }}>
           <i className="ti ti-trash me-1" />Delete
         </button>
       </div>
@@ -289,10 +289,10 @@ const UserCategoryPage: React.FC = () => {
       className: "text-center",
       render: (_: any, record: UserCategory) => (
         <div className="dropdown d-flex justify-content-center">
-          <button className="btn btn-icon btn-sm btn-outline-light shadow-sm" data-bs-toggle="dropdown" aria-expanded="false" style={{ borderRadius: 6 }}>
+          <button type="button" className="table-action-btn" data-bs-toggle="dropdown" aria-expanded="false">
             <i className="ti ti-dots-vertical" />
           </button>
-          <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
+          <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 3 }}>
             <Link
               className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger"
               to="#"
@@ -342,9 +342,9 @@ const UserCategoryPage: React.FC = () => {
     <div className="page-wrapper">
       <div className="content">
         <PageHeader
-          title="Customer category"
-          showModuleTile={false}
+          title="Customer Category"
           badgeCount={categories.length}
+          showModuleTile={false}
           exportComponent={
             <div className="dropdown">
               <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
@@ -411,7 +411,7 @@ const UserCategoryPage: React.FC = () => {
                     <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
                   </button>
                   {showFilter && (
-                    <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
+                    <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 3 }}>
                       <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
                         <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
                         <button
@@ -459,7 +459,7 @@ const UserCategoryPage: React.FC = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
                           <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
-                          <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 8, height: 36, background: '#E41F07' }} onClick={handleApplyFilter}>Filter</button>
+                          <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 3, height: 36, background: '#E41F07' }} onClick={handleApplyFilter}>Filter</button>
                         </div>
                       </div>
                     </div>
@@ -536,7 +536,7 @@ const UserCategoryPage: React.FC = () => {
                     const avatarColor = avatarColors[cat.id % avatarColors.length];
                     return (
                       <div className="col-xxl-3 col-xl-4 col-md-6" key={cat.id}>
-                        <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: 12 }}>
+                        <div className="card h-100 border-0 shadow-sm" style={{ borderRadius: 3 }}>
                           <div className="card-body p-3 d-flex flex-column">
 
                             {/* Top badges */}
@@ -562,7 +562,7 @@ const UserCategoryPage: React.FC = () => {
                                 <button className="btn btn-sm bg-white border shadow-sm d-flex align-items-center justify-content-center" data-bs-toggle="dropdown" style={{ width: 30, height: 30, borderRadius: 6, padding: 0 }}>
                                   <i className="ti ti-dots-vertical fs-14" />
                                 </button>
-                                <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
+                                <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 3 }}>
                                   <button className="dropdown-item py-2 px-3 d-flex align-items-center gap-2 fs-14 text-danger" onClick={() => handleEdit(cat)}>
                                     <i className="ti ti-edit fs-15" /> Edit
                                   </button>
@@ -620,6 +620,111 @@ const UserCategoryPage: React.FC = () => {
       </div>
       {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
       <Footer />
+      {/* ── Page Styles ── */}
+      <style>{`
+        /* Page Header Styles */
+        .page-wrapper .content .mb-4.flex-wrap {
+            margin-bottom: 2rem !important;
+        }
+        .page-wrapper .content h4 {
+            font-size: 20px !important;
+            margin-bottom: 6px !important;
+            display: flex;
+            align-items: center;
+        }
+        .page-wrapper .content h4 .badge {
+            font-size: 13px !important;
+            padding: 2px 10px !important;
+            border-radius: 6px !important;
+            background: #fff1f0 !important;
+            color: #e41f07 !important;
+            font-weight: 700 !important;
+            border: 1px solid #ffccc7 !important;
+            border-bottom: 2px solid #ffa39e !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 20px !important;
+        }
+        .page-wrapper .content .breadcrumb {
+            font-size: 14px !important;
+            color: #64748b !important;
+        }
+        .page-wrapper .content .breadcrumb-item a {
+            color: #64748b !important;
+            text-decoration: none !important;
+        }
+        .page-wrapper .content .breadcrumb-item.active {
+            color: #000 !important;
+            font-weight: 600 !important;
+        }
+        .page-wrapper .content .breadcrumb-item + .breadcrumb-item::before {
+            content:!important;
+            font-family: "tabler-icons" !important;
+            font-size: 12px !important;
+            color: #94a3b8 !important;
+            vertical-align: middle !important;
+            padding-right: 8px !important;
+        }
+        /* Standardizing all header buttons to SMALL template size (38px) */
+        .page-wrapper .content .btn-outline-light {
+            height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            padding: 0 12px !important;
+            border-color: #e5e7eb !important;
+            color: #374151 !important;
+            background: #fff !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            border-radius: 3px !important;
+        }
+        .page-wrapper .content .btn-outline-light:hover {
+            background: #fff1f0 !important;
+            border-color: #ffccc7 !important;
+            color: #e41f07 !important;
+        }
+        .page-wrapper .content .btn-outline-light i {
+            font-size: 16px !important;
+        }
+        .page-wrapper .content .btn-icon {
+            width: 38px !important;
+            height: 38px !important;
+            padding: 0 !important;
+        }
+        .page-wrapper .content .dropdown-toggle::after {
+            font-size: 12px !important;
+            margin-left: 6px !important;
+        }
+        /* Standard Table Action Button (Dark Hover) */
+        .page-wrapper .content .table-action-btn {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            border: 1px solid #dee2e6 !important;
+            background: #fff !important;
+            color: #6c757d !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
+        }
+        .page-wrapper .content .table-action-btn i {
+            font-size: 15px !important;
+        }
+        .page-wrapper .content .table-action-btn:hover {
+            background: #fff1f0 !important;
+            border-color: #ffccc7 !important;
+            color: #e41f07 !important;
+        }
+        .page-wrapper .content .table-action-btn:hover i {
+            color: #e41f07 !important;
+        }
+      `}</style>
     </div>
   );
 };

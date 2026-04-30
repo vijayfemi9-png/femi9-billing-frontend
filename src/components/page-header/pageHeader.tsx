@@ -22,26 +22,39 @@ const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleT
         {titleDropdown ? (
           titleDropdown
         ) : (
-          <h4 className="mb-1" style={{ fontSize: '18px', fontWeight: 600 }}>
-            {title}
-            <span className="badge badge-soft-primary ms-2">{badgeCount}</span>
-          </h4>
-        )}
-        <nav aria-label="breadcrumb">
-          <ol className="breadcrumb mb-0 p-0 fs-14" style={{ fontSize: '14px' }}>
-            <li className="breadcrumb-item fs-14" style={{ fontSize: '14px' }}>
-              <Link to={all_routes.dealsDashboard} className="text-muted fs-14" style={{ fontSize: '14px' }}>Home</Link>
-            </li>
-            {showModuleTile && (
-              <li className="breadcrumb-item fs-14" aria-current="page" style={{ fontSize: '14px' }}>
-                <Link to={moduleLink} className="text-muted fs-14" style={{ fontSize: '14px' }}>{moduleTitle}</Link>
-              </li>
-            )}
-            <li className="breadcrumb-item active text-dark fs-14" aria-current="page" style={{ fontSize: '14px', fontWeight: 500 }}>
+          <>
+            <h4 className="mb-1 d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: 600, lineHeight: 1.3 }}>
               {title}
-            </li>
-          </ol>
-        </nav>
+              {badgeCount !== null && badgeCount !== false && badgeCount !== undefined && (
+                <span style={{
+                  fontSize: 12,
+                  padding: '2px 5px',
+                  borderRadius: 6,
+                  background: '#fff1f0',
+                  color: '#e41f07',
+                  fontWeight: 500,
+                  border: '1px solid #ffccc7',
+                  borderBottom: '2px solid #ffa39e',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1.5,
+                }}>{badgeCount}</span>
+              )}
+            </h4>
+            <div className="d-flex align-items-center gap-1" style={{ fontSize: '14px' }}>
+              <Link to={all_routes.dealsDashboard} className="text-muted" style={{ fontSize: '14px', textDecoration: 'none' }}>Home</Link>
+              <i className="ti ti-chevron-right text-muted" style={{ fontSize: 12, lineHeight: 1 }} />
+              {showModuleTile && (
+                <>
+                  <Link to={moduleLink} className="text-muted" style={{ fontSize: '14px', textDecoration: 'none' }}>{moduleTitle}</Link>
+                  <i className="ti ti-chevron-right text-muted" style={{ fontSize: 12, lineHeight: 1 }} />
+                </>
+              )}
+              <span className="text-dark fw-medium" style={{ fontSize: '14px' }}>{title}</span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="gap-2 d-flex align-items-center flex-wrap">

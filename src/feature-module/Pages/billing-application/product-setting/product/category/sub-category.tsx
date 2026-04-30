@@ -161,7 +161,7 @@ const SubCategoryPage: React.FC = () => {
       render: (_: any, record: SubCategory) => (
         <div className="d-flex align-items-center justify-content-center">
           <div className="dropdown">
-            <button className="btn btn-icon btn-sm btn-outline-light shadow-sm" data-bs-toggle="dropdown" aria-expanded="false" style={{ borderRadius: 6, width: 32, height: 32 }}>
+            <button type="button" className="table-action-btn" data-bs-toggle="dropdown" aria-expanded="false">
               <i className="ti ti-dots-vertical" />
             </button>
             <div className="dropdown-menu dropdown-menu-end shadow border-0 py-2 mt-1" style={{ minWidth: 140, borderRadius: 8 }}>
@@ -196,16 +196,19 @@ const SubCategoryPage: React.FC = () => {
               <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
                 <i className="ti ti-package-export me-2" />Export
               </Link>
-              <div className="dropdown">
-                <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
-                  <i className="ti ti-sort-ascending-2 me-2" />Sort By
-                </Link>
-                <div className="dropdown-menu">
-                  <ul>
-                    <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
-                    <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
-                  </ul>
-                </div>
+              <div className="dropdown-menu dropdown-menu-end">
+                <ul className="mb-0">
+                  <li>
+                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
+                      <i className="ti ti-file-type-pdf me-1" />Export as PDF
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
+                      <i className="ti ti-file-type-xls me-1" />Export as Excel
+                    </Link>
+                  </li>
+                </ul>
               </div>
             </div>
           }
@@ -528,6 +531,111 @@ const SubCategoryPage: React.FC = () => {
         </div>
       </div>
       <Footer />
+      {/* ── Page Styles ── */}
+      <style>{`
+        /* Page Header Styles */
+        .page-wrapper .content .mb-4.flex-wrap {
+            margin-bottom: 2rem !important;
+        }
+        .page-wrapper .content h4 {
+            font-size: 20px !important;
+            margin-bottom: 6px !important;
+            display: flex;
+            align-items: center;
+        }
+        .page-wrapper .content h4 .badge {
+            font-size: 13px !important;
+            padding: 2px 10px !important;
+            border-radius: 6px !important;
+            background: #fff1f0 !important;
+            color: #e41f07 !important;
+            font-weight: 700 !important;
+            border: 1px solid #ffccc7 !important;
+            border-bottom: 2px solid #ffa39e !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 20px !important;
+        }
+        .page-wrapper .content .breadcrumb {
+            font-size: 14px !important;
+            color: #64748b !important;
+        }
+        .page-wrapper .content .breadcrumb-item a {
+            color: #64748b !important;
+            text-decoration: none !important;
+        }
+        .page-wrapper .content .breadcrumb-item.active {
+            color: #000 !important;
+            font-weight: 600 !important;
+        }
+        .page-wrapper .content .breadcrumb-item + .breadcrumb-item::before {
+            content: !important;
+            font-family: "tabler-icons" !important;
+            font-size: 12px !important;
+            color: #94a3b8 !important;
+            vertical-align: middle !important;
+            padding-right: 8px !important;
+        }
+        /* Standardizing all header buttons to SMALL template size (38px) */
+        .page-wrapper .content .btn-outline-light {
+            height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            padding: 0 12px !important;
+            border-color: #e5e7eb !important;
+            color: #374151 !important;
+            background: #fff !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            border-radius: 3px !important;
+        }
+        .page-wrapper .content .btn-outline-light:hover {
+            background: #fff1f0 !important;
+            border-color: #ffccc7 !important;
+            color: #e41f07 !important;
+        }
+        .page-wrapper .content .btn-outline-light i {
+            font-size: 16px !important;
+        }
+        .page-wrapper .content .btn-icon {
+            width: 38px !important;
+            height: 38px !important;
+            padding: 0 !important;
+        }
+        .page-wrapper .content .dropdown-toggle::after {
+            font-size: 12px !important;
+            margin-left: 6px !important;
+        }
+        /* Standard Table Action Button (Dark Hover) */
+        .page-wrapper .content .table-action-btn {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            border: 1px solid #dee2e6 !important;
+            background: #fff !important;
+            color: #6c757d !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer;
+        }
+        .page-wrapper .content .table-action-btn i {
+            font-size: 15px !important;
+        }
+        .page-wrapper .content .table-action-btn:hover {
+            background: #fff1f0 !important;
+            border-color: #ffccc7 !important;
+            color: #e41f07 !important;
+        }
+        .page-wrapper .content .table-action-btn:hover i {
+            color: #e41f07 !important;
+        }
+      `}</style>
     </div>
   );
 };

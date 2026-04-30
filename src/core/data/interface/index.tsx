@@ -310,6 +310,7 @@ export interface DatatableProps {
   rowClassName?: (record: any) => string;
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
+  size?: "small" | "middle" | "large";
 }
 
 export interface CountriesData {

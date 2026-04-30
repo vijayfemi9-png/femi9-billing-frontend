@@ -13,6 +13,7 @@ const Datatable: React.FC<DatatableProps> = ({
   expandable,
   onRow,
   rowClassName,
+  size,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [Selections, setSelections] = useState<any>(true);
@@ -68,7 +69,7 @@ const Datatable: React.FC<DatatableProps> = ({
       <div className="table-responsive mb-3 w-100">
         <Table
           className="table-nowrap"
-          size="middle"
+          size={size || "middle"}
           rowSelection={Selections ? rowSelection : undefined}
           columns={columns}
           rowHoverable={false}

@@ -133,6 +133,20 @@ export const SidebarData = [
         ],
       },
       {
+        label: "Invoices",
+        link: route.billingInvoiceList,
+        submenu: true,
+        showSubRoute: false,
+        icon: "file-invoice",
+        base: "Invoices",
+        materialicons: "start",
+        dot: true,
+        submenuItems: [
+          { label: "All Invoices", link: route.billingInvoiceList },
+          { label: "Invoice Setting", link: route.billingInvoiceSetting },
+        ],
+      },
+      {
         label: "Products",
         link: route.productList,
         submenu: true,

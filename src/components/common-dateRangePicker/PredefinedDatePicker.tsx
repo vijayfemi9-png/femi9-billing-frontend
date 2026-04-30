@@ -93,22 +93,38 @@ export default function PredefinedDatePicker() {
   };
 
   return (
-    <DateRangePicker
-      initialSettings={initialSettings as any}
-      onApply={handleApply}
-      onShow={handleShow}
-    >
-      <div className="btn btn-outline-light bg-white shadow-sm d-flex align-items-center gap-2 px-3" style={{ height: 38, borderRadius: 6, cursor: 'pointer' }}>
-        <input
-          ref={inputRef}
-          type="text"
-          className="reportrange-picker-field text-dark border-0 shadow-none bg-transparent p-0 fs-14 cursor-pointer"
-          style={{ width: 170, pointerEvents: 'none' }}
-          value={displayValue}
-          readOnly
-        />
-        <i className="ti ti-calendar text-dark fs-16" />
-      </div>
-    </DateRangePicker>
+    <>
+      <style>{`
+        .date-range-btn {
+          transition: all 0.2s ease !important;
+        }
+        .date-range-btn:hover {
+          background: #fff7f6 !important;
+          border-color: #fde0dd !important;
+          box-shadow: 0 2px 6px rgba(228, 31, 7, 0.07) !important;
+        }
+        .date-range-btn:hover .ti-calendar,
+        .date-range-btn:hover input {
+          color: #e41f07 !important;
+        }
+      `}</style>
+      <DateRangePicker
+        initialSettings={initialSettings as any}
+        onApply={handleApply}
+        onShow={handleShow}
+      >
+        <div className="date-range-btn btn btn-outline-light bg-white shadow-sm d-flex align-items-center gap-2 px-3" style={{ height: 38, borderRadius: 6, cursor: 'pointer' }}>
+          <input
+            ref={inputRef}
+            type="text"
+            className="reportrange-picker-field text-dark border-0 shadow-none bg-transparent p-0 fs-14 cursor-pointer"
+            style={{ width: 170, pointerEvents: 'none' }}
+            value={displayValue}
+            readOnly
+          />
+          <i className="ti ti-calendar text-dark fs-16" />
+        </div>
+      </DateRangePicker>
+    </>
   );
 }

@@ -314,4 +314,9 @@ export const all_routes = {
   editCategory: "/billing-application/user-category/:id/edit",
   subCategory: "/billing-application/sub-category",
   newSubCategory: "/billing-application/sub-category/new",
+  billingInvoiceSetting: "/billing-application/invoice-setting",
+  billingInvoiceList: "/billing-application/invoices",
+  billingInvoiceAdd: "/billing-application/invoices/new",
+  billingInvoiceView: "/billing-application/invoices/:id",
+  billingInvoiceEdit: "/billing-application/invoices/:id/edit",
 };
