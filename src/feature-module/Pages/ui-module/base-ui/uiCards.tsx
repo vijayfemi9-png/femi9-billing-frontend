@@ -1,8 +1,7 @@
-
+﻿
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 
 
@@ -805,7 +804,6 @@ const UiCards = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

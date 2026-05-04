@@ -1,5 +1,4 @@
-import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
+﻿import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 
 const UiProgress = () => {
   return (
@@ -711,7 +710,6 @@ const UiProgress = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

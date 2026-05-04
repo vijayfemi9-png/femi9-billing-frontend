@@ -4,6 +4,7 @@ import Header from "../components/header/header";
 import { Suspense, lazy, useEffect } from "react";
 import { resetMobileSidebar } from "../core/redux/sidebarSlice";
 import Sidebar from "../components/sidebar/sidebar";
+import Footer from "../components/footer/footer";
 
 // Lazy load only heavy optional components
 const ThemeSettings = lazy(() => import("../components/theme-settings/themeSettings"));
@@ -89,6 +90,7 @@ const Feature = () => {
           <Suspense fallback={null}>
             <ThemeSettings />
           </Suspense>
+          <Footer />
         </div>
         <div
           className={`sidebar-overlay${mobileSidebar ? " opened" : ""}`}

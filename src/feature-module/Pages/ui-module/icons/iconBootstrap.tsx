@@ -1,8 +1,7 @@
-
+﻿
 import { Link } from "react-router";
 import "../../../../assets/icon/bootstrap/bootstrap-icons.min.css"
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconBootstrap = () => {
   return (
@@ -312,7 +311,6 @@ const IconBootstrap = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-      <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

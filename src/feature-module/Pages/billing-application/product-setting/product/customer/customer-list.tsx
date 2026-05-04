@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./customer.scss";
-import Footer from "../../../../../../components/footer/footer";
 import Datatable from "../../../../../../components/dataTable";
 import SearchInput from "../../../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../../../routes/all_routes";
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Customer {
     id: number;
@@ -130,6 +130,29 @@ const CustomerList: React.FC = () => {
         Object.fromEntries(ALL_COLS.map((c) => [c, true]))
     );
     const [del, setDel] = useState<{ name: string; onConfirm: () => void } | null>(null);
+    const [showExport, setShowExport] = useState(false);
+    const [showSortBy, setShowSortBy] = useState(false);
+
+    // Refs for click-outside logic
+    const sortByRef = useRef<HTMLDivElement>(null);
+    const filterRef = useRef<HTMLDivElement>(null);
+    const exportRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sortByRef.current && !sortByRef.current.contains(event.target as Node)) {
+                setShowSortBy(false);
+            }
+            if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+                setShowFilter(false);
+            }
+            if (exportRef.current && !exportRef.current.contains(event.target as Node)) {
+                setShowExport(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
 
     const openAdd = () => {
@@ -351,7 +374,22 @@ const CustomerList: React.FC = () => {
             <div className="dropdown-toggle d-flex align-items-center gap-2 cursor-pointer" data-bs-toggle="dropdown">
                 <h4 className="mb-0 fw-bold" style={{ fontSize: '18px', color: '#111' }}>{selectedView}</h4>
                 <i className="ti ti-chevron-down text-primary fs-14" />
-                <span className="badge badge-soft-primary ms-1">{tableData.length}</span>
+                <span style={{
+                    fontSize: 13,
+                    width: 20,
+                    height: 24,
+                    borderRadius: 6,
+                    background: '#fff1f0',
+                    color: '#e41f07',
+                    fontWeight: 500,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid #ffccc7',
+                    borderBottom: '2px solid #ffa39e',
+                    marginLeft: 4,
+                    lineHeight: 1
+                }}>{tableData.length}</span>
             </div>
             <div className="dropdown-menu shadow-lg border-0 mt-2 py-0 overflow-hidden" style={{ minWidth: 280, borderRadius: 8 }}>
                 <div className="view-list-container" style={{ maxHeight: "400px", overflowY: 'auto' }}>
@@ -373,6 +411,135 @@ const CustomerList: React.FC = () => {
 
     return (
         <div className="page-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            <style>{`
+                /* Manage Columns - remove red focus outline */
+                .manage-columns-btn:focus {
+                    border: none !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                }
+
+                /* Toolbar Buttons Hover (Light Red) */
+                .filter-btn:hover,
+                .sort-by-btn:hover,
+                .export-btn:hover {
+                    background-color: #fff0ee !important;
+                    color: #e41f07 !important;
+                    border-color: #fde0dd !important;
+                }
+
+                /* Icons in hover state */
+                .filter-btn:hover i,
+                .sort-by-btn:hover i,
+                .export-btn:hover i {
+                    color: #e41f07 !important;
+                }
+
+                /* Toolbar Buttons Base Styling - Fix Mobile Wrapping */
+                .filter-btn,
+                .sort-by-btn,
+                .export-btn,
+                .manage-columns-btn {
+                    white-space: nowrap !important;
+                }
+
+                /* Filter & Sort & Export - Click/Active (Full Red) */
+                .filter-btn.active,
+                .sort-by-btn.show,
+                .export-btn.active {
+                    background-color: #e41f07 !important;
+                    color: #ffffff !important;
+                    border-color: #e41f07 !important;
+                }
+
+                /* Icons white in active/click state */
+                .filter-btn.active i,
+                .sort-by-btn.show i,
+                .export-btn.active i {
+                    color: #ffffff !important;
+                }
+
+                /* Fix table clipping for toolbar dropdowns */
+                .toolbar-custom {
+                    position: relative;
+                    z-index: 1061 !important;
+                }
+                
+                /* Ensure parent containers don't clip dropdowns */
+                .card,
+                .card-body.p-0.d-flex.flex-column {
+                    overflow: visible !important;
+                }
+                
+                /* Professional Dropdown Item Styling */
+                .dropdown-item {
+                    padding: 8px 16px !important;
+                    font-size: 14px !important;
+                    font-weight: 500 !important;
+                    color: #4b5563 !important;
+                    transition: all 0.2s ease !important;
+                }
+                
+                .dropdown-item:hover {
+                    background-color: #f3f4f6 !important;
+                    color: #111827 !important;
+                }
+
+                /* Mobile View Optimizations */
+                @media (max-width: 575.98px) {
+                    .toolbar-custom {
+                        padding: 12px !important;
+                    }
+                    .toolbar-custom .d-flex.justify-content-between {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 12px !important;
+                    }
+                    .toolbar-custom .d-flex.align-items-center {
+                        width: 100% !important;
+                        justify-content: center !important;
+                        flex-wrap: wrap !important;
+                        gap: 8px !important;
+                    }
+                    .sort-by-btn, .filter-btn, .export-btn, .manage-columns-btn {
+                        flex: 1 1 calc(50% - 8px) !important;
+                        min-width: 110px !important;
+                        justify-content: center !important;
+                        height: 38px !important;
+                    }
+                    .view-mode-toggle-container {
+                        width: 100% !important;
+                        justify-content: center !important;
+                        margin-top: 4px !important;
+                    }
+                    .card-header.flex-wrap {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 10px !important;
+                    }
+                    .card-header .bg-white[style*="width: 220"] {
+                        width: 100% !important;
+                        margin-bottom: 0 !important;
+                    }
+
+                    /* Table Pagination Mobile Fix */
+                    .dataTables_wrapper .dataTables_paginate,
+                    .dataTables_wrapper .dataTables_info,
+                    .dataTables_wrapper .dataTables_length,
+                    .dataTables_wrapper .dataTables_filter {
+                        float: none !important;
+                        text-align: center !important;
+                        display: block !important;
+                        width: 100% !important;
+                        margin: 10px 0 !important;
+                    }
+                    .dataTables_wrapper .dataTables_paginate .pagination {
+                        display: inline-flex !important;
+                        justify-content: center !important;
+                        width: auto !important;
+                    }
+                }
+            `}</style>
             <div className="content pb-0 flex-grow-1 d-flex flex-column">
                 <PageHeader
                     title="Customers"
@@ -380,24 +547,22 @@ const CustomerList: React.FC = () => {
                     showModuleTile={false}
                     moduleLink="/customer-list"
                     exportComponent={
-                        <div className="dropdown">
-                            <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
-                                <i className="ti ti-package-export me-2" />Export
-                            </Link>
-                            <div className="dropdown-menu dropdown-menu-end">
-                                <ul>
-                                    <li>
-                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportPDF(); }}>
-                                            <i className="ti ti-file-type-pdf me-1" />Export as PDF
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link to="#" className="dropdown-item" onClick={(e) => { e.preventDefault(); handleExportCSV(); }}>
-                                            <i className="ti ti-file-type-xls me-1" />Export as Excel
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
+                        <div className="dropdown" style={{ position: "relative" }} ref={exportRef}>
+                            <button
+                                className={`btn btn-outline-light px-2 shadow-none d-flex align-items-center export-btn ${showExport ? 'active' : ''}`}
+                                onClick={() => setShowExport(!showExport)}
+                                style={{ height: 38, borderRadius: 3, borderColor: "#ebe7e5ff" }}
+                            >
+                                <i className="ti ti-package-export me-2" />Export <i className="ti ti-chevron-down fs-10 ms-1" />
+                            </button>
+                            {showExport && (
+                                <div className="dropdown-menu dropdown-menu-end show shadow-sm border-0 py-2" style={{ position: "absolute", top: "100%", right: 0, zIndex: 1060, borderRadius: 6, minWidth: 160 }}>
+                                    <ul className="mb-0">
+                                        <li><Link to="#" className="dropdown-item py-2 px-3 fs-14" onClick={(e) => { e.preventDefault(); handleExportPDF(); setShowExport(false); }}><i className="ti ti-file-type-pdf me-1" />Export as PDF</Link></li>
+                                        <li><Link to="#" className="dropdown-item py-2 px-3 fs-14" onClick={(e) => { e.preventDefault(); handleExportCSV(); setShowExport(false); }}><i className="ti ti-file-type-xls me-1" />Export as Excel</Link></li>
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     }
                     onRefresh={() => {
@@ -426,146 +591,159 @@ const CustomerList: React.FC = () => {
                                 onFocus={() => setSearchFocused(true)}
                                 onBlur={() => setSearchFocused(false)} />
                         </div>
-                        <button className="btn text-white d-flex align-items-center" style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }} onClick={openAdd}>
+                        <button
+                            className="btn text-white d-flex align-items-center"
+                            style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }}
+                            onClick={openAdd}
+                        >
                             <i className="ti ti-plus me-2 fs-16" /> Add New Customer
                         </button>
                     </div>
 
                     <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
                         <div className="toolbar-custom py-3 px-4">
-                            <div className="d-flex align-items-center gap-2 flex-wrap">
-                                <div className="dropdown">
-                                    <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
-                                        <i className="ti ti-sort-ascending-2 me-2" />Sort By
-                                    </Link>
-                                    <div className="dropdown-menu">
-                                        <ul>
-                                            <li><Link to="#" className={`dropdown-item ${sortBy === "newest" ? "active" : ""}`} onClick={() => setSortBy("newest")}>Newest</Link></li>
-                                            <li><Link to="#" className={`dropdown-item ${sortBy === "oldest" ? "active" : ""}`} onClick={() => setSortBy("oldest")}>Oldest</Link></li>
-                                        </ul>
+                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <div style={{ position: "relative" }} ref={sortByRef}>
+                                        <button
+                                            className={`btn btn-white btn-sm border d-flex align-items-center gap-2 shadow-none fs-14 fw-medium sort-by-btn ${showSortBy ? "show" : ""}`}
+                                            style={{ height: 38, borderRadius: 3, borderColor: "#ebe7e5ff", color: showSortBy ? "#fff" : "#333" }}
+                                            onClick={() => setShowSortBy(!showSortBy)}
+                                        >
+                                            <i className={`ti ti-sort-ascending-2 fs-14 ${showSortBy ? "text-white" : ""}`} /> Sort By <i className="ti ti-chevron-down fs-10 ms-1" />
+                                        </button>
+                                        {showSortBy && (
+                                            <ul className="mb-0 py-2" style={{ position: "absolute", top: "100%", left: 0, zIndex: 1060, background: "#fff", borderRadius: 6, minWidth: 160, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", listStyle: "none", padding: "8px 0", marginTop: 4 }}>
+                                                <li><button className="dropdown-item" onClick={() => { setSortBy("newest"); setShowSortBy(false); }}>Newest</button></li>
+                                                <li><button className="dropdown-item" onClick={() => { setSortBy("oldest"); setShowSortBy(false); }}>Oldest</button></li>
+                                            </ul>
+                                        )}
                                     </div>
-                                </div>
-                                <PredefinedDatePicker />
-                            </div>
-                            <div className="d-flex align-items-center gap-2">
-                                <div style={{ position: "relative" }}>
-                                    <button
-                                        className={`btn btn-outline-light shadow px-2 ${filterStatus.length > 0 ? 'border-primary text-primary' : ''}`}
-                                        style={{ height: 38, fontSize: 14, borderRadius: 3 }}
-                                        onClick={() => setShowFilter(!showFilter)}
-                                    >
-                                        <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
-                                    </button>
-                                    {showFilter && (
-                                        <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
-                                            <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
-                                                <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
-                                                <button
-                                                    type="button"
-                                                    className="custom-btn-close border me-0 d-flex align-items-center justify-content-center rounded-circle"
-                                                    onClick={() => setShowFilter(false)}
-                                                    aria-label="Close"
-                                                >
-                                                    <i className="ti ti-x" />
-                                                </button>
-                                            </div>
-                                            <div className="filter-set-view p-2 px-3">
-                                                <div className="accordion" id="filterAccordion">
-                                                    <div className="filter-set-content">
-                                                        <div className="filter-set-content-head mb-2 mt-1">
-                                                            <Link
-                                                                to="#"
-                                                                className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
-                                                                onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
-                                                            >
-                                                                Status
-                                                            </Link>
-                                                        </div>
-                                                        {statusFilterOpen && (
-                                                            <div className="filter-set-contents">
-                                                                <div className="filter-content-list ps-4">
-                                                                    {["Active", "Inactive"].map(status => (
-                                                                        <div className="form-check mb-2" key={status}>
-                                                                            <input
-                                                                                className="form-check-input primary-checkbox"
-                                                                                type="checkbox"
-                                                                                id={`filter-${status}`}
-                                                                                checked={pendingFilter.includes(status)}
-                                                                                style={{ width: 20, height: 20, cursor: "pointer" }}
-                                                                                onChange={(e) => {
-                                                                                    if (e.target.checked) setPendingFilter([...pendingFilter, status]);
-                                                                                    else setPendingFilter(pendingFilter.filter(s => s !== status));
-                                                                                }}
-                                                                            />
-                                                                            <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
-                                                                                {status}
-                                                                            </label>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
+                                    <PredefinedDatePicker />
+                                    <div style={{ position: "relative" }} ref={filterRef}>
+                                        <button
+                                            className={`btn btn-outline-light shadow px-2 filter-btn ${showFilter ? 'active' : ''}`}
+                                            style={{ height: 38, fontSize: 14, borderRadius: 3, borderColor: "#ebe7e5ff" }}
+                                            onClick={() => setShowFilter(!showFilter)}
+                                        >
+                                            <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
+                                        </button>
+                                        {showFilter && (
+                                            <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
+                                                <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
+                                                    <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-close-custom"
+                                                        onClick={() => setShowFilter(false)}
+                                                        style={{ width: 28, height: 28, background: "#fff1f0", border: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                    >
+                                                        <i className="ti ti-x" style={{ color: "#e41f07", fontSize: 14 }} />
+                                                    </button>
+                                                </div>
+                                                <div className="filter-set-view p-2 px-3">
+                                                    <div className="accordion" id="filterAccordion">
+                                                        <div className="filter-set-content">
+                                                            <div className="filter-set-content-head mb-2 mt-1">
+                                                                <Link
+                                                                    to="#"
+                                                                    className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
+                                                                    onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
+                                                                >
+                                                                    Status
+                                                                </Link>
                                                             </div>
-                                                        )}
+                                                            {statusFilterOpen && (
+                                                                <div className="filter-set-contents">
+                                                                    <div className="filter-content-list ps-4">
+                                                                        {["Active", "Inactive"].map(status => (
+                                                                            <div className="form-check mb-2" key={status}>
+                                                                                <input
+                                                                                    className="form-check-input primary-checkbox"
+                                                                                    type="checkbox"
+                                                                                    id={`filter-${status}`}
+                                                                                    checked={pendingFilter.includes(status)}
+                                                                                    style={{ width: 20, height: 20, cursor: "pointer" }}
+                                                                                    onChange={(e) => {
+                                                                                        if (e.target.checked) setPendingFilter([...pendingFilter, status]);
+                                                                                        else setPendingFilter(pendingFilter.filter(s => s !== status));
+                                                                                    }}
+                                                                                />
+                                                                                <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
+                                                                                    {status}
+                                                                                </label>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
+                                                        <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
+                                                        <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
                                                     </div>
                                                 </div>
-                                                <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
-                                                    <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
-                                                    <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
-                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    {viewMode === "list" && (
+                                        <div className="dropdown">
+                                            <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                                <i className="ti ti-columns-3 me-2" />Manage Columns
+                                            </Link>
+                                            <div className="dropdown-menu dropdown-md p-3">
+                                                <ul>
+                                                    {ALL_COLS.map(col => (
+                                                        <li className="gap-1 d-flex align-items-center mb-2" key={col}>
+                                                            <i className="ti ti-columns me-1" />
+                                                            <div className="form-check form-switch w-100 ps-0">
+                                                                <label className="form-check-label d-flex align-items-center gap-2 w-100">
+                                                                    <span>{col}</span>
+                                                                    <input
+                                                                        className="form-check-input switchCheckDefault ms-auto"
+                                                                        type="checkbox"
+                                                                        role="switch"
+                                                                        checked={visibleCols[col] !== false}
+                                                                        onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
+                                                                    />
+                                                                </label>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
                                         </div>
                                     )}
-                                </div>
-                                {viewMode === "list" && (
-                                    <div className="dropdown">
-                                        <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                            <i className="ti ti-columns-3 me-2" />Manage Columns
-                                        </Link>
-                                        <div className="dropdown-menu dropdown-md p-3">
-                                            <ul>
-                                                {ALL_COLS.map(col => (
-                                                    <li className="gap-1 d-flex align-items-center mb-2" key={col}>
-                                                        <i className="ti ti-columns me-1" />
-                                                        <div className="form-check form-switch w-100 ps-0">
-                                                            <label className="form-check-label d-flex align-items-center gap-2 w-100">
-                                                                <span>{col}</span>
-                                                                <input
-                                                                    className="form-check-input switchCheckDefault ms-auto"
-                                                                    type="checkbox"
-                                                                    role="switch"
-                                                                    checked={visibleCols[col] !== false}
-                                                                    onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
-                                                                />
-                                                            </label>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
+                                    <div className="d-flex align-items-center gap-1 view-mode-toggle-container" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
+                                        <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                            <i className="ti ti-list fs-14" />
+                                        </button>
+                                        <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                            <i className="ti ti-grid-dots fs-14" />
+                                        </button>
                                     </div>
-                                )}
-                                <div className="d-flex align-items-center gap-1" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
-                                    <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                        <i className="ti ti-list fs-14" />
-                                    </button>
-                                    <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                        <i className="ti ti-grid-dots fs-14" />
-                                    </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="flex-grow-1 overflow-auto" style={{ minWidth: 0 }}>
+                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
                             {viewMode === "list" ? (
-                                <div className="custom-table table-nowrap px-4 flex-grow-1 border-0">
-                                    <Datatable
-                                        columns={visibleColumns}
-                                        dataSource={tableData}
-                                        Selection={true}
-                                        searchText={searchText}
-                                        onRow={(record) => ({
-                                            onClick: () => navigate(route.customerView.replace(":id", String(record.id))),
-                                            style: { cursor: "pointer" }
-                                        })}
-                                    />
+                                <div className="p-4">
+                                    <div className="bg-white">
+                                        <Datatable
+                                            columns={visibleColumns}
+                                            dataSource={tableData}
+                                            Selection={true}
+                                            searchText={searchText}
+                                            onRow={(record) => ({
+                                                onClick: () => navigate(route.customerView.replace(":id", String(record.id))),
+                                                style: { cursor: "pointer" }
+                                            })}
+                                        />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="p-4"><div className="row g-3">
@@ -645,7 +823,6 @@ const CustomerList: React.FC = () => {
 
                 {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
             </div>
-            <Footer />
         </div>
     );
 };

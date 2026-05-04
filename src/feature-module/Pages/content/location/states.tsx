@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import { useState } from "react";
 import { StatesListData } from "../../../../core/json/statesListData";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
@@ -164,7 +163,6 @@ const States = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,7 +1,6 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 // --- Scrollspy Hook ---
 function useScrollspy(ids: string[], offset = 0, scrollContainer?: string) {
@@ -532,7 +531,6 @@ const UiScrollspy = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

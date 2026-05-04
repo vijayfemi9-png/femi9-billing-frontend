@@ -1,5 +1,4 @@
-import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
+﻿import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 
 const UiAccordion = () => {
   return (
@@ -2677,7 +2676,6 @@ const UiAccordion = () => {
         {/* End Content */}
 
         {/* Footer Start */}
-        <Footer />
         {/* Footer End */}
       </div>
       {/* ========================

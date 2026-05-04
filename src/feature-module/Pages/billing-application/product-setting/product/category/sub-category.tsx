@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { all_routes } from "../../../../../../routes/all_routes";
 import Datatable from "../../../../../../components/dataTable";
 import SearchInput from "../../../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
-import Footer from "../../../../../../components/footer/footer";
 import "./category.scss";
 import { Category } from "../../../../../../core/json/selectOption";
 
@@ -530,7 +529,6 @@ const SubCategoryPage: React.FC = () => {
           </div>
         </div>
       </div>
-      <Footer />
       {/* ── Page Styles ── */}
       <style>{`
         /* Page Header Styles */

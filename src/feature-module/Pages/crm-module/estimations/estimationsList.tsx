@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import { useState } from "react";
@@ -981,7 +980,6 @@ const EstimationsList = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

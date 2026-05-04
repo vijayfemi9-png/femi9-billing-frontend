@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { all_routes } from "../../../../../../routes/all_routes";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
 import Datatable from "../../../../../../components/dataTable";
 import SearchInput from "../../../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../../../components/common-dateRangePicker/PredefinedDatePicker";
-import Footer from "../../../../../../components/footer/footer";
 import "./category.scss";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
@@ -619,7 +618,6 @@ const UserCategoryPage: React.FC = () => {
         </div>
       </div>
       {del && <DeleteConfirm name={del.name} onConfirm={del.onConfirm} onCancel={() => setDel(null)} />}
-      <Footer />
       {/* ── Page Styles ── */}
       <style>{`
         /* Page Header Styles */

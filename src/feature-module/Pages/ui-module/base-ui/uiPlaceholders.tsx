@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 
@@ -216,7 +215,6 @@ const UiPlaceholders = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

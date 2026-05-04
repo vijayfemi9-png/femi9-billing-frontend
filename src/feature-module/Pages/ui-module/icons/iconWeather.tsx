@@ -1,8 +1,7 @@
-
+﻿
 
 import '../../../../assets/icon/weather/weathericons.css'
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconWeather = () => {
   return (
@@ -1141,7 +1140,6 @@ const IconWeather = () => {
           {/* end row */}
         </div>
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

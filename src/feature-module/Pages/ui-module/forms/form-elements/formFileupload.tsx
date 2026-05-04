@@ -1,4 +1,4 @@
-import { message } from "antd";
+﻿import { message } from "antd";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
 import Dragger from "antd/es/upload/Dragger";
 import { Footer } from "antd/es/layout/layout";
@@ -66,7 +66,6 @@ const FileUploadPage = () => {
       {/* End Content */}
 
       {/* Footer */}
-      <Footer />
     </div>
   );
 };

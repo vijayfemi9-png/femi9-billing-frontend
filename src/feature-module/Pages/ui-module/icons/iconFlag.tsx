@@ -1,7 +1,6 @@
-
+﻿
 import '../../../../assets/icon/flags/flags.css'
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconFlag = () => {
   return (
@@ -1755,7 +1754,6 @@ const IconFlag = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../routes/all_routes";
-import Footer from "../../../../components/footer/footer";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import "overlayscrollbars/overlayscrollbars.css";
 
@@ -1925,7 +1924,6 @@ const Chat = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SettingsTopbar from "../settings-topbar/settingsTopbar";
 import { all_routes } from "../../../../routes/all_routes";
-import Footer from "../../../../components/footer/footer";
 import CommonPhoneInput from "../../../../components/common-phoneInput/commonPhoneInput";
 import { useState } from "react";
 import CommonSelect from "../../../../components/common-select/commonSelect";
@@ -372,7 +371,6 @@ const SecuritySettings = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
@@ -1508,7 +1507,6 @@ const ProjectDetails = () => {
           {/* Start Footer */}
         </div>
         {/* End Content */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

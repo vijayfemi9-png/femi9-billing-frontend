@@ -1,6 +1,5 @@
-import '../../../../assets/icon/typicons/typicons.css'
+﻿import '../../../../assets/icon/typicons/typicons.css'
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconTypicon = () => {
   return (
@@ -1454,7 +1453,6 @@ const IconTypicon = () => {
           {/* end row */}
         </div>
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

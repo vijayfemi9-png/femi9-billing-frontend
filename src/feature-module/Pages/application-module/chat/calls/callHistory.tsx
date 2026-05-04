@@ -1,7 +1,6 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../../components/imageWithBasePath";
 import PageHeader from "../../../../../components/page-header/pageHeader";
-import Footer from "../../../../../components/footer/footer";
 import Modal from "./modal/modal";
 import PredefinedDatePicker from "../../../../../components/common-dateRangePicker/PredefinedDatePicker";
 
@@ -778,7 +777,6 @@ const CallHistory = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

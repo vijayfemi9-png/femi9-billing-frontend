@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 
 const UiUtilities = () => {
   return (
@@ -1319,7 +1318,6 @@ const UiUtilities = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,5 +1,4 @@
-import { Link } from "react-router"
-import Footer from "../../../../components/footer/footer"
+﻿import { Link } from "react-router"
 import { all_routes } from "../../../../routes/all_routes"
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -236,7 +235,6 @@ const Calender = () => {
     </div>
     {/* End Content */}
     {/* Start Footer */}
-    <Footer/>
     {/* End Footer */}
   </div>
   {/* ========================

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import Footer from "../../../../components/footer/footer";
+﻿import { useState } from "react";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { PaymentsListData } from "../../../../core/json/paymentsListData";
 import { Link } from "react-router";
@@ -567,7 +566,6 @@ const Payments = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

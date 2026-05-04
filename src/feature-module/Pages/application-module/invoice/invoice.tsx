@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 
 
 const Invoice = () => {
@@ -902,7 +901,6 @@ const Invoice = () => {
     </div>
     {/* End Content */}
     {/* Footer Start */}
-   <Footer/>
     {/* Footer End */}
   </div>
   {/* ========================

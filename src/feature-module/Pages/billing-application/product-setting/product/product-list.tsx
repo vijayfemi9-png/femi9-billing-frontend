@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import "../../billing-application.scss";
-import Footer from "../../../../../components/footer/footer";
 import ExcelJS from "exceljs";
 import { useNavigate } from "react-router-dom";
 import { saveAs } from "file-saver";
@@ -89,7 +88,6 @@ const SEED_PRODUCTS: Item[] = [
     { id: 1, name: 'sdfghj', sku: 'SKU-001', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '09/04/2026 04:04 PM', details: 'created by', user: 'gowthamfemi9' }] },
     { id: 2, name: 'vijay', sku: 'SKU-002', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '09/04/2026 04:10 PM', details: 'created by', user: 'vijayfemi9-png' }] },
     { id: 3, name: 'Test Product', sku: 'TP-001', stockOnHand: 30, reorderLevel: 5, status: 'active', isSingle: true, isReturnable: true, hasSku: true, unit: 'box', brand: 'General', category: 'General', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '10/04/2026 10:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
-    { id: 4, name: 'Test Product', sku: 'TP-002', stockOnHand: 30, reorderLevel: 5, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '10/04/2026 11:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
     { id: 5, name: 'vasan', sku: 'VN-001', stockOnHand: 0, reorderLevel: 0, status: 'active', isSingle: true, isReturnable: false, hasSku: true, unit: 'pcs', brand: '--', category: '--', manufacturer: '--', weight: '--', weightUnit: 'kg', dimensions: '--', dimensionUnit: 'cm', costPrice: 0, selling_price: 0, purchaseAccount: 'Cost of Goods Sold', salesAccount: 'Sales', inventoryAccount: 'Inventory Asset', purchaseDescription: '--', salesDescription: '--', itemType: 'Inventory Items', openingStockRate: 0, history: [{ date: '11/04/2026 09:00 AM', details: 'created by', user: 'vijayfemi9-png' }] },
 ];
 
@@ -1518,7 +1516,6 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                     )}
                 </div>
             </div >
-            <Footer />
         </>
     );
 };

@@ -1,9 +1,8 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 
 
@@ -144,7 +143,6 @@ const UiLightboxes = () => {
           </>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

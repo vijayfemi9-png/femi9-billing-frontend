@@ -1,5 +1,4 @@
-
-import Footer from "../../../../components/footer/footer";
+﻿
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 
 const UiSpinner = () => {
@@ -350,7 +349,6 @@ const UiSpinner = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

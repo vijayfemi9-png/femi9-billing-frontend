@@ -1,6 +1,5 @@
-
+﻿
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormGridGutters = () => {
   return (
@@ -351,7 +350,6 @@ const FormGridGutters = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ============================================================== */}

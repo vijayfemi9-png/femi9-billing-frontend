@@ -1,10 +1,9 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
-import Footer from "../../../../components/footer/footer";
 import Datatable from "../../../../components/dataTable";
 import { all_routes } from "../../../../routes/all_routes";
 import CommonSelect from "../../../../components/common-select/commonSelect";
@@ -956,7 +955,6 @@ const Tickets = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

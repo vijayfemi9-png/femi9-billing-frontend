@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import "./customer.scss";
 import PageHeader from "../../../../../../components/page-header/pageHeader";
-import Footer from "../../../../../../components/footer/footer";
 import { all_routes } from "../../../../../../routes/all_routes";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
@@ -838,7 +837,6 @@ const CustomerAdd: React.FC<CustomerAddProps> = ({ onClose }) => {
                     )}
                 </div>
             </div>
-            <Footer />
         </div>
     );
 

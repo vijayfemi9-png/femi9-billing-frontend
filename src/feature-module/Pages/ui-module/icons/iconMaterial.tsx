@@ -1,4 +1,4 @@
-
+﻿
 
 
 import {
@@ -202,7 +202,6 @@ import {
     ZhihuSquareFilled,
   } from "@ant-design/icons";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconMaterial = () => {
   return (
@@ -836,7 +835,6 @@ const IconMaterial = () => {
           </div>
         </div>
          {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

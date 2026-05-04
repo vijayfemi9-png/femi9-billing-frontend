@@ -96,12 +96,16 @@ export default function PredefinedDatePicker() {
     <>
       <style>{`
         .date-range-btn {
+          height: 38px !important;
+          border-radius: 3px !important;
+          border: 1px solid #dee2e6 !important;
+          background: #ffffff !important;
           transition: all 0.2s ease !important;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
         }
         .date-range-btn:hover {
-          background: #fff7f6 !important;
-          border-color: #fde0dd !important;
-          box-shadow: 0 2px 6px rgba(228, 31, 7, 0.07) !important;
+          border-color: #e41f07 !important;
+          background: #fff !important;
         }
         .date-range-btn:hover .ti-calendar,
         .date-range-btn:hover input {
@@ -113,7 +117,7 @@ export default function PredefinedDatePicker() {
         onApply={handleApply}
         onShow={handleShow}
       >
-        <div className="date-range-btn btn btn-outline-light bg-white shadow-sm d-flex align-items-center gap-2 px-3" style={{ height: 38, borderRadius: 6, cursor: 'pointer' }}>
+        <div className="date-range-btn btn d-flex align-items-center gap-2 px-3" style={{ cursor: 'pointer' }}>
           <input
             ref={inputRef}
             type="text"

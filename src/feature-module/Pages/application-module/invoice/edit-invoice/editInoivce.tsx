@@ -1,10 +1,9 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 
 import { useState } from "react";
 import { all_routes } from "../../../../../routes/all_routes";
 import CommonSelect from "../../../../../components/common-select/commonSelect";
 import { Discount } from "../../../../../core/json/selectOption";
-import Footer from "../../../../../components/footer/footer";
 interface Invoice {
   id: number;
   field1: string;
@@ -579,7 +578,6 @@ const EditInoivce = () => {
         </div>
         {/* End Content */}
         {/* Footer Start */}
-        <Footer/>
         {/* Footer End */}
       </div>
       {/* ========================

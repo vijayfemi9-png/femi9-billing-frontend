@@ -1,6 +1,5 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
-import Footer from "../../../../components/footer/footer";
 import { useState } from "react";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
@@ -160,7 +159,6 @@ const BlogTags = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

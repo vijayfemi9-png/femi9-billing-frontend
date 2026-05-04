@@ -1,8 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import copy from "clipboard-copy";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiClipBoard: React.FC = () => {
   const inputCopyRef = useRef<HTMLInputElement>(null);
@@ -277,7 +276,6 @@ const UiClipBoard: React.FC = () => {
             {/* /Drag Card */}
           </div>
         </div>
-        <Footer/>
       </div>
     </div>
   );

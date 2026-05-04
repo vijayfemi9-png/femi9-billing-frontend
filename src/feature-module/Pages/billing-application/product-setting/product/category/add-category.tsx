@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+﻿import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { all_routes } from "../../../../../../routes/all_routes";
-import Footer from "../../../../../../components/footer/footer";
 import "./category.scss";
 
 const route = all_routes;
@@ -442,7 +441,6 @@ const AddCategoryPage: React.FC = () => {
         </div>
 
       </div>
-      <Footer />
     </div>
   );
 };

@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import "../billing-application.scss";
-import Footer from "../../../../components/footer/footer";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SettingsTopbar from "../../settings/settings-topbar/settingsTopbar";
 import CommonSelect from "../../../../components/common-select/commonSelect";
@@ -800,7 +799,6 @@ const InvoiceSetting: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <Footer />
             </div>
 
             {/* ══ MODAL — ADD CUSTOM FIELD ══ */}

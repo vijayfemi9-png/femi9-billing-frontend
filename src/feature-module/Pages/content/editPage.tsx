@@ -1,5 +1,4 @@
-import { Link } from "react-router"
-import Footer from "../../../components/footer/footer"
+﻿import { Link } from "react-router"
 import { all_routes } from "../../../routes/all_routes"
 
 const EditPage = () => {
@@ -163,7 +162,6 @@ const EditPage = () => {
     </div>
     {/* End Content */}
     {/* Start Footer */}
-   <Footer/>
     {/* End Footer */}
   </div>
   {/* ========================

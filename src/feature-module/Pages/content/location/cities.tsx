@@ -1,10 +1,9 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { CitiesListData } from "../../../../core/json/citiesListData";
 import { useState } from "react";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import Datatable from "../../../../components/dataTable";
-import Footer from "../../../../components/footer/footer";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import { all_routes } from "../../../../routes/all_routes";
 
@@ -156,7 +155,6 @@ const Cities = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

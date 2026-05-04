@@ -4,7 +4,7 @@ const Footer = () => {
   return (
     <>
       {/* Start Footer */}
-      <footer className="footer d-block d-md-flex justify-content-between text-md-start text-center">
+      <footer className="footer d-block d-md-flex justify-content-between text-md-start text-center mt-5">
         <p className="mb-md-0 mb-1">
           Copyright © {new Date().getFullYear()}
           <Link

@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { all_routes } from "../../../../routes/all_routes";
@@ -793,7 +792,6 @@ const TasksImportant = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -980,8 +980,8 @@ const CustomerView: React.FC = () => {
                             </div>
                         </div>
                         <div className="dropdown">
-                            <button className="cv-header-btn btn-outline" data-bs-toggle="dropdown">
-                                More <i className="ti ti-chevron-down fs-11 ms-1" />
+                            <button className="cv-header-btn btn-icon" data-bs-toggle="dropdown" title="More actions">
+                                <i className="ti ti-dots-vertical fs-16 text-muted" />
                             </button>
                             <div className="dropdown-menu dropdown-menu-end shadow border-0 py-1" style={{ minWidth: 200 }}>
                                 <button className="dropdown-item fs-14 py-2 d-flex align-items-center justify-content-between"

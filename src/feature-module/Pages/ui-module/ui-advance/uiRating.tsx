@@ -1,9 +1,8 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { RotateCcw } from "react-feather";
 
 import StarRatings from "react-star-ratings";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiRating = () => {
   const [rating1, setRating1] = useState(0);
@@ -237,7 +236,6 @@ const UiRating = () => {
           </div>
         </div>
       </div>
-      <Footer/>
     </div>
   );
 };

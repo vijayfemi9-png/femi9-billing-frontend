@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import "../billing-application.scss";
 import { Link } from "react-router-dom";
-import Footer from "../../../../components/footer/footer";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import SettingsTopbar from "../../settings/settings-topbar/settingsTopbar";
@@ -1139,7 +1138,6 @@ const ProductPreference: React.FC = () => {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
 
       {/* ══ MODAL — CONFIGURE (Serial / Batch) ══ */}

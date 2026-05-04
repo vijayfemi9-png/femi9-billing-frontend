@@ -1,7 +1,6 @@
-
+﻿
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiNavTabs = () => {
   return (
@@ -834,7 +833,6 @@ const UiNavTabs = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

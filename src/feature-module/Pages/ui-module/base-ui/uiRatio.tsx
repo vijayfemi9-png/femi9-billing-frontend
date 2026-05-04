@@ -1,7 +1,6 @@
-
+﻿
 
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 
 const UiRatio = () => {
@@ -101,7 +100,6 @@ const UiRatio = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

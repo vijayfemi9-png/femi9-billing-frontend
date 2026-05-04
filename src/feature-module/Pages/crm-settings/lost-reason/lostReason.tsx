@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import { LostReasonListData } from "../../../../core/json/lostReasonListData";
 import { useState } from "react";
@@ -127,7 +126,6 @@ const LostReason = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,7 +1,6 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormValidation = () => {
   useEffect(() => {
@@ -780,7 +779,6 @@ const FormValidation = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

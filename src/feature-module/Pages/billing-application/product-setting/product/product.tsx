@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import "../../billing-application.scss";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import Select, { components } from "react-select";
 import CreatableSelect from "react-select/creatable";
-import Footer from "../../../../../components/footer/footer";
 import PageHeader from "../../../../../components/page-header/pageHeader";
 import SettingsTopbar from "../../../settings/settings-topbar/settingsTopbar";
 import { all_routes } from "../../../../../routes/all_routes";
@@ -765,7 +764,7 @@ const Product = () => {
     return (
         <div className="page-wrapper">
             <div className="content">
-                <PageHeader title="Settings" badgeCount={false} showModuleTile={false} showExport={false} />
+            <PageHeader title="Settings" badgeCount={false} showModuleTile={false} showExport={false} />
                 <SettingsTopbar />
                 <div className="row">
                     <div className="col-xl-12 col-lg-12">
@@ -1318,8 +1317,6 @@ const Product = () => {
                     </div>
                 </div>
             </div>
-
-            <Footer />
         </div>
     );
 };

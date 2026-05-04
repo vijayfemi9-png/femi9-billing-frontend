@@ -1,5 +1,4 @@
-import { PermissionListData } from "../../../../core/json/permissionListData";
-import Footer from "../../../../components/footer/footer";
+﻿import { PermissionListData } from "../../../../core/json/permissionListData";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import Datatable from "../../../../components/dataTable";
 
@@ -110,7 +109,6 @@ const Permission = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

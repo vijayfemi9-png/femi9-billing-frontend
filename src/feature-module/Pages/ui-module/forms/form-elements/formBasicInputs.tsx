@@ -1,6 +1,5 @@
-
+﻿
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormBasicInputs = () => {
   return (
@@ -625,7 +624,6 @@ const FormBasicInputs = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ============================================================== */}

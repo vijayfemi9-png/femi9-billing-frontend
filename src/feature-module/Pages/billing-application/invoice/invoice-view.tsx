@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import "../billing-application.scss";
-import Footer from "../../../../components/footer/footer";
 import { all_routes } from "../../../../routes/all_routes";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -110,7 +109,6 @@ const InvoiceView: React.FC = () => {
                         Back to Invoices
                     </button>
                 </div>
-                <Footer />
             </div>
         );
     }
@@ -445,7 +443,6 @@ const InvoiceView: React.FC = () => {
                     onCancel={() => setShowDel(false)}
                 />
             )}
-            <Footer />
         </div>
     );
 };

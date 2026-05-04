@@ -1,10 +1,9 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 
 import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiRangeSlides = () => {
   const [sliderValue, setSliderValue] = useState(0);
@@ -285,7 +284,6 @@ const UiRangeSlides = () => {
             {/* /Rangeslider */}
           </div>
         </div>
-        <Footer/>
       </div>
       {/* /Main Wrapper */}
     </>

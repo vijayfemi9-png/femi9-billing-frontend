@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import ModalCompaniesDetails from "./modal/modalCompaniesDetails";
 import PageHeader from "../../../../components/page-header/pageHeader";
@@ -8,7 +8,6 @@ import {
   Task_Priority,
 } from "../../../../core/json/selectOption";
 import CommonSelect from "../../../../components/common-select/commonSelect";
-import Footer from "../../../../components/footer/footer";
 import { all_routes } from "../../../../routes/all_routes";
 
 const CompaniesDetails = () => {
@@ -1563,7 +1562,6 @@ const CompaniesDetails = () => {
           {/* Start Footer */}
         </div>
         {/* End Content */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

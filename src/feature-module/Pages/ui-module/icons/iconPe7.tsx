@@ -1,4 +1,4 @@
-import {
+﻿import {
   AccountBookFilled,
   AlertFilled,
   AlipaySquareFilled,
@@ -141,7 +141,6 @@ import {
   TrophyFilled,
 } from "@ant-design/icons";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconPe7 = () => {
   return (
@@ -606,7 +605,6 @@ const IconPe7 = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

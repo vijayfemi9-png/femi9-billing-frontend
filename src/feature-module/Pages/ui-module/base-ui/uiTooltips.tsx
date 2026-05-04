@@ -1,8 +1,7 @@
-import  { useState } from "react";
+﻿import  { useState } from "react";
 import { Link } from "react-router";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap'
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiTooltips = () => {
     const TooltipOnLinkOne = (props:any) => (
@@ -374,7 +373,6 @@ const UiTooltips = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

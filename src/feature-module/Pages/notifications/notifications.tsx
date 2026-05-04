@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../components/page-header/pageHeader";
 import ImageWithBasePath from "../../../components/imageWithBasePath";
 
@@ -224,7 +223,6 @@ const Notifications = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

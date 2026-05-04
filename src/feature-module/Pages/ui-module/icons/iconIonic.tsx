@@ -1,8 +1,7 @@
-
+﻿
 
 import "../../../../assets/icon/ionic/ionicons.css"
 import CommonUiPageHeader from '../../../../components/commonUiPageHeader/commonUiPageHeader'
-import Footer from '../../../../components/footer/footer'
 
 const IconIonic = () => {
   return (
@@ -2120,7 +2119,6 @@ const IconIonic = () => {
     </div>
     {/* End Content */}
     {/* Start Footer */}
-    <Footer/>
     {/* End Footer */}
   </div>
   {/* ========================

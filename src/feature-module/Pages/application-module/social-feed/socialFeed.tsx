@@ -1,10 +1,9 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 
 const galleryImages = [
   {
@@ -1704,7 +1703,6 @@ const SocialFeed = () => {
         </div>
         {/* End Content */}
         {/* Footer Start */}
-       <Footer/>
         {/* Footer End */}
       </div>
       {/* ========================

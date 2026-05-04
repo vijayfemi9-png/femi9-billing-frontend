@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { Select } from "antd";
 import CommonSelect from "../../../../../components/common-select/commonSelect";
 import { defaultSingle } from "../../../../../core/json/selectOption";
 import CommonTagInputs from "../../../../../components/common-tagInput/commonTagInputs";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const handleChange = (value: string) => {
   console.log(`selected ${value}`);
@@ -549,7 +548,6 @@ const FormSelect2 = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

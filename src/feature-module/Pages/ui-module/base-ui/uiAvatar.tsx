@@ -1,6 +1,5 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 
 const UiAvatar = () => {
@@ -489,7 +488,6 @@ const UiAvatar = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

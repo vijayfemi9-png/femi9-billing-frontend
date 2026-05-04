@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import CommonSelect from "../../../../components/common-select/commonSelect";
@@ -8,7 +8,6 @@ import {
   Reminder,
   Task_Priority,
 } from "../../../../core/json/selectOption";
-import Footer from "../../../../components/footer/footer";
 import ModalLeadsDetails from "./modal/modalLeadsDetails";
 import { all_routes } from "../../../../routes/all_routes";
 
@@ -1465,7 +1464,6 @@ const LeadsDetails = () => {
           {/* Start Footer */}
         </div>
         {/* End Content */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

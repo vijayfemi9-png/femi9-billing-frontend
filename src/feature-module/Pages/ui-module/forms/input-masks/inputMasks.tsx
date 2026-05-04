@@ -1,7 +1,6 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { IMaskInput } from "react-imask";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 const FormMask = () => {
   const [formData, setFormData] = useState({
     phone: "",
@@ -210,7 +209,6 @@ const FormMask = () => {
         </div>
         {/*  End container */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* /Page wrapper */}

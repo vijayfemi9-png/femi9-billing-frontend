@@ -20,7 +20,42 @@ const PageHeader = ({ title = "", badgeCount = null, showExport = false, moduleT
     <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
       <div>
         {titleDropdown ? (
-          titleDropdown
+          <>
+            {titleDropdown}
+            {title && (
+              <div className="d-flex align-items-center gap-1 mt-1" style={{ fontSize: '14px' }}>
+                <Link to={all_routes.dealsDashboard} className="text-muted" style={{ fontSize: '14px', textDecoration: 'none' }}>Home</Link>
+                <i className="ti ti-chevron-right text-muted" style={{ fontSize: 12, lineHeight: 1 }} />
+                {showModuleTile && (
+                  <>
+                    <Link to={moduleLink} className="text-muted" style={{ fontSize: '14px', textDecoration: 'none' }}>{moduleTitle}</Link>
+                    <i className="ti ti-chevron-right text-muted" style={{ fontSize: 12, lineHeight: 1 }} />
+                  </>
+                )}
+                <span className="d-inline-flex align-items-center gap-1">
+                  <span className="text-dark fw-medium" style={{ fontSize: '14px' }}>{title}</span>
+                  {badgeCount !== null && badgeCount !== false && badgeCount !== undefined && (
+                    <span style={{
+                      fontSize: 12,
+                      minWidth: 20,
+                      height: 20,
+                      padding: '0 5px',
+                      borderRadius: 6,
+                      background: '#fff1f0',
+                      color: '#e41f07',
+                      fontWeight: 700,
+                      border: '1px solid #ffccc7',
+                      borderBottom: '2px solid #ffa39e',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1,
+                    }}>{badgeCount}</span>
+                  )}
+                </span>
+              </div>
+            )}
+          </>
         ) : (
           <>
             <h4 className="mb-1 d-flex align-items-center gap-2" style={{ fontSize: '18px', fontWeight: 600, lineHeight: 1.3 }}>

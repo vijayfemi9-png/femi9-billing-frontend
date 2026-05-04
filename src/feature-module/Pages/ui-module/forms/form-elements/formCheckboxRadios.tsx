@@ -1,7 +1,6 @@
-
+﻿
 
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormCheckboxRadios = () => {
   return (
@@ -737,7 +736,6 @@ const FormCheckboxRadios = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

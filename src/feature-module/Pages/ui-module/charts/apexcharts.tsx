@@ -1,7 +1,6 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 
 const ChartApex = () => {
@@ -537,7 +536,6 @@ const ChartApex = () => {
           {/* /Chart */}
         </div>
       </div>
-      <Footer/>
     </div>
   );
 };

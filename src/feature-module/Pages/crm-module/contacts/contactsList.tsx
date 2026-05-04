@@ -1,11 +1,10 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { useState } from "react";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import Datatable from "../../../../components/dataTable";
 import { ContactsListData } from "../../../../core/json/contactsListData";
 import { all_routes } from "../../../../routes/all_routes";
-import Footer from "../../../../components/footer/footer";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import ModalContacts from "./modals/modalContacts";
@@ -1072,7 +1071,6 @@ const ContactsList = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import Footer from "../../../../../components/footer/footer";
 import "../../billing-application.scss";
 
 
@@ -95,8 +96,8 @@ const useResponsive = () => {
 // ── Shared Styles ─────────────────────────────────────────────────────────────
 const inp: React.CSSProperties = { border: "1px solid #e3e3e3", borderRadius: 6, padding: "7px 11px", fontSize: 13, outline: "none", width: "100%", color: "#333" };
 const lbl = (req = false): React.CSSProperties => ({ fontSize: 13, fontWeight: 500, marginBottom: 5, display: "block", color: req ? "#e41f07" : "#444" });
-const thStyle: React.CSSProperties = { padding: "10px 16px", fontWeight: 600, color: "#000000", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", background: "transparent", borderBottom: "1px solid #e8e8e8", whiteSpace: "nowrap", userSelect: "none" };
-const tdStyle: React.CSSProperties = { padding: "8px 16px", fontSize: 12, color: "#444", verticalAlign: "middle" };
+const thStyle: React.CSSProperties = { padding: "14px 16px", fontWeight: 700, color: "#1e293b", fontSize: 14, textTransform: "capitalize", background: "transparent", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap", userSelect: "none" };
+const tdStyle: React.CSSProperties = { padding: "14px 16px", fontSize: 13, color: "#475569", verticalAlign: "middle" };
 
 // ── Sort Icon ─────────────────────────────────────────────────────────────────
 const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; }) => (
@@ -121,19 +122,7 @@ const SeriesMultiSelect = ({ value, onChange, options, label, required }: {
         onChange(value.includes(opt) ? value.filter(v => v !== opt) : [...value, opt]);
         setOpen(false);
     };
-    const moveUp = (idx: number) => {
-        if (idx === 0) return;
-        const newVal = [...value];
-        [newVal[idx - 1], newVal[idx]] = [newVal[idx], newVal[idx - 1]];
-        onChange(newVal);
-    };
-    const moveDown = (idx: number) => {
-        if (idx === value.length - 1) return;
-        const newVal = [...value];
-        [newVal[idx], newVal[idx + 1]] = [newVal[idx + 1], newVal[idx]];
-        onChange(newVal);
-    };
-
+    
     return (
         <div style={{ marginBottom: 14, position: "relative" }} ref={ref}>
             <label style={lbl(required)}>{label}{required && " *"}</label>
@@ -329,7 +318,7 @@ const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () =
                     <p style={{ fontSize: 12, color: "#aaa", marginBottom: 0 }}>Supported format: CSV · Max 500 rows per import</p>
                 </div>
                 <div style={{ borderTop: "1px solid #f0f0f0", padding: "14px 24px", display: "flex", gap: 10 }}>
-                    <button title={file ? "Import selected CSV file" : "Select a CSV file first"} onClick={handleImport} disabled={!file} style={{ background: file ? "#e41f07" : "#f0f0f0", color: file ? "#fff" : "#aaa", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: file ? "pointer" : "not-allowed", fontSize: 13 }}>Import</button>
+                    <button title={file ? "Import selected CSV file" : "Select a CSV file first"} onClick={handleImport} disabled={!file} style={{ background: file ? "#e41f07" : "#fff", color: file ? "#fff" : "#aaa", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: file ? "pointer" : "not-allowed", fontSize: 13 }}>Import</button>
                     <button title="Cancel import" onClick={onClose} style={{ background: "#f4f4f4", color: "#555", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Cancel</button>
                 </div>
             </div>
@@ -415,22 +404,15 @@ const TransactionSeriesSelect = ({ value, onChange, options, label, required, ha
                                 onChange={e => setQ(e.target.value)}
                                 placeholder="Search transaction series…"
                                 style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "8px 12px", fontSize: 13, outline: "none", transition: "all 0.2s", color: "#333", backgroundColor: "#fff" }}
-                                onFocus={(e) => e.currentTarget.style.borderColor = "#e41f07"}
-                                onBlur={(e) => e.currentTarget.style.borderColor = "#e0e0e0"}
                             />
                         </div>
                     )}
                     <div style={{ maxHeight: 240, overflowX: "hidden", overflowY: "auto" }}>
                         {filtered.length === 0
-                            ? <div style={{ padding: "16px 14px", fontSize: 13, color: "#aaa", textAlign: "center" }}>
-                                <i className="ti ti-search" style={{ fontSize: 20, color: "#ddd", display: "block", marginBottom: 6 }} />
-                                No series found
-                            </div>
+                            ? <div style={{ padding: "16px 14px", fontSize: 13, color: "#aaa", textAlign: "center" }}>No series found</div>
                             : filtered.map(opt => (
                                 <div key={opt} onClick={() => { onChange(opt); setOpen(false); setQ(""); }}
-                                    style={{ padding: "11px 14px", fontSize: 13, cursor: "pointer", background: value === opt ? "#e41f07" : "#fff", color: value === opt ? "#fff" : "#555", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f5f5f5", transition: "all 0.15s" }}
-                                    onMouseEnter={(e) => !value || value !== opt ? (e.currentTarget.style.background = "#fff8f7") : undefined}
-                                    onMouseLeave={(e) => !value || value !== opt ? (e.currentTarget.style.background = "#fff") : undefined}>
+                                    style={{ padding: "11px 14px", fontSize: 13, cursor: "pointer", background: value === opt ? "#e41f07" : "#fff", color: value === opt ? "#fff" : "#555", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f5f5f5" }}>
                                     <span>{opt}</span>
                                     {value === opt && <i className="ti ti-check" style={{ fontSize: 14, fontWeight: 700 }} />}
                                 </div>
@@ -438,9 +420,7 @@ const TransactionSeriesSelect = ({ value, onChange, options, label, required, ha
                     </div>
                     {onAddSeries && (
                         <div style={{ borderTop: "1px solid #f0f0f0", padding: "8px" }}>
-                            <button onClick={() => { onAddSeries(); setOpen(false); setQ(""); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 14px", fontSize: 13, color: "#e41f07", background: "#fff", border: "none", cursor: "pointer", fontWeight: 600, transition: "all 0.2s" }}
-                                onMouseEnter={e => (e.currentTarget.style.background = "#fff8f7")}
-                                onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                            <button onClick={() => { onAddSeries(); setOpen(false); setQ(""); }} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 14px", fontSize: 13, color: "#e41f07", background: "#fff", border: "none", cursor: "pointer", fontWeight: 600 }}>
                                 <i className="ti ti-plus" style={{ fontSize: 14 }} />Add Transaction Series
                             </button>
                         </div>
@@ -857,7 +837,7 @@ const SeriesGeneratorModal = ({ show, onClose, onApply, moduleName }: {
                     <button type="button" className="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
                 </div>
                 <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto" }}>
-                    <div style={{ border: "1px solid #e3e3e3", borderRadius: 8, overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: 16 }}>
+                    <div style={{ border: "1px solid #e3e3e3", borderRadius: 8, overflowX: "auto", WebkitOverflowScrolling: "touch", marginBottom: 15 }}>
                         <table style={{ width: "100%", minWidth: isMobile ? 600 : "auto", borderCollapse: "separate", borderSpacing: 0, fontSize: 13 }}>
                             <thead>
                                 <tr style={{ background: "#f8f9fb" }}>
@@ -1113,9 +1093,6 @@ const SeriesModal = ({ show, onClose, onSave, editData, locationNames, defaultLo
     const [selectedLocation, setSelectedLocation] = useState(editData ? editData.locations[0] ?? "" : (locationNames.includes(defaultLocation) ? defaultLocation : ""));
     const [modules, setModules] = useState<SeriesModule[]>(editData ? editData.modules.map(m => ({ ...m })) : DEFAULT_MODULES.map(m => ({ ...m })));
 
-    const [prefixAttributes, setPrefixAttributes] = useState<any[]>([
-        { attribute: "Module Name", show: "First", count: 3, letterCase: "Upper Case", separator: "-" }
-    ]);
     const [openLocDrop, setOpenLocDrop] = useState(false);
     const [locQuery, setLocQuery] = useState("");
     const [genModule, setGenModule] = useState<string | null>(null);
@@ -1190,12 +1167,8 @@ const SeriesModal = ({ show, onClose, onSave, editData, locationNames, defaultLo
                                 <tr style={{ background: "#fafafa", borderBottom: "1px solid #e8e8e8" }}>
                                     <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap", width: "20%" }}>Module</th>
                                     <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", width: "25%" }}>Prefix</th>
-                                    <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap", width: "20%" }}>
-                                        Starting Number <i className="ti ti-info-circle" title="The number from which the transaction numbering will begin" style={{ fontSize: 12, color: "#bbb", verticalAlign: "middle", cursor: "help" }} />
-                                    </th>
-                                    <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", width: "20%" }}>
-                                        Preview <i className="ti ti-info-circle" title="Prefix + Starting Number preview" style={{ fontSize: 12, color: "#bbb", verticalAlign: "middle", cursor: "help" }} />
-                                    </th>
+                                    <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap", width: "20%" }}>Starting Number</th>
+                                    <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", width: "20%" }}>Preview</th>
                                     <th style={{ padding: "11px 16px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px", width: "15%" }}>Customize</th>
                                 </tr>
                             </thead>
@@ -1717,8 +1690,6 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
 
 
 // ── Connector Lines Component ─────────────────────────────────────────────────
-// position:absolute top:0/bottom:0 → fills the FULL td height (not just 52px).
-// Line divs use top:-1/bottom:-1 → bleed 1px into adjacent rows → seamless join.
 function ConnectorLines({
     loc, isCollapsed, onToggle,
 }: {
@@ -1739,20 +1710,14 @@ function ConnectorLines({
     });
 
     return (
-        // Extends BLEED px above/below the td so lines physically overlap adjacent rows.
         <div style={{ position: "absolute", left: 0, top: -BLEED, bottom: -BLEED, width: w, pointerEvents: "none" }}>
 
-            {/* Ancestor vertical continuation lines — full height of extended container */}
             {Array.from({ length: Math.max(0, loc.depth - 1) }, (_, d) =>
                 loc.ancestorContinuations[d]
                     ? <div key={`ac${d}`} style={vLine(BASE_X + d * STEP, 0, 0)} />
                     : null
             )}
 
-            {/* Incoming vertical from parent.
-                top:0   = container top = BLEED px above this td → reaches into parent row.
-                bottom:"50%" = td visual centre (50% of container = td_height/2 from td top).
-                bottom:0    = BLEED px below td → reaches into next row. */}
             {loc.depth > 0 && (
                 <div style={vLine(
                     BASE_X + (loc.depth - 1) * STEP,
@@ -1761,7 +1726,6 @@ function ConnectorLines({
                 )} />
             )}
 
-            {/* Horizontal elbow — 50% of container = visual centre of td (no extra offset needed) */}
             {loc.depth > 0 && (
                 <div style={{
                     position: "absolute",
@@ -1772,12 +1736,10 @@ function ConnectorLines({
                 }} />
             )}
 
-            {/* Downward line — starts just below circle (50% + half-circle), runs to container bottom */}
             {loc.hasChildren && !isCollapsed && (
                 <div style={vLine(cx, `calc(50% + ${CIRCLE / 2}px)`, 0)} />
             )}
 
-            {/* Circle — centred at 50% of container = visual centre of td */}
             <div onClick={onToggle} style={{
                 position: "absolute",
                 left: cx - CIRCLE / 2,
@@ -1801,6 +1763,7 @@ function ConnectorLines({
         </div>
     );
 }
+
 // ── Inline Series Cell (table) ────────────────────────────────────────────────
 const InlineSeriesCell = ({ locId, value, seriesList, onChangeSeries, onAddSeries }: {
     locId: number; value: string; seriesList: TxnSeries[];
@@ -1834,9 +1797,7 @@ const InlineSeriesCell = ({ locId, value, seriesList, onChangeSeries, onAddSerie
                     <div style={{ maxHeight: 180, overflowX: "hidden", overflowY: "auto" }}>
                         {seriesList.map(s => (
                             <div key={s.id} onClick={() => { onChangeSeries(locId, s.name); setOpen(false); }}
-                                style={{ padding: "9px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === s.name ? "#fff0eb" : "#fff", color: value === s.name ? "#e41f07" : "#333", borderBottom: "1px solid #f5f5f5" }}
-                                onMouseEnter={e => { if (value !== s.name) e.currentTarget.style.background = "#fafafa"; }}
-                                onMouseLeave={e => { if (value !== s.name) e.currentTarget.style.background = "#fff"; }}>
+                                style={{ padding: "9px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === s.name ? "#fff0eb" : "#fff", color: value === s.name ? "#e41f07" : "#333", borderBottom: "1px solid #f5f5f5" }}>
                                 <span>{s.name}</span>
                                 {value === s.name && <i className="ti ti-check" style={{ fontSize: 13 }} />}
                             </div>
@@ -1845,9 +1806,7 @@ const InlineSeriesCell = ({ locId, value, seriesList, onChangeSeries, onAddSerie
                     </div>
                     <div style={{ borderTop: "1px solid #f0f0f0", padding: "8px" }}>
                         <button onClick={() => { onAddSeries(); setOpen(false); }}
-                            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 14px", fontSize: 13, color: "#e41f07", background: "#fff", border: "none", cursor: "pointer", fontWeight: 600, borderRadius: 4 }}
-                            onMouseEnter={e => (e.currentTarget.style.background = "#fff8f7")}
-                            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
+                            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 14px", fontSize: 13, color: "#e41f07", background: "#fff", border: "none", cursor: "pointer", fontWeight: 600, borderRadius: 4 }}>
                             <i className="ti ti-plus" style={{ fontSize: 14 }} />Add Transaction Series
                         </button>
                     </div>
@@ -1875,19 +1834,12 @@ const LocationPage = () => {
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
     const [primaryTarget, setPrimaryTarget] = useState<Location | null>(null);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
-    const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const exportRef = useRef<HTMLDivElement>(null);
     const isMobile = useResponsive();
 
     useEffect(() => {
         const h = (e: MouseEvent) => { if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false); };
         document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
-    }, []);
-
-    useEffect(() => {
-        const move = (e: MouseEvent) => { setTooltipPos({ x: e.clientX, y: e.clientY }); };
-        document.addEventListener("mousemove", move);
-        return () => document.removeEventListener("mousemove", move);
     }, []);
 
     const handleSort = (key: SortKey) => {
@@ -1907,9 +1859,7 @@ const LocationPage = () => {
             return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
         });
 
-    const businessLocationsList = allFiltered.filter(l => l.type === "Business");
-    const warehouseLocationsList = allFiltered.filter(l => l.type === "Warehouse");
-    const filtered = [...businessLocationsList, ...warehouseLocationsList];
+    const filtered = allFiltered;
     const pageFontFamily = "var(--crms-body-font-family, 'Golos Text', sans-serif)";
 
     const locationNameSet = new Set(filtered.map(l => l.name));
@@ -1921,15 +1871,6 @@ const LocationPage = () => {
         bucket.push(loc);
         childrenByParent.set(parentKey, bucket);
     });
-
-    const primaryLoc = filtered.find(l => !!l.isDefault);
-
-    // Helper to check if a location is the primary one or an ancestor of it
-    const isPrimaryOrAncestor = (loc: Location): boolean => {
-        if (loc.id === primaryLoc?.id) return true;
-        const children = childrenByParent.get(loc.name) ?? [];
-        return children.some(child => isPrimaryOrAncestor(child));
-    };
 
     const orderedLocations: Array<Location & { depth: number; hasChildren: boolean; isLastSibling: boolean; ancestorContinuations: boolean[] }> = [];
 
@@ -1944,14 +1885,12 @@ const LocationPage = () => {
         }
     };
 
-    // 2. Build the tree, pinning the primary branch root at the top
     const rootItems = filtered
         .filter(loc => !loc.parentLocation || !locationNameSet.has(loc.parentLocation))
         .sort((a, b) => a.name.localeCompare(b.name));
 
     rootItems.forEach((loc, index) => pushWithChildren(loc, 0, index === rootItems.length - 1, []));
 
-    // ── Export PDF ────────────────────────────────────────────────────────────
     const exportPDF = () => {
         const rows = selected.length > 0 ? filtered.filter(l => selected.includes(l.id)) : filtered;
         const date = now();
@@ -1996,7 +1935,6 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
         setExportOpen(false);
     };
 
-    // ── Export Excel ──────────────────────────────────────────────────────────
     const exportExcel = async () => {
         const rows = selected.length > 0 ? filtered.filter(l => selected.includes(l.id)) : filtered;
         const wb = new ExcelJS.Workbook();
@@ -2046,14 +1984,12 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
         setLocations(prev => {
             const next = prev.map(l => {
                 if (editLoc && l.id === editLoc.id) return { ...form, id: editLoc.id };
-                // If the new/updated location is primary, unset others
                 if (form.isDefault) return { ...l, isDefault: false };
                 return l;
             });
             if (!editLoc) {
                 const newId = Math.max(0, ...prev.map(l => l.id)) + 1;
-                const newLoc = { ...form, id: newId };
-                return [...next, newLoc];
+                return [...next, { ...form, id: newId }];
             }
             return next;
         });
@@ -2123,27 +2059,26 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
     );
 
     return (
-        <div className="page-wrapper">
-            {/* (Gold star tooltip removed) */}
-            <div className="content">
+        <div className="page-wrapper d-flex flex-column" style={{ minHeight: "100vh" }}>
+            <div className="content flex-grow-1">
 
-                {/* Page Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12, fontFamily: pageFontFamily }}>
+                <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
                     <div>
-                        <h4 style={{ margin: 0, fontWeight: 700, fontSize: isMobile ? 18 : 20, color: "#1a1a2e" }}>Locations</h4>
-                        <nav style={{ fontSize: 13, color: "#aaa", marginTop: 4 }}>
-                            <span>Home</span><span style={{ margin: "0 6px" }}>›</span>
-                            <span style={{ color: "#0e0a0a", fontWeight: 500 }}>Locations</span>
+                        <h4 className="fw-bold mb-1" style={{ color: "#1a1a2e" }}>Locations</h4>
+                        <nav aria-label="breadcrumb" style={{ fontSize: 13, color: "#aaa" }}>
+                            <span>Home</span>
+                            <span className="mx-2">›</span>
+                            <span className="fw-medium" style={{ color: "#333" }}>Locations</span>
                         </nav>
                     </div>
 
-                    {/* Top-right actions */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div className="d-flex align-items-center gap-2">
                         <div ref={exportRef} style={{ position: "relative" }}>
                             <button title="Export locations as PDF or Excel" onClick={() => setExportOpen(o => !o)}
-                                style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, padding: isMobile ? "6px 10px" : "7px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", color: "#4b5563" }}
-                                onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
+                                className="btn btn-outline-light d-flex align-items-center gap-2 shadow-sm"
+                                style={{ fontSize: 13 }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "#fff1f0"; e.currentTarget.style.borderColor = "#e41f07"; e.currentTarget.style.color = "#e41f07"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}>
                                 <i className="ti ti-package-export" style={{ fontSize: 16 }} />
                                 {!isMobile && "Export"}
                                 <i className="ti ti-chevron-down" style={{ fontSize: 12 }} />
@@ -2162,158 +2097,149 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                             )}
                         </div>
                         <button title="Refresh" onClick={() => { setSearch(""); setLocations(INIT_LOCATIONS); setSeriesList(INIT_SERIES); setSelected([]); setCollapsed(new Set()); }}
-                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
+                            className="btn btn-outline-light d-flex align-items-center justify-content-center shadow-sm"
+                            style={{ width: 36, height: 36, padding: 0 }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "#fff1f0"; e.currentTarget.style.borderColor = "#e41f07"; e.currentTarget.style.color = "#e41f07"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}>
                             <i className="ti ti-refresh" style={{ fontSize: 15 }} />
                         </button>
                         <button title="Import" onClick={() => setShowImport(true)}
-                            style={{ border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, width: isMobile ? 32 : 36, height: isMobile ? 32 : 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#4b5563" }}
-                            onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
+                            className="btn btn-outline-light d-flex align-items-center justify-content-center shadow-sm"
+                            style={{ width: 36, height: 36, padding: 0 }}
+                            onMouseEnter={e => { e.currentTarget.style.background = "#fff1f0"; e.currentTarget.style.borderColor = "#e41f07"; e.currentTarget.style.color = "#e41f07"; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.borderColor = ""; e.currentTarget.style.color = ""; }}>
                             <i className="ti ti-upload" style={{ fontSize: 15 }} />
                         </button>
                     </div>
                 </div>
 
-                {/* Table Card */}
-                <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.05)", border: "1px solid #d1d5db", overflow: "visible", fontFamily: pageFontFamily }}>
-                    {/* Toolbar */}
-                    <div className="mobile-toolbar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderBottom: "1px solid #edf1f7", flexWrap: "wrap", gap: 12, background: "#fff", borderTopLeftRadius: 12, borderTopRightRadius: 12 }}>
-                        <div className="input-icon input-icon-start position-relative" style={{ width: "min(100%, 280px)" }}>
-                            <span className="input-icon-addon text-dark">
-                                <i className="ti ti-search"></i>
+                <div className="card shadow-sm" style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
+                    <div className="card-header d-flex align-items-center justify-content-between gap-3 flex-wrap" style={{ padding: "18px 24px", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
+                        <div className="input-icon input-icon-start position-relative" style={{ width: "min(100%, 320px)" }}>
+                            <span className="input-icon-addon" style={{ left: 12, color: "#64748b" }}>
+                                <i className="ti ti-search" style={{ fontSize: 18 }}></i>
                             </span>
-                            <input type="text" className="form-control" placeholder="Search locations..." value={search || ""} onChange={(e) => setSearch(e.target.value)} />
+                            <input type="text" className="form-control" style={{ paddingLeft: 40, height: 42, borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14 }} placeholder="Search locations..." value={search || ""} onChange={(e) => setSearch(e.target.value)} />
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                        <div className="d-flex align-items-center gap-3 flex-wrap">
                             <button title="Manage transaction number series" onClick={() => setView("series")}
-                                style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #e6e8ec", background: "#fff", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer", color: "#4b5563" }}
-                                onMouseEnter={e => { e.currentTarget.style.background = "#fff4f1"; e.currentTarget.style.borderColor = "#efc7bf"; e.currentTarget.style.color = "#e41f07"; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#e6e8ec"; e.currentTarget.style.color = "#4b5563"; }}>
-                                <i className="ti ti-settings" style={{ fontSize: 15 }} />
+                                className="btn btn-white d-flex align-items-center gap-2" style={{ fontSize: 13, height: 42, border: "1px solid #e2e8f0", borderRadius: 8, color: "#475569", fontWeight: 500, padding: "0 16px" }}>
+                                <i className="ti ti-settings" style={{ fontSize: 18, color: "#64748b" }} />
                                 Transaction Series Preferences
                             </button>
-                            <button title="Add a new location" className="mobile-button" onClick={() => openLocationForm()}
-                                style={{ background: "#e41f07", color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
-                                <i className="ti ti-plus" style={{ fontSize: 16 }} />Add Location
+                            <button title="Add a new location" className="btn d-flex align-items-center gap-2" onClick={() => openLocationForm()}
+                                style={{ background: "#e41f07", color: "#fff", height: 42, padding: "0 20px", borderRadius: 8, fontWeight: 600, border: "none", fontSize: 13 }}>
+                                <i className="ti ti-plus" style={{ fontSize: 18 }} />Add Location
                             </button>
                         </div>
                     </div>
 
-                    {/* Table */}
-                    <div className="loc-table-wrapper" style={{ overflowX: "auto", overflowY: "visible", WebkitOverflowScrolling: "touch" }}>
-                        <table className="loc-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: 13 }}>
-                            <thead>
-                                <tr style={{ background: "#f8f9fb" }}>
-                                    <SortTh col="name" label="Name" />
-                                    <SortTh col="defaultTxnSeries" label="Default Transaction Number Series" />
-                                    <SortTh col="type" label="Type" />
-                                    <SortTh col="address" label="Address Details" />
-                                    <th style={{ ...thStyle, textAlign: "center", background: "#f7f8fb", color: "#697586" }}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orderedLocations.length === 0 ? (
-                                    <tr><td colSpan={5} style={{ ...tdStyle, textAlign: "center", padding: 56, color: "#bbb" }}>
-                                        <i className="ti ti-map-pin-off" style={{ fontSize: 36, display: "block", marginBottom: 10, color: "#ddd" }} />
-                                        No locations found.
-                                    </td></tr>
-                                ) : (
-                                    orderedLocations.map((loc) => (
-                                        <tr key={loc.id}
-                                            onClick={() => openLocationForm(loc)}
-                                            onMouseEnter={() => setHoveredRow(loc.id)}
-                                            onMouseLeave={() => setHoveredRow(null)}
-                                            style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer", background: (hoveredRow === loc.id || selected.includes(loc.id)) ? "#fff8f7" : (loc.depth > 0 ? "#fbfcff" : "#fff") }}>
-                                            {/* ── Name column with CSS connector ── */}
-                                            {/* position:relative → containing block for the absolute connector.
-                                                paddingLeft = connector width + 8px gap so text never overlaps lines. */}
-                                            <td style={{
-                                                ...tdStyle,
-                                                position: "relative",
-                                                paddingLeft: (14 + (loc.depth + 1) * 28 + 4) + 8,
-                                                color: "#3d4758", fontSize: 12,
-                                                fontFamily: pageFontFamily,
-                                                minWidth: isMobile ? 220 : 0,
-                                            }}>
-                                                <ConnectorLines
-                                                    loc={loc}
-                                                    isCollapsed={collapsed.has(loc.id)}
-                                                    onToggle={loc.hasChildren ? (e) => {
-                                                        e.stopPropagation();
-                                                        setCollapsed(prev => {
-                                                            const next = new Set(prev);
-                                                            if (next.has(loc.id)) next.delete(loc.id);
-                                                            else next.add(loc.id);
-                                                            return next;
-                                                        });
-                                                    } : undefined}
-                                                />
-                                                <div style={{ fontWeight: 500, color: "#101828", cursor: "pointer", display: "flex", alignItems: "center", position: "relative", paddingLeft: 26, fontSize: 12, lineHeight: 1.1, fontFamily: pageFontFamily }} onClick={(e) => { e.stopPropagation(); openLocationForm(loc); }}>
-                                                    {/* Star / Primary button - Always visible for both parent and child as requested */}
-                                                    <div onClick={e => e.stopPropagation()} style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                        <div onClick={(e) => { if (!loc.isDefault) { e.stopPropagation(); setPrimaryTarget(loc); } }} style={{ cursor: loc.isDefault ? "default" : "pointer", padding: "2px" }}>
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill={loc.isDefault ? "#f59e0b" : "none"} stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                                            </svg>
+                    <div className="card-body p-0">
+                        <div className="loc-table-wrapper table-responsive">
+                            <table className="loc-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0, fontSize: 13 }}>
+                                <thead>
+                                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                                        <SortTh col="name" label="Name" />
+                                        <SortTh col="defaultTxnSeries" label="Default Transaction Number Series" />
+                                        <SortTh col="type" label="Type" />
+                                        <SortTh col="address" label="Address Details" />
+                                        <th style={{ ...thStyle, textAlign: "center", width: 80, borderBottom: "1px solid #e2e8f0" }}>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {orderedLocations.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={5} style={{ ...tdStyle, textAlign: "center", padding: 56, color: "#bbb" }}>
+                                                <i className="ti ti-map-pin-off" style={{ fontSize: 36, display: "block", marginBottom: 10, color: "#ddd" }} />
+                                                No locations found.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        orderedLocations.map((loc) => (
+                                            <tr key={loc.id}
+                                                onClick={() => openLocationForm(loc)}
+                                                onMouseEnter={() => setHoveredRow(loc.id)}
+                                                onMouseLeave={() => setHoveredRow(null)}
+                                                style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer", background: (hoveredRow === loc.id || selected.includes(loc.id)) ? "#fff8f7" : (loc.depth > 0 ? "#fbfcff" : "#fff") }}>
+                                                
+                                                <td style={{ ...tdStyle, position: "relative", paddingLeft: (14 + (loc.depth + 1) * 28 + 4) + 8, color: "#3d4758", fontSize: 12, fontFamily: pageFontFamily, minWidth: isMobile ? 220 : 0 }}>
+                                                    <ConnectorLines
+                                                        loc={loc}
+                                                        isCollapsed={collapsed.has(loc.id)}
+                                                        onToggle={loc.hasChildren ? (e) => {
+                                                            e.stopPropagation();
+                                                            setCollapsed(prev => {
+                                                                const next = new Set(prev);
+                                                                if (next.has(loc.id)) next.delete(loc.id);
+                                                                else next.add(loc.id);
+                                                                return next;
+                                                            });
+                                                        } : undefined}
+                                                    />
+                                                    
+                                                    <div style={{ display: "flex", alignItems: "center", position: "relative", paddingLeft: 28 }}>
+                                                        <div onClick={e => e.stopPropagation()} style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: 24 }}>
+                                                            <div onClick={(e) => { if (!loc.isDefault) { e.stopPropagation(); setPrimaryTarget(loc); } }} style={{ cursor: loc.isDefault ? "default" : "pointer" }}>
+                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill={loc.isDefault ? "#f59e0b" : "none"} stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: 600, color: "#1e293b", fontSize: 13 }}>{loc.name}</div>
+                                                            <div style={{ fontSize: 11, color: loc.depth === 0 ? "#e41f07" : "#64748b", marginTop: 2 }}>
+                                                                {loc.parentLocation ? `Child of ${loc.parentLocation}` : "Parent Location"}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    {loc.name}
-                                                </div>
-                                                <div style={{ fontSize: 10, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>
-                                                    {loc.parentLocation ? (
-                                                        <span style={{ color: "#888" }}>Child of {loc.parentLocation}</span>
-                                                    ) : loc.hasChildren ? (
-                                                        <span style={{ color: "#e41f07", fontWeight: 500 }}>Parent Location</span>
-                                                    ) : null}
-                                                </div>
-                                            </td>
+                                                </td>
 
-                                            <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, overflow: "visible", position: "relative", whiteSpace: "nowrap", minWidth: 200 }}>
-                                                <InlineSeriesCell
-                                                    locId={loc.id}
-                                                    value={loc.defaultTxnSeries}
-                                                    seriesList={seriesList}
-                                                    onChangeSeries={handleInlineChangeSeries}
-                                                    onAddSeries={() => setShowSeriesModal(true)}
-                                                />
-                                            </td>
-                                            <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, whiteSpace: "nowrap", minWidth: 100, overflow: "visible", position: "relative" }}>
-                                                {loc.type}
-                                            </td>
-                                            <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, minWidth: 200, overflow: "visible", position: "relative" }}>
-                                                {[loc.city, loc.state, loc.country].filter(Boolean).join(", ") || <span style={{ color: "#bbb" }}>-</span>}
-                                            </td>
-                                            <td style={{ ...tdStyle, textAlign: "center", width: 76, minWidth: 76, paddingLeft: 12, paddingRight: 12, overflow: "visible", position: "relative" }} onClick={e => e.stopPropagation()}>
-                                                <ActionMenu
-                                                    onEdit={() => openLocationForm(loc)}
-                                                    onDelete={() => setDelTarget(loc)}
-                                                    isPrimary={loc.isDefault}
-                                                    onSetPrimary={() => setPrimaryTarget(loc)}
-                                                />
-                                            </td>
-
-                                        </tr>
-                                    ))
-                                )}
-
-                            </tbody>
-                        </table>
+                                                <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, overflow: "visible", position: "relative", whiteSpace: "nowrap", minWidth: 200 }}>
+                                                    <InlineSeriesCell
+                                                        locId={loc.id}
+                                                        value={loc.defaultTxnSeries}
+                                                        seriesList={seriesList}
+                                                        onChangeSeries={handleInlineChangeSeries}
+                                                        onAddSeries={() => setShowSeriesModal(true)}
+                                                    />
+                                                </td>
+                                                <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, whiteSpace: "nowrap", minWidth: 100, overflow: "visible", position: "relative" }}>
+                                                    {loc.type}
+                                                </td>
+                                                <td style={{ ...tdStyle, color: "#3d4758", fontFamily: pageFontFamily, minWidth: 200, overflow: "visible", position: "relative" }}>
+                                                    {[loc.city, loc.state, loc.country].filter(Boolean).join(", ") || <span style={{ color: "#bbb" }}>-</span>}
+                                                </td>
+                                                <td style={{ ...tdStyle, textAlign: "center", width: 76, minWidth: 76, paddingLeft: 12, paddingRight: 12, overflow: "visible", position: "relative" }} onClick={e => e.stopPropagation()}>
+                                                    <ActionMenu
+                                                        onEdit={() => openLocationForm(loc)}
+                                                        onDelete={() => setDelTarget(loc)}
+                                                        isPrimary={loc.isDefault}
+                                                        onSetPrimary={() => setPrimaryTarget(loc)}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    {/* Footer */}
-                    <div style={{ padding: "12px 20px", borderTop: "1px solid #f5f5f5", fontSize: 12, color: "#aaa", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}>
-                        <span>Showing {filtered.length} of {locations.length} locations</span>
-                        {selected.length > 0 && (
-                            <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                <span style={{ color: "#e41f07", fontWeight: 600 }}>{selected.length} selected</span>
-                                <button onClick={() => setSelected([])} style={{ background: "none", border: "none", color: "#aaa", cursor: "pointer", fontSize: 12 }}>Clear</button>
-                            </span>
-                        )}
+                    <div className="card-footer" style={{ padding: "14px 24px", background: "#fff", borderTop: "1px solid #f1f5f9" }}>
+                        <div className="d-flex align-items-center justify-content-between">
+                            <div style={{ fontSize: 13, color: "#64748b" }}>
+                                Showing {filtered.length > 0 ? 1 : 0} to {filtered.length} of {locations.length} locations
+                            </div>
+                            {selected.length > 0 && (
+                                <div className="d-flex align-items-center gap-2">
+                                    <span style={{ color: "#e41f07", fontWeight: 600, fontSize: 13 }}>{selected.length} selected</span>
+                                    <button onClick={() => setSelected([])} className="btn btn-link p-0" style={{ fontSize: 13, color: "#64748b", textDecoration: "none" }}>Clear</button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-            {/* Modals */}
+
             <DeleteModal show={!!delTarget} name={delTarget?.name ?? ""} onConfirm={handleDelLoc} onClose={() => setDelTarget(null)} />
             <PrimaryConfirmationModal
                 show={!!primaryTarget}

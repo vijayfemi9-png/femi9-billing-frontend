@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import DealsReportChart from "../../dashboard/deals-dashboard/chats/dealsReportChart";
 import LeadsAnalysisChart from "../../dashboard/deals-dashboard/chats/leadsAnalysis";
@@ -562,7 +561,6 @@ const DealReports = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

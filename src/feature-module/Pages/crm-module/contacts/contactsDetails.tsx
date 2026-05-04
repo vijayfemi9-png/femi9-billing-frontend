@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import {
   Assigned_To,
@@ -8,7 +8,6 @@ import {
 import CommonSelect from "../../../../components/common-select/commonSelect";
 import ModalContactDetails from "./modals/modalContactDetails";
 import { all_routes } from "../../../../routes/all_routes";
-import Footer from "../../../../components/footer/footer";
 
 const ContactsDetails = () => {
   return (
@@ -1606,7 +1605,6 @@ const ContactsDetails = () => {
           {/* Start Footer */}
         </div>
         {/* End Content */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,7 +1,6 @@
-
+﻿
 
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormFloatingLabels = () => {
   return (
@@ -228,7 +227,6 @@ const FormFloatingLabels = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

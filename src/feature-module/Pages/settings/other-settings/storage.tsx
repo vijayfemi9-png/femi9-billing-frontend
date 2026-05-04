@@ -1,9 +1,8 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SettingsTopbar from "../settings-topbar/settingsTopbar";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 
 const Storage = () => {
   return (
@@ -175,7 +174,6 @@ const Storage = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

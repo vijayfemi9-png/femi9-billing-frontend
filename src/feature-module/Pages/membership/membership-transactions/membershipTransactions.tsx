@@ -1,5 +1,4 @@
-import { useState } from "react";
-import Footer from "../../../../components/footer/footer";
+﻿import { useState } from "react";
 import { MembershipTransactionsListData } from "../../../../core/json/membershipTransactionsListData";
 import { all_routes } from "../../../../routes/all_routes";
 import { Link } from "react-router";
@@ -519,7 +518,6 @@ const MembershipTransactions = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

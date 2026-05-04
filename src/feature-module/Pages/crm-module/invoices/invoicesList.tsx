@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import { useState } from "react";
@@ -668,7 +667,6 @@ const InvoicesList = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

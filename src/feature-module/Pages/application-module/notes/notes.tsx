@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import DefaultEditor from "react-simple-wysiwyg";
 import { DatePicker } from "antd";
 import { useState } from "react";
@@ -7,7 +7,6 @@ import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { Assignee, Priority, StatusActive } from "../../../../core/json/selectOption";
 import CommonTagInputs from "../../../../components/common-tagInput/commonTagInputs";
 import CommonSelect from "../../../../components/common-select/commonSelect";
-import Footer from "../../../../components/footer/footer";
 import PageHeader from "../../../../components/page-header/pageHeader";
 
 
@@ -2409,7 +2408,6 @@ const Notes = () => {
         </div>
         {/* End Content */}
         {/* Footer Start */}
-        <Footer/>
         {/* Footer End */}
       </div>
       {/* ========================

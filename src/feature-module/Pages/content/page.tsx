@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PageHeader from "../../../components/page-header/pageHeader";
 import PredefinedDatePicker from "../../../components/common-dateRangePicker/PredefinedDatePicker";
 import { PagesListData } from "../../../core/json/pagesListData";
@@ -6,7 +6,6 @@ import { useState } from "react";
 import Datatable from "../../../components/dataTable";
 import { all_routes } from "../../../routes/all_routes";
 import SearchInput from "../../../components/dataTable/dataTableSearch";
-import Footer from "../../../components/footer/footer";
 
 const Page = () => {
   const [searchText, setSearchText] = useState<string>("");
@@ -441,7 +440,6 @@ const Page = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

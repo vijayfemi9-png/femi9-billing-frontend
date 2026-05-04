@@ -1,7 +1,6 @@
-
+﻿
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconTabler = () => {
   return (
@@ -311,7 +310,6 @@ const IconTabler = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

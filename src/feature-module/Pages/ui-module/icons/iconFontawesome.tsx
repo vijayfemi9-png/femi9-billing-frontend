@@ -1,6 +1,5 @@
-
+﻿
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconFontawesome = () => {
   return (
@@ -1572,7 +1571,6 @@ const IconFontawesome = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-       <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

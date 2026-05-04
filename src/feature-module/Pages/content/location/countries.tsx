@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import { useState } from "react";
 import { COuntriesListData } from "../../../../core/json/countriesListData";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
@@ -155,7 +154,6 @@ const Countries = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

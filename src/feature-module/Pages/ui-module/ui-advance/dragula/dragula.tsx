@@ -1,9 +1,8 @@
-
+﻿
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useState } from "react";
 import ImageWithBasePath from "../../../../../components/imageWithBasePath";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 
 
@@ -389,7 +388,6 @@ const UiDragula = () => {
         </div>
 
         {/* Footer */}
-        <Footer/>
       </div>
     </>
   );

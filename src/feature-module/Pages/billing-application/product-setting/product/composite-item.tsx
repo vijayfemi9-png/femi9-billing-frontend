@@ -5,7 +5,6 @@ import { Link, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import Select, { components } from "react-select";
 import CreatableSelect from "react-select/creatable";
-import Footer from "../../../../../components/footer/footer";
 import PageHeader from "../../../../../components/page-header/pageHeader";
 import Datatable from "../../../../../components/dataTable";
 import SearchInput from "../../../../../components/dataTable/dataTableSearch";
@@ -1553,8 +1552,24 @@ const CompositeItem = () => {
 
     // ── LIST VIEW ─────────────────────────────────────────────────────
     const listView = (
-        <div className="page-wrapper full-height-wrapper">
-            <div className={`content ${selectedItem ? 'p-0' : 'pb-0'}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <div className="page-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            <style>{`
+                .ci-red-hover {
+                    transition: all 0.2s ease;
+                }
+                .ci-red-hover:hover, .ci-red-hover.show {
+                    background-color: #fff1f0 !important;
+                    border-color: #fecaca !important;
+                    color: #e41f07 !important;
+                }
+                .ci-red-hover:hover i, .ci-red-hover.show i {
+                    color: #e41f07 !important;
+                }
+                .page-wrapper > .content {
+                    min-height: 0 !important;
+                }
+            `}</style>
+            <div className={`content ${selectedItem ? 'pt-4 pb-0' : 'pb-0'} d-flex flex-column`} style={{ flex: 1, minHeight: 'unset' }}>
                 {!selectedItem && (
                     <PageHeader
                         title="Composite Items"
@@ -1563,7 +1578,7 @@ const CompositeItem = () => {
                         moduleTitle="Composite Items"
                         moduleLink={route.compositeItems}
                         showExport={false}
-                        settingsLink={route.productPreference}
+                        settingsLink={route.customerPreference}
                         exportComponent={
                             <div className="dropdown">
                                 <Link to="#" className="dropdown-toggle btn btn-outline-light px-2 shadow" data-bs-toggle="dropdown">
@@ -1588,7 +1603,7 @@ const CompositeItem = () => {
                     />
                 )}
 
-                <div className="card mb-0 border-0 rounded-0 flex-grow-1" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div className="card mb-0 border-0 shadow-none flex-grow-1" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     {/* ── Condition: Standard List vs Master-Detail ── */}
                     {!selectedItem ? (
                         <>
@@ -1708,7 +1723,7 @@ const CompositeItem = () => {
 
                                     {/* Full Table */}
                                     {viewMode === 'list' && (
-                                        <div className="custom-table table-nowrap overflow-auto flex-grow-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                                        <div className="custom-table table-nowrap overflow-hidden p-3 flex-grow-1 " style={{ WebkitOverflowScrolling: 'touch' }}>
                                             <Datatable
                                                 columns={columns.filter(c => c.title === 'Action' || visibleColumns[c.title as string])}
                                                 dataSource={tableData}
@@ -2067,7 +2082,7 @@ const CompositeItem = () => {
                                         {!selectedItem.isDeleted && (
                                             <>
                                                 <button
-                                                    className="btn btn-sm btn-white border shadow-none d-flex align-items-center justify-content-center rounded-2"
+                                                    className="btn btn-sm btn-white border shadow-none d-flex align-items-center justify-content-center rounded-2 ci-red-hover"
                                                     style={{ width: '34px', height: '34px', padding: 0, flexShrink: 0 }}
                                                     onClick={() => navigate(route.compositeItemEdit.replace(':id', String(selectedItem.id)))}
                                                 >
@@ -2085,7 +2100,7 @@ const CompositeItem = () => {
                                                 )}
 
                                                 <div className="dropdown">
-                                                    <button className="btn btn-sm btn-white border shadow-none dropdown-toggle px-3 fs-14 fw-semibold rounded-2" style={{ height: '34px' }} data-bs-toggle="dropdown">More</button>
+                                                    <button className="btn btn-sm btn-white border shadow-none dropdown-toggle px-3 fs-14 fw-semibold rounded-2 ci-red-hover" style={{ height: '34px' }} data-bs-toggle="dropdown">More</button>
                                                     <div className="dropdown-menu dropdown-menu-right">
                                                         <Link to="#" className="dropdown-item fs-14" onClick={() => navigate(route.compositeItemEdit.replace(':id', String(selectedItem.id)))}>
                                                             <i className="ti ti-edit me-2" />Edit
@@ -2101,8 +2116,8 @@ const CompositeItem = () => {
                                                 </div>
                                             </>
                                         )}
-                                        <button className="btn btn-sm btn-white border-0 shadow-none p-0 ms-1 d-flex align-items-center justify-content-center" onClick={() => setSelectedItem(null)} style={{ width: '34px', height: '34px' }}>
-                                            <i className="ti ti-x fs-20 text-muted" />
+                                        <button className="btn btn-sm btn-white border shadow-none p-0 ms-1 d-flex align-items-center justify-content-center rounded-2 ci-red-hover" onClick={() => setSelectedItem(null)} style={{ width: '34px', height: '34px' }}>
+                                            <i className="ti ti-x fs-16 text-muted" />
                                         </button>
                                     </div>
                                 </div>
@@ -2515,9 +2530,9 @@ const CompositeItem = () => {
                                                                                 {/* Vertical line start for children */}
                                                                                 <div style={{
                                                                                     position: 'absolute',
-                                                                                    left: 18, // 8px padding + 10px half width of folder
+                                                                                    left: 18,
                                                                                     top: '50%',
-                                                                                    bottom: -16,
+                                                                                    bottom: '-1px',
                                                                                     width: '1px',
                                                                                     backgroundColor: '#d1d5db',
                                                                                     zIndex: 1
@@ -2540,8 +2555,8 @@ const CompositeItem = () => {
                                                                                         <div style={{
                                                                                             position: 'absolute',
                                                                                             left: 18,
-                                                                                            top: -16,
-                                                                                            bottom: isLast ? '50%' : -16,
+                                                                                            top: '-1px',
+                                                                                            bottom: isLast ? '50%' : '-1px',
                                                                                             width: '1px',
                                                                                             backgroundColor: '#d1d5db',
                                                                                             zIndex: 1
@@ -2550,7 +2565,7 @@ const CompositeItem = () => {
                                                                                             position: 'absolute',
                                                                                             left: 18,
                                                                                             top: '50%',
-                                                                                            width: 20,
+                                                                                            width: 24,
                                                                                             height: '1px',
                                                                                             backgroundColor: '#d1d5db',
                                                                                             zIndex: 1
@@ -2641,13 +2656,11 @@ const CompositeItem = () => {
                                     )}
 
                                     {detailTab === 'transactions' && (
-                                        <div>
-                                            {/* Filter bar */}
+                                        <div className="p-0">
                                             <div className="d-flex align-items-center gap-2 mb-4">
-                                                {/* Filter By */}
                                                 <div className="position-relative">
                                                     <button
-                                                        className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-13"
+                                                        className="btn btn-sm btn-white border d-flex align-items-center gap-1 fs-13 shadow-none"
                                                         onClick={() => { setShowTxFilterMenu(v => !v); setShowTxStatusMenu(false); }}
                                                         style={{ height: 32 }}
                                                     >
@@ -2669,10 +2682,9 @@ const CompositeItem = () => {
                                                         </div>
                                                     )}
                                                 </div>
-                                                {/* Status */}
                                                 <div className="position-relative">
                                                     <button
-                                                        className="btn btn-sm btn-light border d-flex align-items-center gap-1 fs-14"
+                                                        className="btn btn-sm btn-white border d-flex align-items-center gap-1 fs-13 shadow-none"
                                                         onClick={() => { setShowTxStatusMenu(v => !v); setShowTxFilterMenu(false); }}
                                                         style={{ height: 32 }}
                                                     >
@@ -2695,43 +2707,47 @@ const CompositeItem = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            {/* Empty state */}
-                                            <div className="text-center py-5 text-muted">
-                                                <p className="fs-14">No {txFilterBy} recorded yet.</p>
+                                            <div className="text-center py-5">
+                                                <div className="mb-3">
+                                                    <i className="ti ti-receipt-off fs-48 text-muted opacity-50" />
+                                                </div>
+                                                <p className="text-muted fs-14 mb-0">No {txFilterBy} recorded yet.</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {detailTab === 'history' && (
-                                        <div>
-                                            <div className="table-responsive">
-                                                <table className="table table-borderless mb-0" style={{ tableLayout: 'fixed' }}>
-                                                    <thead>
-                                                        <tr style={{ borderBottom: '1px solid #e9ecef' }}>
-                                                            <th className="fs-12 fw-semibold text-muted py-2" style={{ width: '34%', letterSpacing: '0.05em' }}>DATE</th>
-                                                            <th className="fs-12 fw-semibold text-muted py-2" style={{ letterSpacing: '0.05em' }}>DETAILS</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {(selectedItem.history && selectedItem.history.length > 0) ? (
-                                                            selectedItem.history.map((entry, idx) => (
-                                                                <tr key={idx} style={{ borderBottom: '1px solid #f3f3f3' }}>
-                                                                    <td className="py-3 fs-14 text-muted align-top">{entry.date}</td>
-                                                                    <td className="py-3 fs-14 align-top">
+                                        <div className="p-0">
+                                            {selectedItem.history && selectedItem.history.length > 0 ? (
+                                                <div className="table-responsive">
+                                                    <table className="table table-borderless mb-0">
+                                                        <thead>
+                                                            <tr className="border-bottom">
+                                                                <th className="fs-12 fw-semibold text-muted py-2" style={{ width: '30%', letterSpacing: '0.05em' }}>DATE</th>
+                                                                <th className="fs-12 fw-semibold text-muted py-2" style={{ letterSpacing: '0.05em' }}>DETAILS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {selectedItem.history.map((entry, idx) => (
+                                                                <tr key={idx} className="border-bottom">
+                                                                    <td className="py-3 fs-14 text-muted">{entry.date}</td>
+                                                                    <td className="py-3 fs-14">
                                                                         <span className="fw-medium text-dark">{entry.details}</span>
-                                                                        {' - '}
-                                                                        <span className="fst-italic text-muted">{entry.user}</span>
+                                                                        <span className="text-muted ms-1 fst-italic">- {entry.user}</span>
                                                                     </td>
                                                                 </tr>
-                                                            ))
-                                                        ) : (
-                                                            <tr>
-                                                                <td colSpan={2} className="py-5 text-center text-muted fs-14">No history available.</td>
-                                                            </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-5">
+                                                    <div className="mb-3">
+                                                        <i className="ti ti-history-off fs-48 text-muted opacity-50" />
+                                                    </div>
+                                                    <p className="text-muted fs-14 mb-0">No history available.</p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -2880,7 +2896,6 @@ const CompositeItem = () => {
                 )}
 
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-                <Footer />
             </div>
         </div>
     );
@@ -3581,7 +3596,6 @@ const CompositeItem = () => {
                     </div>
                 </div>
 
-                <Footer />
             </div>
         </div>
     );

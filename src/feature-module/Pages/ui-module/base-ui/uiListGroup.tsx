@@ -1,6 +1,5 @@
-
+﻿
 import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 
 
@@ -648,7 +647,6 @@ const UiListGroup = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

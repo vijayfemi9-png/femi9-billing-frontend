@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import CollapseIcons from "../../../../components/collapse-icons/collapseIcons";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
@@ -625,7 +624,6 @@ const ProjectDashboard = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,10 +1,9 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FaqListData } from "../../../core/json/faqListData";
 import { Link } from "react-router";
 import PageHeader from "../../../components/page-header/pageHeader";
 import SearchInput from "../../../components/dataTable/dataTableSearch";
 import Datatable from "../../../components/dataTable";
-import Footer from "../../../components/footer/footer";
 import { all_routes } from "../../../routes/all_routes";
 
 const Faq = () => {
@@ -162,7 +161,6 @@ const Faq = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

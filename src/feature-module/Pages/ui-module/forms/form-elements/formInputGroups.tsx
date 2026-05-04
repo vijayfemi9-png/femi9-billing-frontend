@@ -1,7 +1,6 @@
-
+﻿
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormInputGroups = () => {
   return (
@@ -866,7 +865,6 @@ const FormInputGroups = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,7 +1,6 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import "../../../../assets/icon/remix/fonts/remixicon.css"
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const IconRemix = () => {
   return (
@@ -311,7 +310,6 @@ const IconRemix = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

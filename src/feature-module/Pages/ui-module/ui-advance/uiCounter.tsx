@@ -1,7 +1,6 @@
-import CountUp from "react-countup";
+﻿import CountUp from "react-countup";
 
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 const UiCounter = () => {
   return (
     <div className="page-wrapper cardhead">
@@ -147,7 +146,6 @@ const UiCounter = () => {
           {/* /Counter */}
         </div>
       </div>
-      <Footer/>
     </div>
   );
 };

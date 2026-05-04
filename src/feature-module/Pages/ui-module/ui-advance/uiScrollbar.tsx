@@ -1,6 +1,5 @@
-
+﻿
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 
 const UiScrollbar = () => {
@@ -264,7 +263,6 @@ const UiScrollbar = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

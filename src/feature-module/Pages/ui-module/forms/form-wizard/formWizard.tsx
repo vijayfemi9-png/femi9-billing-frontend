@@ -1,7 +1,6 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const FormWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -840,7 +839,6 @@ const FormWizard = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ============================================================== */}

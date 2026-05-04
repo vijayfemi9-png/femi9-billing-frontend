@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Button, Toast } from "react-bootstrap";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiToasts = () => {
   const [showTopLeftToast, setShowTopLeftToast] = useState(false);
@@ -1425,7 +1424,6 @@ const UiToasts = () => {
           </div>
           {/* Aligning Toast Using Flexbox */}
         </div>
-        <Footer/>
       </div>
       {/* /Page Wrapper */}
     </div>

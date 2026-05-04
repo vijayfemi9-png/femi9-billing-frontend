@@ -1,6 +1,5 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PredefinedDatePicker from "../../../components/common-dateRangePicker/PredefinedDatePicker";
-import Footer from "../../../components/footer/footer";
 import { all_routes } from "../../../routes/all_routes";
 import ImageWithBasePath from "../../../components/imageWithBasePath";
 import PageHeader from "../../../components/page-header/pageHeader";
@@ -442,7 +441,6 @@ const PurchaseTransaction = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

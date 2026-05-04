@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { all_routes } from "../../../../../routes/all_routes";
 import { Popover, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 import PageHeader from "../../../../../components/page-header/pageHeader";
-import Footer from "../../../../../components/footer/footer";
 import Datatable from "../../../../../components/dataTable";
 import SearchInput from "../../../../../components/dataTable/dataTableSearch";
 import PredefinedDatePicker from "../../../../../components/common-dateRangePicker/PredefinedDatePicker";
@@ -621,7 +620,6 @@ const PriceList = () => {
                         </div>
                     </div>
                 </div>
-                <Footer />
             </div>
         </div>
     );

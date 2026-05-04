@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
-import Footer from "../../../../components/footer/footer";
 import Modals from "./modals/modals";
 import CommonDatePicker from "../../../../components/common-datePicker/commonDatePicker";
 
@@ -1091,7 +1090,6 @@ const Todo = () => {
         </div>
         {/* End Content */}
         {/* Footer Start */}
-        <Footer />
         {/* Footer End */}
       </div>
       {/* ========================

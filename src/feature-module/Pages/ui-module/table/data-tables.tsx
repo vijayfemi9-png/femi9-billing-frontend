@@ -1,8 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { DataTablesData } from "../../../../core/json/dataTablesData";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import Datatable from "../../../../components/dataTable";
-import Footer from "../../../../components/footer/footer";
 
 
 const DataTables = () => {
@@ -100,7 +99,6 @@ const DataTables = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

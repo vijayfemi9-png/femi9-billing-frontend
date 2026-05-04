@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { ProjectReportListData } from "../../../../core/json/projectReportListData";
 import { all_routes } from "../../../../routes/all_routes";
@@ -671,7 +670,6 @@ const ProjectReports = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

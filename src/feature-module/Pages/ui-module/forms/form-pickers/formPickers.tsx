@@ -1,11 +1,10 @@
-import type { TimePickerProps } from "antd";
+﻿import type { TimePickerProps } from "antd";
 import { TimePicker } from "antd";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import type { DatePickerProps } from "antd";
 import { DatePicker } from "antd";
 import CommonUiPageHeader from "../../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../../components/footer/footer";
 
 const onChangeDate: DatePickerProps["onChange"] = (date, dateString) => {
   console.log(date, dateString);
@@ -402,7 +401,6 @@ const FormPickers = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,6 +1,5 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
-import Footer from "../../../../components/footer/footer";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
 import { ContactReportListData } from "../../../../core/json/contactReportListData";
@@ -1048,7 +1047,6 @@ const ContactReports = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================

@@ -1,7 +1,6 @@
-
+﻿
 import { Link } from "react-router";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 
 const UiCollapse = () => {
@@ -216,7 +215,6 @@ const UiCollapse = () => {
         </div>
         {/*End container */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

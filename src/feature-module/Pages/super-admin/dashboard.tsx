@@ -1,5 +1,4 @@
-import { Link } from "react-router"
-import Footer from "../../../components/footer/footer"
+﻿import { Link } from "react-router"
 import PredefinedDatePicker from "../../../components/common-dateRangePicker/PredefinedDatePicker"
 import CollapseIcons from "../../../components/collapse-icons/collapseIcons"
 import { all_routes } from "../../../routes/all_routes"
@@ -808,7 +807,6 @@ const Dashboard = () => {
     </div>
     {/* End Content */}
     {/* Start Footer */}
-    <Footer/>
     {/* End Footer */}
   </div>
   {/* ========================

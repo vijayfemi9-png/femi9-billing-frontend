@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import SearchInput from "../../../../components/dataTable/dataTableSearch";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
@@ -7,7 +7,6 @@ import Datatable from "../../../../components/dataTable";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { CompaniesListData } from "../../../../core/json/companiesListData";
-import Footer from "../../../../components/footer/footer";
 import ModalCompanies from "./modal/modalCompanies";
 
 const CompaniesList = () => {
@@ -991,7 +990,6 @@ const CompaniesList = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

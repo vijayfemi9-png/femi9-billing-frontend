@@ -1,7 +1,6 @@
-
+﻿
 
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
-import Footer from "../../../../components/footer/footer";
 
 const UiTypography = () => {
   return (
@@ -500,7 +499,6 @@ const UiTypography = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

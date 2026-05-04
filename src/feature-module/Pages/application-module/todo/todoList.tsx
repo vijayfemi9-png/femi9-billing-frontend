@@ -1,8 +1,7 @@
-import { Link } from "react-router";
+﻿import { Link } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import Modals from "./modals/modals";
-import Footer from "../../../../components/footer/footer";
 
 const TodoList = () => {
   return (
@@ -1038,7 +1037,6 @@ const TodoList = () => {
           </div>
         </div>
         {/* Start Footer*/}
-       <Footer/>
         {/* End Footer*/}
       </div>
       {/* ========================

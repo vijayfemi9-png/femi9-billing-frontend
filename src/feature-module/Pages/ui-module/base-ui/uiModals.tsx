@@ -1,6 +1,5 @@
-
+﻿
 import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
 import CommonUiPageHeader from "../../../../components/commonUiPageHeader/commonUiPageHeader";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import { all_routes } from "../../../../routes/all_routes";
@@ -2748,7 +2747,6 @@ const UiModals = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer/>
         {/* End Footer */}
       </div>
       {/* ========================

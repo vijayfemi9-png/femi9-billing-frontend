@@ -1,5 +1,4 @@
-import { Link } from "react-router";
-import Footer from "../../../../components/footer/footer";
+﻿import { Link } from "react-router";
 import CollapseIcons from "../../../../components/collapse-icons/collapseIcons";
 import ImageWithBasePath from "../../../../components/imageWithBasePath";
 import DealsChart from "./chart/dealsChart";
@@ -1781,7 +1780,6 @@ const Analytics = () => {
         </div>
         {/* End Content */}
         {/* Start Footer */}
-        <Footer />
         {/* End Footer */}
       </div>
       {/* ========================
