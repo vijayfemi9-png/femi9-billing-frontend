@@ -937,10 +937,26 @@ const CustomerView: React.FC = () => {
     /* ── Full-page split layout ──────────────────────────────────────────────── */
     return (
         <div className={`page-wrapper customer-view-page`} style={isMobile ? { minHeight: "100vh", display: "flex", flexDirection: "column" } : { height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <style>{`
+                .customer-view-page {
+                    padding: 0 !important;
+                }
+                .customer-view-page .content {
+                    padding: 24px !important;
+                    padding-top: 0 !important;
+                    padding-bottom: 0 !important;
+                }
+                /* Ensure cv-shell-container has some breathing room if footer is present */
+                .cv-shell-container {
+                    margin-bottom: 0 !important;
+                    border-bottom: 1px solid #dee2e6 !important;
+                    border-radius: 0 !important;
+                }
+            `}</style>
             <div className={`content pb-0 flex-grow-1 d-flex flex-column`} style={isMobile ? { minHeight: 0 } : { minHeight: 0, overflow: "hidden" }}>
 
                 {/* ── Top Unified Header ── */}
-                <div className="d-flex align-items-center justify-content-between flex-wrap mb-3 gap-3">
+                <div className="d-flex align-items-center justify-content-between flex-wrap mb-3 mt-0 gap-3">
                     <div>
                         <div className="d-flex align-items-center gap-2 mb-1">
                             {isMobile && !showSidebar && (
@@ -1342,18 +1358,18 @@ const CustomerView: React.FC = () => {
                                                                     className="d-flex align-items-center justify-content-between p-2 cursor-pointer"
                                                                     onClick={() => setExpandedSidebarContactId(isExpanded ? null : cp.id)}
                                                                 >
-                                                                    <div className="d-flex align-items-center gap-2">
-                                                                        <div className="avatar-circle fs-10 fw-bold text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(cp.firstName + cp.lastName) }}>
+                                                                    <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ minWidth: 0 }}>
+                                                                        <div className="avatar-circle fs-10 fw-bold text-white d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 24, height: 24, borderRadius: '50%', background: getAvatarColor(cp.firstName + cp.lastName) }}>
                                                                             {getInitials(cp.firstName + " " + cp.lastName)}
                                                                         </div>
-                                                                        <div>
-                                                                            <div className="fs-14 fw-semibold text-dark">{cp.firstName} {cp.lastName}</div>
-                                                                            <div className="fs-14 text-muted" style={{ maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cp.email}</div>
+                                                                        <div className="flex-grow-1" style={{ minWidth: 0 }}>
+                                                                            <div className="fs-14 fw-semibold text-dark text-truncate">{cp.firstName} {cp.lastName}</div>
+                                                                            <div className="fs-13 text-muted text-truncate">{cp.email}</div>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="d-flex align-items-center gap-1">
+                                                                    <div className="d-flex align-items-center gap-2 flex-shrink-0 ms-2">
                                                                         <button className="btn btn-sm p-1 border-0" onClick={(e) => { e.stopPropagation(); openEditContact(cp); }} title="Edit">
-                                                                            <i className="ti ti-pencil fs-14 text-muted" />
+                                                                            <i className="ti ti-pencil fs-16 text-muted" />
                                                                         </button>
                                                                         <i className={`ti ti-chevron-${isExpanded ? 'up' : 'down'} fs-14 text-muted`} />
                                                                     </div>

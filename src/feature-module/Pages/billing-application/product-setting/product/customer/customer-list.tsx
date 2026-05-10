@@ -422,7 +422,8 @@ const CustomerList: React.FC = () => {
                 /* Toolbar Buttons Hover (Light Red) */
                 .filter-btn:hover,
                 .sort-by-btn:hover,
-                .export-btn:hover {
+                .export-btn:hover,
+                .manage-columns-btn:hover {
                     background-color: #fff0ee !important;
                     color: #e41f07 !important;
                     border-color: #fde0dd !important;
@@ -575,16 +576,17 @@ const CustomerList: React.FC = () => {
                 />
 
                 <div className="card border-0 rounded-0 flex-grow-1 mb-4 d-flex flex-column">
-                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4" }}>
+                    <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap" style={{ borderBottom: "1px solid #f0f2f4", padding: '12px 24px' }}>
                         <div className="d-flex align-items-center rounded bg-white" style={{
                             width: 220,
                             border: searchFocused ? '1px solid #e41f07' : '1px solid #dee2e6',
+                            height: 34
                         }}>
                             <span className="px-2 d-flex align-items-center text-muted">
-                                <i className="ti ti-search fs-14" />
+                                <i className="ti ti-search fs-13" />
                             </span>
-                            <input className="form-control border-0 ps-0 fs-14 bg-transparent"
-                                style={{ outline: 'none', boxShadow: 'none', height: '36px' }}
+                            <input className="form-control border-0 ps-0 fs-13 bg-transparent"
+                                style={{ outline: 'none', boxShadow: 'none', height: '32px' }}
                                 placeholder="Search..."
                                 value={searchText}
                                 onChange={e => setSearchText(e.target.value)}
@@ -592,143 +594,142 @@ const CustomerList: React.FC = () => {
                                 onBlur={() => setSearchFocused(false)} />
                         </div>
                         <button
-                            className="btn text-white d-flex align-items-center"
-                            style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '6px 14px' }}
+                            className="btn text-white d-flex align-items-center fw-bold"
+                            style={{ background: '#e41f07', border: 'none', borderRadius: '4px', padding: '0 15px', height: 36, fontSize: 13 }}
                             onClick={openAdd}
                         >
-                            <i className="ti ti-plus me-2 fs-16" /> Add New Customer
+                            <i className="ti ti-plus me-2 fs-14" /> Add New Customer
                         </button>
                     </div>
 
                     <div className="card-body p-0 d-flex flex-column" style={{ minHeight: 0 }}>
-                        <div className="toolbar-custom py-3 px-4">
-                            <div className="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    <div style={{ position: "relative" }} ref={sortByRef}>
-                                        <button
-                                            className={`btn btn-white btn-sm border d-flex align-items-center gap-2 shadow-none fs-14 fw-medium sort-by-btn ${showSortBy ? "show" : ""}`}
-                                            style={{ height: 38, borderRadius: 3, borderColor: "#ebe7e5ff", color: showSortBy ? "#fff" : "#333" }}
-                                            onClick={() => setShowSortBy(!showSortBy)}
-                                        >
-                                            <i className={`ti ti-sort-ascending-2 fs-14 ${showSortBy ? "text-white" : ""}`} /> Sort By <i className="ti ti-chevron-down fs-10 ms-1" />
-                                        </button>
-                                        {showSortBy && (
-                                            <ul className="mb-0 py-2" style={{ position: "absolute", top: "100%", left: 0, zIndex: 1060, background: "#fff", borderRadius: 6, minWidth: 160, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", listStyle: "none", padding: "8px 0", marginTop: 4 }}>
-                                                <li><button className="dropdown-item" onClick={() => { setSortBy("newest"); setShowSortBy(false); }}>Newest</button></li>
-                                                <li><button className="dropdown-item" onClick={() => { setSortBy("oldest"); setShowSortBy(false); }}>Oldest</button></li>
-                                            </ul>
-                                        )}
-                                    </div>
-                                    <PredefinedDatePicker />
-                                    <div style={{ position: "relative" }} ref={filterRef}>
-                                        <button
-                                            className={`btn btn-outline-light shadow px-2 filter-btn ${showFilter ? 'active' : ''}`}
-                                            style={{ height: 38, fontSize: 14, borderRadius: 3, borderColor: "#ebe7e5ff" }}
-                                            onClick={() => setShowFilter(!showFilter)}
-                                        >
-                                            <i className="ti ti-filter me-2" />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
-                                        </button>
-                                        {showFilter && (
-                                            <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
-                                                <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
-                                                    <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
-                                                    <button
-                                                        type="button"
-                                                        className="btn-close-custom"
-                                                        onClick={() => setShowFilter(false)}
-                                                        style={{ width: 28, height: 28, background: "#fff1f0", border: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                                    >
-                                                        <i className="ti ti-x" style={{ color: "#e41f07", fontSize: 14 }} />
-                                                    </button>
-                                                </div>
-                                                <div className="filter-set-view p-2 px-3">
-                                                    <div className="accordion" id="filterAccordion">
-                                                        <div className="filter-set-content">
-                                                            <div className="filter-set-content-head mb-2 mt-1">
-                                                                <Link
-                                                                    to="#"
-                                                                    className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
-                                                                    onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
-                                                                >
-                                                                    Status
-                                                                </Link>
-                                                            </div>
-                                                            {statusFilterOpen && (
-                                                                <div className="filter-set-contents">
-                                                                    <div className="filter-content-list ps-4">
-                                                                        {["Active", "Inactive"].map(status => (
-                                                                            <div className="form-check mb-2" key={status}>
-                                                                                <input
-                                                                                    className="form-check-input primary-checkbox"
-                                                                                    type="checkbox"
-                                                                                    id={`filter-${status}`}
-                                                                                    checked={pendingFilter.includes(status)}
-                                                                                    style={{ width: 20, height: 20, cursor: "pointer" }}
-                                                                                    onChange={(e) => {
-                                                                                        if (e.target.checked) setPendingFilter([...pendingFilter, status]);
-                                                                                        else setPendingFilter(pendingFilter.filter(s => s !== status));
-                                                                                    }}
-                                                                                />
-                                                                                <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
-                                                                                    {status}
-                                                                                </label>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
-                                                        <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
-                                                        <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                        <div className="toolbar-custom py-2 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <div style={{ position: "relative" }} ref={sortByRef}>
+                                    <button
+                                        className={`btn btn-white btn-sm border d-flex align-items-center gap-2 shadow-none fs-14 fw-medium sort-by-btn ${showSortBy ? "show" : ""}`}
+                                        style={{ height: 34, borderRadius: 3, borderColor: "#ebe7e5ff", color: showSortBy ? "#fff" : "#333" }}
+                                        onClick={() => setShowSortBy(!showSortBy)}
+                                    >
+                                        <i className={`ti ti-sort-ascending-2 fs-14 ${showSortBy ? "text-white" : ""}`} /> Sort By <i className="ti ti-chevron-down fs-10 ms-1" />
+                                    </button>
+                                    {showSortBy && (
+                                        <ul className="mb-0 py-2" style={{ position: "absolute", top: "100%", left: 0, zIndex: 1060, background: "#fff", borderRadius: 6, minWidth: 160, boxShadow: "0 4px 16px rgba(0,0,0,0.12)", listStyle: "none", padding: "8px 0", marginTop: 4 }}>
+                                            <li><button className="dropdown-item" onClick={() => { setSortBy("newest"); setShowSortBy(false); }}>Newest</button></li>
+                                            <li><button className="dropdown-item" onClick={() => { setSortBy("oldest"); setShowSortBy(false); }}>Oldest</button></li>
+                                        </ul>
+                                    )}
                                 </div>
+                                <PredefinedDatePicker />
+                            </div>
 
-                                <div className="d-flex align-items-center gap-2 flex-wrap">
-                                    {viewMode === "list" && (
-                                        <div className="dropdown">
-                                            <Link to="#" className="btn bg-soft-indigo px-2 border-0" style={{ height: 36, fontSize: 14, display: "inline-flex", alignItems: "center" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                                <i className="ti ti-columns-3 me-2" />Manage Columns
-                                            </Link>
-                                            <div className="dropdown-menu dropdown-md p-3">
-                                                <ul>
-                                                    {ALL_COLS.map(col => (
-                                                        <li className="gap-1 d-flex align-items-center mb-2" key={col}>
-                                                            <i className="ti ti-columns me-1" />
-                                                            <div className="form-check form-switch w-100 ps-0">
-                                                                <label className="form-check-label d-flex align-items-center gap-2 w-100">
-                                                                    <span>{col}</span>
-                                                                    <input
-                                                                        className="form-check-input switchCheckDefault ms-auto"
-                                                                        type="checkbox"
-                                                                        role="switch"
-                                                                        checked={visibleCols[col] !== false}
-                                                                        onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
-                                                                    />
-                                                                </label>
+                            <div className="d-flex align-items-center gap-2 flex-wrap">
+                                <div style={{ position: "relative" }} ref={filterRef}>
+                                    <button
+                                        className={`btn btn-outline-light px-3 filter-btn ${showFilter ? 'active' : ''}`}
+                                        style={{ height: 34, fontSize: 13, borderRadius: 3, borderColor: "#ebe7e5ff", color: showFilter ? "#fff" : "#333" }}
+                                        onClick={() => setShowFilter(!showFilter)}
+                                    >
+                                        <i className={`ti ti-filter me-2 ${showFilter ? "text-white" : ""}`} />Filter {filterStatus.length > 0 && <span className="badge bg-primary ms-1">{filterStatus.length}</span>} <i className="ti ti-chevron-down ms-1" />
+                                    </button>
+                                    {showFilter && (
+                                        <div className="filter-dropdown-menu dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: 'absolute', right: 0, top: '100%', minWidth: 220, zIndex: 1060, borderRadius: 8 }}>
+                                            <div className="filter-header d-flex align-items-center justify-content-between p-2 px-3 border-bottom">
+                                                <h6 className="fs-14 fw-bold mb-0 text-dark"><i className="ti ti-filter me-2" />Filter</h6>
+                                                <button
+                                                    type="button"
+                                                    className="btn-close-custom"
+                                                    onClick={() => setShowFilter(false)}
+                                                    style={{ width: 28, height: 28, background: "#fff1f0", border: "none", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                >
+                                                    <i className="ti ti-x" style={{ color: "#e41f07", fontSize: 14 }} />
+                                                </button>
+                                            </div>
+                                            <div className="filter-set-view p-2 px-3">
+                                                <div className="accordion" id="filterAccordion">
+                                                    <div className="filter-set-content">
+                                                        <div className="filter-set-content-head mb-2 mt-1">
+                                                            <Link
+                                                                to="#"
+                                                                className={statusFilterOpen ? "text-dark fw-bold fs-14" : "collapsed text-dark fw-bold fs-14"}
+                                                                onClick={(e) => { e.preventDefault(); setStatusFilterOpen(!statusFilterOpen); }}
+                                                            >
+                                                                Status
+                                                            </Link>
+                                                        </div>
+                                                        {statusFilterOpen && (
+                                                            <div className="filter-set-contents">
+                                                                <div className="filter-content-list ps-4">
+                                                                    {["Active", "Inactive"].map(status => (
+                                                                        <div className="form-check mb-2" key={status}>
+                                                                            <input
+                                                                                className="form-check-input primary-checkbox"
+                                                                                type="checkbox"
+                                                                                id={`filter-${status}`}
+                                                                                checked={pendingFilter.includes(status)}
+                                                                                style={{ width: 20, height: 20, cursor: "pointer" }}
+                                                                                onChange={(e) => {
+                                                                                    if (e.target.checked) setPendingFilter([...pendingFilter, status]);
+                                                                                    else setPendingFilter(pendingFilter.filter(s => s !== status));
+                                                                                }}
+                                                                            />
+                                                                            <label className="form-check-label fs-14 cursor-pointer text-muted fw-medium ms-1" htmlFor={`filter-${status}`}>
+                                                                                {status}
+                                                                            </label>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
+                                                    <button className="btn btn-light bg-light border-0 flex-grow-1 fs-14 fw-bold p-1 shadow-none" style={{ borderRadius: 6, height: 36, color: "#444" }} onClick={handleResetFilter}>Reset</button>
+                                                    <button className="btn btn-danger flex-grow-1 fs-14 fw-bold p-1 shadow-sm" style={{ borderRadius: 6, height: 36 }} onClick={handleApplyFilter}>Filter</button>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
-                                    <div className="d-flex align-items-center gap-1 view-mode-toggle-container" style={{ border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", padding: "2px" }}>
-                                        <button onClick={() => setViewMode("list")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                            <i className="ti ti-list fs-14" />
-                                        </button>
-                                        <button onClick={() => setViewMode("grid")} style={{ width: 26, height: 24, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#222", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
-                                            <i className="ti ti-grid-dots fs-14" />
-                                        </button>
+                                </div>
+                                {viewMode === "list" && (
+                                    <div className="dropdown">
+                                        <Link to="#" className="btn px-3 border-0 d-flex align-items-center gap-2 shadow-none manage-columns-btn fw-bold" style={{ height: 34, fontSize: 13, borderRadius: 8, background: "#f5f7ff", color: "#6366f1" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                            <i className="ti ti-columns-3" /> Manage Columns
+                                        </Link>
+                                        <div className="dropdown-menu dropdown-menu-end dropdown-md p-3 shadow-lg border-0 mt-2" style={{ borderRadius: 8 }}>
+                                            <ul className="mb-0">
+                                                {ALL_COLS.map(col => (
+                                                    <li className="gap-1 d-flex align-items-center mb-2" key={col}>
+                                                        <i className="ti ti-columns me-1 text-muted" />
+                                                        <div className="form-check form-switch w-100 ps-0">
+                                                            <label className="form-check-label d-flex align-items-center gap-2 w-100 cursor-pointer">
+                                                                <span className="fs-14">{col}</span>
+                                                                <input
+                                                                    className="form-check-input switchCheckDefault ms-auto"
+                                                                    type="checkbox"
+                                                                    role="switch"
+                                                                    checked={visibleCols[col] !== false}
+                                                                    onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
+                                                                />
+                                                            </label>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
                                     </div>
+                                )}
+                                <div className="d-flex align-items-center gap-1 view-mode-toggle-container" style={{ border: "1px solid #ebe7e5ff", borderRadius: 3, background: "#fff", padding: "4px", height: 34 }}>
+                                    <button onClick={() => setViewMode("list")} style={{ width: 30, height: 30, border: "none", cursor: "pointer", background: viewMode === "list" ? "#1ba59e" : "transparent", color: viewMode === "list" ? "#fff" : "#6c757d", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                        <i className="ti ti-list fs-16" />
+                                    </button>
+                                    <button onClick={() => setViewMode("grid")} style={{ width: 30, height: 30, border: "none", cursor: "pointer", background: viewMode === "grid" ? "#1ba59e" : "transparent", color: viewMode === "grid" ? "#fff" : "#6c757d", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}>
+                                        <i className="ti ti-grid-dots fs-16" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
+
                         <div className="flex-grow-1" style={{ minWidth: 0 }}>
                             {viewMode === "list" ? (
                                 <div className="p-4">
@@ -746,76 +747,78 @@ const CustomerList: React.FC = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="p-4"><div className="row g-3">
-                                    {tableData.map(c => (
-                                        <div className="col-xxl-3 col-xl-4 col-md-6" key={c.id}>
-                                            <div className="card border shadow-sm h-100 hover-shadow transition-all" style={{ borderRadius: 10 }}>
-                                                <div className="card-body p-3">
-                                                    <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-3 border-bottom pb-3">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="avatar avatar-md border rounded-circle flex-shrink-0 me-2 d-flex align-items-center justify-content-center bg-soft-primary" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))} style={{ cursor: "pointer", width: 42, height: 42 }}>
-                                                                <span className="fs-16 fw-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
+                                <div className="p-4">
+                                    <div className="row g-3">
+                                        {tableData.map(c => (
+                                            <div className="col-xxl-3 col-xl-4 col-md-6" key={c.id}>
+                                                <div className="card border shadow-sm h-100 hover-shadow transition-all" style={{ borderRadius: 10 }}>
+                                                    <div className="card-body p-3">
+                                                        <div className="d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-3 border-bottom pb-3">
+                                                            <div className="d-flex align-items-center">
+                                                                <div className="avatar avatar-md border rounded-circle flex-shrink-0 me-2 d-flex align-items-center justify-content-center bg-soft-primary" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))} style={{ cursor: "pointer", width: 42, height: 42 }}>
+                                                                    <span className="fs-16 fw-bold text-primary">{c.name.charAt(0).toUpperCase()}</span>
+                                                                </div>
+                                                                <div>
+                                                                    <h6 className="mb-0">
+                                                                        <span className="cursor-pointer text-dark fs-14" style={{ fontSize: '14px' }} onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
+                                                                            {c.name}
+                                                                        </span>
+                                                                    </h6>
+                                                                    <div className="fs-12 text-muted mt-1">
+                                                                        {c.companyName || "No Company"}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <h6 className="mb-0">
-                                                                    <span className="cursor-pointer text-dark fs-14" style={{ fontSize: '14px' }} onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
-                                                                        {c.name}
-                                                                    </span>
-                                                                </h6>
-                                                                <div className="fs-12 text-muted mt-1">
-                                                                    {c.companyName || "No Company"}
+                                                            <div className="dropdown table-action">
+                                                                <button className="btn btn-icon btn-sm btn-outline-light shadow-sm bg-white" data-bs-toggle="dropdown">
+                                                                    <i className="ti ti-dots-vertical text-muted" />
+                                                                </button>
+                                                                <div className="dropdown-menu dropdown-menu-right">
+                                                                    <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
+                                                                        <i className="ti ti-edit text-blue me-2" /> Edit
+                                                                    </button>
+                                                                    <button className="dropdown-item text-danger" onClick={(e) => { e.stopPropagation(); handleDelete(c); }}>
+                                                                        <i className="ti ti-trash me-2" /> Delete
+                                                                    </button>
+                                                                    <button className="dropdown-item" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
+                                                                        <i className="ti ti-eye text-blue-light me-2" /> Preview
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="dropdown table-action">
-                                                            <button className="btn btn-icon btn-sm btn-outline-light shadow-sm bg-white" data-bs-toggle="dropdown">
-                                                                <i className="ti ti-dots-vertical text-muted" />
-                                                            </button>
-                                                            <div className="dropdown-menu dropdown-menu-right">
-                                                                <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); openEdit(c); }}>
-                                                                    <i className="ti ti-edit text-blue me-2" /> Edit
-                                                                </button>
-                                                                <button className="dropdown-item text-danger" onClick={(e) => { e.stopPropagation(); handleDelete(c); }}>
-                                                                    <i className="ti ti-trash me-2" /> Delete
-                                                                </button>
-                                                                <button className="dropdown-item" onClick={() => navigate(route.customerView.replace(":id", String(c.id)))}>
-                                                                    <i className="ti ti-eye text-blue-light me-2" /> Preview
-                                                                </button>
+                                                        <div className="d-block pt-1">
+                                                            <div className="d-flex flex-column mb-3">
+                                                                <p className="text-default d-inline-flex align-items-center mb-2 fs-14" style={{ fontSize: '14px' }}>
+                                                                    <i className="ti ti-mail text-dark me-2 fs-15" />
+                                                                    {c.email || "No Email"}
+                                                                </p>
+                                                                <p className="text-default d-inline-flex align-items-center mb-0 fs-14" style={{ fontSize: '14px' }}>
+                                                                    <i className="ti ti-phone text-dark me-2 fs-15" />
+                                                                    {c.workPhone || "No Phone"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="d-flex align-items-center">
+                                                                <span className={`badge badge-tag ${c.status === "Active" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`} style={{ padding: "4px 8px" }}>
+                                                                    <i className="ti ti-point-filled me-1" />{c.status}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="d-block pt-1">
-                                                        <div className="d-flex flex-column mb-3">
-                                                            <p className="text-default d-inline-flex align-items-center mb-2 fs-14" style={{ fontSize: '14px' }}>
-                                                                <i className="ti ti-mail text-dark me-2 fs-15" />
-                                                                {c.email || "No Email"}
-                                                            </p>
-                                                            <p className="text-default d-inline-flex align-items-center mb-0 fs-14" style={{ fontSize: '14px' }}>
-                                                                <i className="ti ti-phone text-dark me-2 fs-15" />
-                                                                {c.workPhone || "No Phone"}
-                                                            </p>
-                                                        </div>
-                                                        <div className="d-flex align-items-center">
-                                                            <span className={`badge badge-tag ${c.status === "Active" ? "bg-soft-success text-success" : "bg-soft-danger text-danger"} border-0`} style={{ padding: "4px 8px" }}>
-                                                                <i className="ti ti-point-filled me-1" />{c.status}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 border-top pt-3 mt-3">
-                                                        <div>
-                                                            <span className="fs-11 text-muted text-uppercase d-block mb-1">Receivables</span>
-                                                            <span className="fs-14 fw-bold text-dark">{fmt(c.receivables)}</span>
-                                                        </div>
-                                                        <div className="text-end">
-                                                            <span className="fs-11 text-muted text-uppercase d-block mb-1">Unused Credits</span>
-                                                            <span className="fs-14 fw-bold text-dark">{fmt(c.unusedCredits)}</span>
+                                                        <div className="d-flex justify-content-between align-items-center flex-wrap row-gap-2 border-top pt-3 mt-3">
+                                                            <div>
+                                                                <span className="fs-11 text-muted text-uppercase d-block mb-1">Receivables</span>
+                                                                <span className="fs-14 fw-bold text-dark">{fmt(c.receivables)}</span>
+                                                            </div>
+                                                            <div className="text-end">
+                                                                <span className="fs-11 text-muted text-uppercase d-block mb-1">Unused Credits</span>
+                                                                <span className="fs-14 fw-bold text-dark">{fmt(c.unusedCredits)}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div></div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>

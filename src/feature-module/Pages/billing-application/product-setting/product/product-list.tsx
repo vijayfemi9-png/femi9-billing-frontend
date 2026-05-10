@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, CSSProperties } from "react";
 import "../../billing-application.scss";
 import ExcelJS from "exceljs";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +57,19 @@ type Item = {
     openingStockRate?: number;
 };
 
-// ── Search Form Type ─────────────────────────────────────────────────────────
+type LocationType = "Business" | "Warehouse";
+type ProductLocation = {
+    id: number;
+    name: string;
+    type: LocationType;
+    parentLocation: string;
+    isDefault?: boolean;
+    city: string;
+    state: string;
+    country: string;
+};
+
+// INR INR  Search Form Type INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
 type SearchForm = {
     itemName: string;
     sku: string;
@@ -103,6 +115,16 @@ function saveProducts(data: Item[]) {
     try { localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(data)); } catch { /* ignore */ }
 }
 
+const LOCATION_STORAGE_KEY = 'location_list_data';
+
+function loadLocations(): ProductLocation[] {
+    try {
+        const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
+        if (stored) return JSON.parse(stored) as ProductLocation[];
+    } catch { /* ignore */ }
+    return [];
+}
+
 const VIEWS = [
     { key: "all", label: "All Items" },
     { key: "active", label: "Active Items" },
@@ -122,7 +144,7 @@ const VIEWS = [
 
 type ViewMode = "list" | "grid";
 
-// ── Export Dropdown Button ───────────────────────────────────────────────────
+// INR INR  Export Dropdown Button INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
 const ExportDropdown = ({ onExportPDF, onExportExcel }: { onExportPDF: () => void; onExportExcel: () => void; }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -163,9 +185,9 @@ const ExportDropdown = ({ onExportPDF, onExportExcel }: { onExportPDF: () => voi
     );
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-// ── Search Modal Component ────────────────────────────────────────────────────
-// ══════════════════════════════════════════════════════════════════════════════
+// INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
+// INR INR  Search Modal Component INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
+// INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
 const SearchModal = ({
     show,
     onClose,
@@ -220,7 +242,7 @@ const SearchModal = ({
         cursor: "pointer",
     });
 
-    const labelCls: React.CSSProperties = {
+    const labelCls: CSSProperties = {
         fontSize: 13,
         color: "#495057",
         fontWeight: 500,
@@ -294,7 +316,7 @@ const SearchModal = ({
                 animation: "slideDown 0.18s ease",
             }}>
 
-                {/* ── Header Bar ── */}
+                {/* INR INR  Header Bar INR INR  */}
                 <div style={{
                     display: "flex", alignItems: "center", gap: 16,
                     padding: "13px 20px", borderBottom: "1px solid #dee2e6",
@@ -337,7 +359,7 @@ const SearchModal = ({
                     </button>
                 </div>
 
-                {/* ── Form Grid ── */}
+                {/* INR INR  Form Grid INR INR  */}
                 <div style={{
                     padding: "20px 24px",
                     display: "grid",
@@ -379,7 +401,7 @@ const SearchModal = ({
                         options={["GST Exempt", "Zero Rated", "Exempt Supply"]} />
                 </div>
 
-                {/* ── Footer Buttons ── */}
+                {/* INR INR  Footer Buttons INR INR  */}
                 <div style={{
                     display: "flex", justifyContent: "center", gap: 10,
                     padding: "14px 24px 20px",
@@ -403,8 +425,11 @@ const ProductList = () => {
 
     const [items, setItems] = useState<Item[]>(() => loadProducts());
 
+    const [locations, setLocations] = useState<ProductLocation[]>([]);
+
     const fetchProducts = () => {
         setItems(loadProducts());
+        setLocations(loadLocations());
     };
 
     useEffect(() => {
@@ -431,24 +456,24 @@ const ProductList = () => {
     const [viewSearch, setViewSearch] = useState("");
     const [starred, setStarred] = useState<Set<string>>(new Set(["uncategorized"]));
 
-    // ── Search state ─────────────────────────────────────────────────────────
+    // INR INR  Search state INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const [searchOpen, setSearchOpen] = useState(false);
     const [appliedSearch, setAppliedSearch] = useState<SearchForm | null>(null);
 
-    // ── Sort state ────────────────────────────────────────────────────────────
+    // INR INR  Sort state INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const [sortField, setSortField] = useState<"name" | "stock" | "reorder" | null>(null);
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
     const [sortSubmenuOpen, setSortSubmenuOpen] = useState(false);
 
-    // ── Import modal state ────────────────────────────────────────────────────
+    // INR INR  Import modal state INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [importFile, setImportFile] = useState<File | null>(null);
 
-    // ── Toast state ───────────────────────────────────────────────────────────
+    // INR INR  Toast state INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const [toastMsg, setToastMsg] = useState<string | null>(null);
     const showToast = (msg: string) => { setToastMsg(msg); setTimeout(() => setToastMsg(null), 2500); };
 
-    // ── Mobile responsive ─────────────────────────────────────────────────────
+    // INR INR  Mobile responsive INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     useEffect(() => {
         const handler = () => setIsMobile(window.innerWidth < 768);
@@ -471,13 +496,11 @@ const ProductList = () => {
 
     const [itemImages] = useState<Record<number, string>>({});
 
-    useEffect(() => {
-        // Removed focus/sessionStorage reload for API integration
-    }, []);
 
-    // ══════════════════════════════════════════════════════════════════════════
-    // ── FIXED: Handle Edit Navigation ─────────────────────────────────────────
-    // ══════════════════════════════════════════════════════════════════════════
+
+    // INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
+    // INR INR  FIXED: Handle Edit Navigation INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
+    // INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const handleEditProduct = (e: React.MouseEvent, productId: number) => {
         e.stopPropagation(); // Prevent parent click events
         e.preventDefault();  // Prevent any default behavior
@@ -494,7 +517,7 @@ const ProductList = () => {
         navigate(editPath);
     };
 
-    // ── Handle Delete Product ─────────────────────────────────────────────────
+    // INR INR  Handle Delete Product INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const handleDelete = () => {
         if (!deleteTarget) return;
         const nowStr = fmtDate(new Date());
@@ -525,13 +548,13 @@ const ProductList = () => {
         setDeleteTarget(null);
     };
 
-    // ── Handle search apply ──────────────────────────────────────────────────
+    // INR INR  Handle search apply INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const handleSearchApply = (form: SearchForm) => {
         setAppliedSearch(form);
         setSearchOpen(false);
     };
 
-    // ── Derived: view filter + search filter ─────────────────────────────────
+    // INR INR  Derived: view filter + search filter INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const viewFilteredItems = items.filter(item => {
         switch (activeView) {
             case "active": return item.status === "active";
@@ -576,7 +599,7 @@ const ProductList = () => {
     const openDetail = (id: number) => { setActiveItemId(id); setIsSplitView(true); setActiveTab("Overview"); };
     const activeItem = items.find(i => i.id === activeItemId) ?? items[0];
 
-    // ── Export as PDF ─────────────────────────────────────────────────────────
+    // INR INR  Export as PDF INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const exportPDF = () => {
         const exportItems = activeItemId ? items.filter(i => i.id === activeItemId) : filteredItems;
         const isSingle = exportItems.length === 1;
@@ -616,13 +639,13 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
 <td style="text-align:right">${item.stockOnHand.toFixed(2)}</td><td style="text-align:right">${item.reorderLevel.toFixed(2)}</td>
 <td style="text-align:center"><span style="padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;background:${item.status === "active" ? "#dcfce7" : "#fef3c7"};color:${item.status === "active" ? "#16a34a" : "#d97706"}">${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span></td>
 </tr>`).join("")}</tbody></table></div>
-<div class="footer"><span>CRMS · Product List</span><span>Exported on ${now}</span></div>
+<div class="footer"><span>CRMS ?? Product List</span><span>Exported on ${now}</span></div>
 <script>window.onload=()=>window.print();</script></body></html>`;
         const win = window.open("", "_blank", "width=1100,height=750");
         if (win) { win.document.write(html); win.document.close(); }
     };
 
-    // ── Export as Excel ───────────────────────────────────────────────────────
+    // INR INR  Export as Excel INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const exportExcel = async () => {
         const exportItems = activeItemId ? items.filter(i => i.id === activeItemId) : filteredItems;
         const sheetName = (activeItemId ? exportItems[0].name : currentViewLabel).substring(0, 31);
@@ -657,34 +680,34 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
         saveAs(blob, `${sheetName}.xlsx`);
     };
 
-    // ── Sort options ──────────────────────────────────────────────────────────
+    // INR INR  Sort options INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     const SORT_OPTIONS = [
-        { field: "name" as const, label: "Name A → Z", dir: "asc" as const },
-        { field: "name" as const, label: "Name Z → A", dir: "desc" as const },
-        { field: "stock" as const, label: "Stock: High → Low", dir: "desc" as const },
-        { field: "stock" as const, label: "Stock: Low → High", dir: "asc" as const },
-        { field: "reorder" as const, label: "Reorder: High → Low", dir: "desc" as const },
-        { field: "reorder" as const, label: "Reorder: Low → High", dir: "asc" as const },
+        { field: "name" as const, label: "Name A INR  Z", dir: "asc" as const },
+        { field: "name" as const, label: "Name Z INR  A", dir: "desc" as const },
+        { field: "stock" as const, label: "Stock: High INR  Low", dir: "desc" as const },
+        { field: "stock" as const, label: "Stock: Low INR  High", dir: "asc" as const },
+        { field: "reorder" as const, label: "Reorder: High INR  Low", dir: "desc" as const },
+        { field: "reorder" as const, label: "Reorder: Low INR  High", dir: "asc" as const },
     ];
 
-    // ── JSX ───────────────────────────────────────────────────────────────────
+    // INR INR  JSX INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR INR 
     return (
         <>
-            {/* ══ Search Modal ══ */}
+            {/* INR INR  Search Modal INR INR  */}
             <SearchModal
                 show={searchOpen}
                 onClose={() => setSearchOpen(false)}
                 onSearch={handleSearchApply}
             />
 
-            {/* ══ Toast ══ */}
+            {/* INR INR  Toast INR INR  */}
             {toastMsg && (
                 <div style={{ position: "fixed", bottom: 28, left: "50%", transform: "translateX(-50%)", zIndex: 9999, background: "#222", color: "#fff", borderRadius: 8, padding: "10px 24px", fontSize: 13, boxShadow: "0 4px 16px rgba(0,0,0,0.18)", pointerEvents: "none", whiteSpace: "nowrap" }}>
                     <i className="ti ti-check me-2 text-success" />{toastMsg}
                 </div>
             )}
 
-            {/* ══ Delete Confirmation Modal ══ */}
+            {/* INR INR  Delete Confirmation Modal INR INR  */}
             {deleteTarget && (
                 <div className="modal fade show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
                     <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 420 }}>
@@ -728,7 +751,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                 </div>
             )}
 
-            {/* ══ Import Modal ══ */}
+            {/* INR INR  Import Modal INR INR  */}
             {importModalOpen && (
                 <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.4)", zIndex: 1055 }}>
                     <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 460 }}>
@@ -761,7 +784,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                             <div className="modal-footer border-0 pt-0">
                                 <button className="btn btn-light px-4" onClick={() => { setImportModalOpen(false); setImportFile(null); }}>Cancel</button>
                                 <button className="btn btn-primary px-4" disabled={!importFile}
-                                    onClick={() => { setImportModalOpen(false); setImportFile(null); showToast("Import started — feature coming soon"); }}>
+                                    onClick={() => { setImportModalOpen(false); setImportFile(null); showToast("Import started INR  feature coming soon"); }}>
                                     <i className="ti ti-upload me-1" />Import
                                 </button>
                             </div>
@@ -784,13 +807,13 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                     />
 
                     {isSplitView ? (
-                        /* ══ SPLIT VIEW ══ */
+                        /* INR INR  SPLIT VIEW INR INR  */
                         <div className="card border-0 rounded-0 mb-0" style={{ flex: 1, minHeight: 0, overflow: "hidden", display: 'flex', flexDirection: 'column' }}>
                             <div className="d-flex" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 {/* Left sidebar */}
                                 <div style={{ width: 320, borderRight: "1px solid #e3e3e3", display: isMobile ? "none" : "flex", flexDirection: "column", background: "#fff", flexShrink: 0, overflow: "hidden" }}>
                                     <div className="d-flex align-items-center gap-2 px-3 py-2 border-bottom">
-                                        <span className="fw-semibold fs-15">{currentViewLabel} <span className="text-muted fs-12">▾</span></span>
+                                        <span className="fw-semibold fs-15">{currentViewLabel} <span className="text-muted fs-12">INR </span></span>
                                         <div className="ms-auto d-flex gap-1 align-items-center">
                                             <button className="btn btn-primary btn-sm px-3 shadow-sm" onClick={() => navigate(route.product)}><i className="ti ti-square-rounded-plus-filled me-1" />New</button>
                                             <div className="dropdown">
@@ -829,7 +852,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                 <div className="hide-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", background: "#fff", overflow: isMobile ? "auto" : "hidden" }}>
                                     {activeItem && (
                                         <>
-                                            {/* ── Detail Header ── */}
+                                            {/* INR INR  Detail Header INR INR  */}
                                             <div className="d-flex align-items-center justify-content-between px-3 border-bottom bg-white" style={{ height: 60, flexShrink: 0 }}>
                                                 <div className="d-flex align-items-center gap-2">
                                                     {isMobile && (
@@ -894,7 +917,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                 </div>
                                             </div>
 
-                                            {/* ── Tabs ── */}
+                                            {/* INR INR  Tabs INR INR  */}
                                             <div className="bg-white border-bottom px-3 hide-scrollbar" style={{ flexShrink: 0, overflowX: "auto" }}>
                                                 <ul className="nav nav-tabs border-0 mt-2" style={{ flexWrap: "nowrap", whiteSpace: "nowrap" }}>
                                                     {["Overview", "Locations", "Transactions", "History"].map(tab => (
@@ -919,7 +942,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                 </ul>
                                             </div>
 
-                                            {/* ── Tab Content Container with Right Sidebar ── */}
+                                            {/* INR INR  Tab Content Container with Right Sidebar INR INR  */}
                                             <div className="d-flex" style={{ flex: isMobile ? "none" : 1, minHeight: 0, flexDirection: isMobile ? "column" : "row" }}>
                                                 {/* Main Column */}
                                                 <div style={{ flex: isMobile ? "none" : 1, overflowY: isMobile ? "visible" : "auto", overflowX: "hidden", background: "#fcfcfc" }} className="p-3 hide-scrollbar">
@@ -956,7 +979,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                         ].map(([label, val]) => (
                                                                             <div key={label} className="d-flex align-items-start" style={{ fontSize: 13 }}>
                                                                                 <div className="text-muted" style={{ width: 120, flexShrink: 0 }}>{label}</div>
-                                                                                <div className="text-dark fw-medium">{val || <span className="text-muted">—</span>}</div>
+                                                                                <div className="text-dark fw-medium">{val || <span className="text-muted">INR </span>}</div>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -969,7 +992,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                 <div className="d-flex flex-column gap-3">
                                                                     <div className="d-flex" style={{ fontSize: 13 }}>
                                                                         <div className="text-muted" style={{ width: 140 }}>Cost Price</div>
-                                                                        <div className="text-dark fw-medium">₹{activeItem.costPrice?.toFixed(2)}</div>
+                                                                        <div className="text-dark fw-medium">INR {activeItem.costPrice?.toFixed(2)}</div>
                                                                     </div>
                                                                     <div className="d-flex" style={{ fontSize: 13 }}>
                                                                         <div className="text-muted" style={{ width: 140 }}>Purchase Account</div>
@@ -988,7 +1011,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                 <div className="d-flex flex-column gap-3">
                                                                     <div className="d-flex" style={{ fontSize: 13 }}>
                                                                         <div className="text-muted" style={{ width: 140 }}>Selling Price</div>
-                                                                        <div className="text-dark fw-medium">₹{activeItem.selling_price?.toFixed(2)}</div>
+                                                                        <div className="text-dark fw-medium">INR {activeItem.selling_price?.toFixed(2)}</div>
                                                                     </div>
                                                                     <div className="d-flex" style={{ fontSize: 13 }}>
                                                                         <div className="text-muted" style={{ width: 140 }}>Sales Account</div>
@@ -1029,9 +1052,9 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                 {/* Stats Row */}
                                                                 <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0" }}>
                                                                     {[
-                                                                        { label: "Direct Sales", value: "₹0.00", icon: "ti-arrow-up-right", color: "#10b981", bg: "#f0fdf4" },
-                                                                        { label: "Invoiced", value: "₹0.00", icon: "ti-file-invoice", color: "#3b82f6", bg: "#eff6ff" },
-                                                                        { label: "Received", value: "₹0.00", icon: "ti-wallet", color: "#8b5cf6", bg: "#f5f3ff" },
+                                                                        { label: "Direct Sales", value: "INR 0.00", icon: "ti-arrow-up-right", color: "#10b981", bg: "#f0fdf4" },
+                                                                        { label: "Invoiced", value: "INR 0.00", icon: "ti-file-invoice", color: "#3b82f6", bg: "#eff6ff" },
+                                                                        { label: "Received", value: "INR 0.00", icon: "ti-wallet", color: "#8b5cf6", bg: "#f5f3ff" },
                                                                     ].map(({ label, value, icon, color, bg }, i, arr) => (
                                                                         <div key={label} style={{ flex: 1, padding: "12px 14px", borderRight: i < arr.length - 1 ? "1px solid #f0f0f0" : "none", display: "flex", alignItems: "center", gap: 10 }}>
                                                                             <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -1127,9 +1150,61 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                         </div>
                                                     )}
                                                     {activeTab === "Locations" && (
-                                                        <div className="text-center py-5 text-muted">
-                                                            <i className="ti ti-map-pin fs-40 mb-2 d-block opacity-25" />
-                                                            <p className="fs-14">No locations assigned yet.</p>
+                                                        <div className="p-3">
+                                                            <div className="d-flex align-items-center justify-content-between mb-3">
+                                                                <h6 className="fw-bold fs-14 mb-0 text-dark">Stock at Locations</h6>
+                                                                <button
+                                                                    className="btn btn-link p-0 text-decoration-none fs-13" 
+                                                                    style={{ color: "#e41f07", fontWeight: 500 }}
+                                                                    onClick={() => navigate(all_routes.locations)}
+                                                                >
+                                                                    <i className="ti ti-settings me-1" />Manage Locations
+                                                                </button>
+                                                            </div>
+                                                            <div className="table-responsive border rounded-3 overflow-hidden">
+                                                                <table className="table table-nowrap table-hover mb-0" style={{ fontSize: 13 }}>
+                                                                    <thead className="bg-light">
+                                                                        <tr>
+                                                                            <th className="py-2 px-3 fw-bold text-muted border-0" style={{ fontSize: 12 }}>LOCATION</th>
+                                                                            <th className="py-2 px-3 fw-bold text-muted border-0 text-end" style={{ fontSize: 12 }}>STOCK ON HAND</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="border-0">
+                                                                        {locations.length > 0 ? (
+                                                                            locations.map(loc => (
+                                                                                <tr 
+                                                                                    key={loc.id} 
+                                                                                    className="border-bottom" 
+                                                                                    style={{ cursor: "pointer" }}
+                                                                                    onClick={() => navigate(all_routes.locations)}
+                                                                                >
+                                                                                    <td className="py-3 px-3 border-0">
+                                                                                        <div className="d-flex align-items-center gap-2">
+                                                                                            <div className="d-flex align-items-center justify-content-center bg-light rounded-circle" style={{ width: 28, height: 28 }}>
+                                                                                                <i className={`ti ${loc.type === "Warehouse" ? "ti-building-warehouse" : "ti-building-store"} fs-14 text-muted`} />
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <div className="fw-bold text-dark">{loc.name} {loc.isDefault && <span className="ms-1 text-warning">(Default)</span>}</div>
+                                                                                                <div className="text-muted fs-11">{[loc.city, loc.state].filter(Boolean).join(", ") || "No address"}</div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td className="py-3 px-3 border-0 text-end fw-medium text-dark">
+                                                                                        {loc.isDefault ? activeItem.stockOnHand.toFixed(2) : "0.00"}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))
+                                                                        ) : (
+                                                                            <tr>
+                                                                                <td colSpan={2} className="py-5 text-center text-muted" onClick={() => navigate(all_routes.locations)} style={{ cursor: "pointer" }}>
+                                                                                    <i className="ti ti-map-pin fs-32 mb-2 d-block opacity-25" />
+                                                                                    <div>No locations found. Click to manage.</div>
+                                                                                </td>
+                                                                            </tr>
+                                                                        )}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1188,7 +1263,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                             </div>
                         </div>
                     ) : (
-                        /* ══ LIST / GRID VIEW ══ */
+                        /* INR INR  LIST / GRID VIEW INR INR  */
                         <div className="card border-0 rounded-0" style={{ flex: 1 }}>
                             <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap">
 
@@ -1220,7 +1295,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             onClick={() => { setActiveView(view.key); setFilterOpen(false); setViewSearch(""); }}>
                                                             <span className="fs-13" style={{ color: isActive ? "#fff" : "#333", fontWeight: isActive ? 600 : 400 }}>{view.label}</span>
                                                             <span onClick={e => toggleStar(view.key, e)} style={{ fontSize: 14, cursor: "pointer", color: isStarred ? (isActive ? "#fff" : "#f59e0b") : (isActive ? "rgba(255,255,255,0.5)" : "#ccc") }}>
-                                                                {isStarred ? "★" : "☆"}
+                                                                {isStarred ? "INR " : "INR "}
                                                             </span>
                                                         </div>
                                                     );
@@ -1243,7 +1318,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                             <button className="btn btn-sm border-0 px-2 py-1">
                                                 <i className={`ti ${rowDensity === "expanded" ? "ti-list" : "ti-list-details"} fs-14 text-muted`} />
                                             </button>
-                                            <span className="text-muted" style={{ fontSize: 10, paddingRight: 4 }}>▾</span>
+                                            <span className="text-muted" style={{ fontSize: 10, paddingRight: 4 }}>INR </span>
                                         </div>
                                         {densityOpen && (
                                             <div className="card border shadow-lg position-absolute mt-1" style={{ width: 190, zIndex: 500, left: 0, top: "100%", borderRadius: 8, overflow: "hidden", padding: "4px 0" }}>
@@ -1381,7 +1456,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                         </span>
                                                     </th>
 
-                                                    {/* ══ SEARCH ICON COLUMN — click opens modal ══ */}
+                                                    {/* INR INR  SEARCH ICON COLUMN INR  click opens modal INR INR  */}
                                                     <th style={{ width: 28, textAlign: "right", padding: "10px 16px 10px 6px" }}>
                                                         <i
                                                             className="ti ti-search fs-13"
@@ -1403,7 +1478,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                     <tr><td colSpan={5} className="text-center text-muted py-5 fs-13">
                                                         No items found
                                                         {isSearchActive && (
-                                                            <span> — <span className="text-danger" style={{ cursor: "pointer" }} onClick={() => setAppliedSearch(null)}>Clear search</span></span>
+                                                            <span> INR  <span className="text-danger" style={{ cursor: "pointer" }} onClick={() => setAppliedSearch(null)}>Clear search</span></span>
                                                         )}
                                                     </td></tr>
                                                 )}
@@ -1442,7 +1517,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                     className="btn btn-sm ms-1"
                                                     style={{ background: "#fff0ee", color: "#e41f07", border: "1px solid #fecaca", fontSize: 11, padding: "1px 10px", borderRadius: 20 }}
                                                     onClick={() => setAppliedSearch(null)}>
-                                                    Clear ✕
+                                                    Clear INR 
                                                 </button>
                                             </div>
                                         )}
@@ -1503,7 +1578,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             )}
                                                         </div>
                                                         <div className="fs-13 text-muted text-truncate">
-                                                            Cost : <span className="fw-medium text-dark">₹{item.costPrice?.toFixed(2) || '0.00'}</span>
+                                                            Cost : <span className="fw-medium text-dark">INR {item.costPrice?.toFixed(2) || '0.00'}</span>
                                                         </div>
                                                     </div>
                                                 </div>

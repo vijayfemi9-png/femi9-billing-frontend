@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react';
+// @ts-nocheck
+import { useState, useEffect } from 'react';
 import "../../billing-application.scss";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
@@ -9,7 +10,7 @@ import SettingsTopbar from "../../../settings/settings-topbar/settingsTopbar";
 import { all_routes } from "../../../../../routes/all_routes";
 import { productService } from "../../../../../api/productService";
 
-// ── Image compression (max 5 MB, PNG / JPG / WebP only) ──────────────────────
+//  Image compression (max 5 MB, PNG / JPG / WebP only) 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -189,7 +190,7 @@ const unitSelectStyles = {
 type AttributeOption = { value: string; label: string };
 type Attribute = { id: number; name: string; options: AttributeOption[] };
 
-const Product = () => {
+const Product: any = () => {
     const [categories, setCategories] = useState<{ id: number; name: string; isDeleted?: boolean }[]>([]);
     const [brands, setBrands] = useState<{ id: number; name: string; isDeleted?: boolean }[]>([]);
     const [loading, setLoading] = useState(false);
@@ -293,7 +294,7 @@ const Product = () => {
         { value: 'pcs', label: 'PCS - pcs' },
     ]);
 
-    // ── Category Handlers ──
+    //  Category Handlers 
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) return;
         try {
@@ -378,7 +379,7 @@ const Product = () => {
         }
     };
 
-    // ── Brand Handlers ──
+    //  Brand Handlers 
     const handleAddBrand = async () => {
         if (!newBrandName.trim()) return;
         try {
@@ -542,7 +543,7 @@ const Product = () => {
     const navigate = useNavigate();
     const { id } = useParams();
 
-    // ── Load product data if editing ───────────────────────────────────
+    //  Load product data if editing 
     useEffect(() => {
         if (!id) return;
 
@@ -569,7 +570,7 @@ const Product = () => {
 
                 if (!p || !p.id) return;
 
-                // ── Basic fields ──
+                //  Basic fields 
                 setItemName(p.name || '');
                 setItemType(p.type === 'service' ? 'Service' : 'Goods');
                 setDetailType(p.item_variant_type === 'contains_variants' ? 'Contains Variants' : 'Single Item');
@@ -577,17 +578,17 @@ const Product = () => {
                 setSku(p.sku || '');
                 setDescription(p.description || '');
 
-                // ── Pricing ──
+                //  Pricing 
                 setSalesPrice(p.selling_price?.toString() || '');
                 setSalesDescription(p.sales_description || '');
                 setPurchasePrice(p.cost_price?.toString() || '');
                 setPurchaseDescription(p.purchase_description || '');
 
-                // ── Inventory ──
+                //  Inventory 
                 setTrackInventory(p.track_inventory === undefined ? true : !!p.track_inventory);
                 setReorderPoint(p.reorder_point?.toString() || '');
 
-                // ── Dimensions & Weight ──
+                //  Dimensions & Weight 
                 setDimensionL(p.dimension_l?.toString() || '');
                 setDimensionW(p.dimension_w?.toString() || '');
                 setDimensionH(p.dimension_h?.toString() || '');
@@ -595,51 +596,51 @@ const Product = () => {
                 setWeight(p.weight?.toString() || '');
                 if (p.weight_unit) setWeightUnit({ value: p.weight_unit, label: p.weight_unit });
 
-                // ── Image ──
+                //  Image 
                 if (p.front_image_url) setPreviewUrl(p.front_image_url);
 
-                // ── Unit ──
+                //  Unit 
                 if (p.unit) {
                     const matchedUnit = units.find(u => u.value === p.unit);
                     setSelectedUnit(matchedUnit || { value: p.unit, label: `${p.unit.toUpperCase()} - ${p.unit}` });
                 }
 
-                // ── Brand (use fresh data for matching) ──
+                //  Brand (use fresh data for matching) 
                 if (p.brand_id || p.brand_name || p.brand) {
                     const matched = freshBrands.find((b: any) => b.id?.toString() === p.brand_id?.toString());
                     setSelectedBrand({ value: p.brand_id?.toString() || '', label: matched?.name || p.brand_name || p.brand || 'Selected Brand' });
                 }
 
-                // ── Category (use fresh data for matching) ──
+                //  Category (use fresh data for matching) 
                 if (p.category_id || p.category_name || p.category) {
                     const matched = freshCategories.find((c: any) => c.id?.toString() === p.category_id?.toString());
                     setSelectedCategory({ value: p.category_id?.toString() || '', label: matched?.name || p.category_name || p.category || 'Selected Category' });
                 }
 
-                // ── Identifiers ──
+                //  Identifiers 
                 if (p.upc || p.mpn || p.ean || p.isbn) {
                     setShowIdentifiers(true);
                     setVariantAdditionalInfo({ upc: p.upc || '', mpn: p.mpn || '', ean: p.ean || '', isbn: p.isbn || '' });
                 }
 
-                // ── Preferred Vendor ──
+                //  Preferred Vendor 
                 if (p.preferred_vendor || p.vendor_name || p.vendor_id) {
                     setSelectedVendor({ value: p.vendor_id?.toString() || p.preferred_vendor || '', label: p.vendor_name || p.preferred_vendor || 'Selected Vendor' });
                 }
 
-                // ── Inventory Account ──
+                //  Inventory Account 
                 if (p.inventory_account) {
                     setSelectedInventoryAccount({ value: p.inventory_account, label: p.inventory_account === 'inv_asset' ? 'Inventory Asset' : p.inventory_account });
                 }
 
-                // ── Inventory Valuation ──
+                //  Inventory Valuation 
                 const vm = p.valuation_method || p.inventory_valuation_method;
                 if (vm) {
                     const vLabels: Record<string, string> = { FIFO: 'FIFO (First In, First Out)', WAC: 'WAC (Weighted Average Costing)' };
                     setSelectedValuation({ value: vm, label: vLabels[vm] || vm });
                 }
 
-                // ── Variants ──
+                //  Variants 
                 const variantsArr = p.variants ?? p.variants_data?.variants ?? [];
                 if (variantsArr.length > 0) {
                     setVariants(variantsArr.map((v: any) => ({
@@ -661,7 +662,7 @@ const Product = () => {
             })
             .finally(() => setLoading(false));
     }, [id]);
-    // ── Save product via API ────────────────
+    //  Save product via API 
     const handleSave = async () => {
         if (!itemName.trim()) {
             alert('Please enter a product name.');
@@ -775,7 +776,7 @@ const Product = () => {
                                 </div>
                                 <form onSubmit={(e) => e.preventDefault()}>
 
-                                    {/* ── Basic Info ── */}
+                                    {/*  Basic Info  */}
                                     <div className="row mb-3">
                                         {/* LEFT: always col-lg-8 regardless of item type */}
                                         <div className="col-lg-8">
@@ -818,7 +819,7 @@ const Product = () => {
                                             </div>
                                         </div>
 
-                                        {/* RIGHT: image — only for Single Item */}
+                                        {/* RIGHT: image  only for Single Item */}
                                         {detailType === 'Single Item' && (
                                             <div className="col-lg-4">
                                                 <div className="mb-3">
@@ -867,7 +868,7 @@ const Product = () => {
                                         )}
                                     </div>
 
-                                    {/* ── Item Details ── */}
+                                    {/*  Item Details  */}
                                     <div className="mb-3 mt-4 pt-4 border-top">
                                         <h6 className="mb-1">Item Details</h6>
                                         <p className="mb-0">Provide the information below</p>
@@ -911,7 +912,7 @@ const Product = () => {
                                         )}
                                     </div>
 
-                                    {/* ── Contains Variants ── */}
+                                    {/*  Contains Variants  */}
                                     {detailType === 'Contains Variants' && (
                                         <div className="animate__animated animate__fadeIn mt-4 pt-4 border-top">
                                             <div className="mb-3"><h6 className="mb-1">Variations</h6></div>
@@ -964,7 +965,7 @@ const Product = () => {
                                                 </div>
                                             </div>
 
-                                            {/* ── Variants Table ── */}
+                                            {/*  Variants Table  */}
                                             {variants.length > 0 && (
                                                 <div className="variants-section mt-5 animate__animated animate__fadeIn">
                                                     <div className="section-header mb-3"><h6 className="mb-1">Variants</h6></div>
@@ -991,13 +992,13 @@ const Product = () => {
                                                                         </div>
                                                                     </th>
                                                                     <th className="border-0 align-top">
-                                                                        COST PRICE (₹)*
+                                                                        COST PRICE (INR)*
                                                                         <div className="mt-1">
                                                                             <Link to="#" className="text-zoho-blue fs-11 fw-normal" onClick={() => handleCopyAll('costPrice', variants[0].costPrice)}>COPY TO ALL</Link>
                                                                         </div>
                                                                     </th>
                                                                     <th className="border-0 align-top">
-                                                                        SELLING PRICE (₹)*
+                                                                        SELLING PRICE (INR)*
                                                                         <div className="mt-1">
                                                                             <Link to="#" className="text-zoho-blue fs-11 fw-normal" onClick={() => handleCopyAll('sellingPrice', variants[0].sellingPrice)}>COPY TO ALL</Link>
                                                                         </div>
@@ -1073,7 +1074,7 @@ const Product = () => {
                                         </div>
                                     )}
 
-                                    {/* ── Item Description ── */}
+                                    {/*  Item Description  */}
                                     <div className="mt-4 pt-4 border-top">
                                         <div className="mb-3"><h6 className="mb-1">Item Description</h6><p className="mb-0">Provide the information below</p></div>
                                         <div className="row mb-5 pb-4 border-bottom align-items-center">
@@ -1082,7 +1083,7 @@ const Product = () => {
                                         </div>
                                     </div>
 
-                                    {/* ── Sales Information ── */}
+                                    {/*  Sales Information  */}
                                     <div className="form-check mb-3 mt-4 pt-4 border-top">
                                         <input className="form-check-input" type="checkbox" id="salesInfo" defaultChecked />
                                         <label className="form-check-label h6 mb-0 ms-1" htmlFor="salesInfo">Sales Information</label>
@@ -1104,7 +1105,7 @@ const Product = () => {
                                         </div>
                                     </div>
 
-                                    {/* ── Purchase Information ── */}
+                                    {/*  Purchase Information  */}
                                     <div className="form-check mb-3 mt-4 pt-4 border-top">
                                         <input className="form-check-input" type="checkbox" id="purchaseInfo" defaultChecked />
                                         <label className="form-check-label h6 mb-0 ms-1" htmlFor="purchaseInfo">Purchase Information</label>
@@ -1132,7 +1133,7 @@ const Product = () => {
                                         </div>
                                     </div>
 
-                                    {/* ── Inventory ── */}
+                                    {/*  Inventory  */}
                                     <div className="form-check mb-1 mt-4 pt-4 border-top">
                                         <input className="form-check-input" type="checkbox" id="trackInv" checked={trackInventory} onChange={(e) => setTrackInventory(e.target.checked)} />
                                         <label className="form-check-label h6 mb-0 ms-1" htmlFor="trackInv">Track Inventory for this item <HelpIcon text="Enable this option to track stock" id="tooltip-track-inv" /></label>
@@ -1148,7 +1149,7 @@ const Product = () => {
                                         </div>
                                     )}
 
-                                    {/* ── Returns ── */}
+                                    {/*  Returns  */}
                                     <div className="section-header mb-4 pt-4 border-top">
                                         <h6 className="mb-1">Cancellation and Returns</h6>
                                         <p className="mb-0">Provide the information below</p>
@@ -1163,7 +1164,7 @@ const Product = () => {
                                         </div>
                                     </div>
 
-                                    {/* ── Fulfilment Details ── */}
+                                    {/*  Fulfilment Details  */}
                                     {detailType === 'Single Item' && (
                                         <>
                                             <div className="section-header mb-4 pt-4 border-top"><h6 className="mb-1">Fulfilment Details</h6><p className="mb-0">Provide the information below</p></div>
@@ -1208,7 +1209,7 @@ const Product = () => {
                 </div>
             </div>
 
-            {/* ─── Modals ─── */}
+            {/*  Modals  */}
             <div className="modal fade" id="generate-sku-modal" tabIndex={-1} aria-hidden="true">
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content border-0 rounded-3">

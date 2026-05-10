@@ -5,7 +5,7 @@ import Footer from "../../../../../components/footer/footer";
 import "../../billing-application.scss";
 
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+//  Types 
 type LocationType = "Business" | "Warehouse";
 type SortKey = "name" | "defaultTxnSeries" | "type" | "address";
 type SortDir = "asc" | "desc";
@@ -16,7 +16,7 @@ type TxnSeries = {
     id: number; name: string; locations: string[]; modules: SeriesModule[];
 };
 
-type Location = {
+type ProductLocation = {
     id: number;
     name: string;
     type: LocationType;
@@ -34,7 +34,7 @@ type Location = {
 
 type OrgUser = { name: string; email: string; role: string; };
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+//  Constants 
 const DEFAULT_MODULES: SeriesModule[] = [
     { module: "Credit Note", prefix: "CN-", startingNumber: "00001" },
     { module: "Customer Payment", prefix: "", startingNumber: "1" },
@@ -55,12 +55,12 @@ const INIT_SERIES: TxnSeries[] = [
     { id: 2, name: "1", locations: ["erode"], modules: DEFAULT_MODULES.map(m => ({ ...m })) },
 ];
 
-const INIT_LOCATIONS: Location[] = [
+const INIT_LOCATIONS: ProductLocation[] = [
     { id: 1, name: "Head Office", type: "Business", parentLocation: "", address: "Vijay Vijay", street1: "", street2: "", city: "", pinCode: "", country: "India", state: "Tamil Nadu", phone: "", fax: "", websiteUrl: "", primaryContact: "vijay48357@gmail.com", txnSeries: ["Default Transaction Series"], defaultTxnSeries: "Default Transaction Series", isDefault: true, locationAccess: ["vijay48357@gmail.com"] },
     { id: 2, name: "erode", type: "Business", parentLocation: "Head Office", address: "", street1: "", street2: "", city: "namakkal", pinCode: "", country: "India", state: "Tamil Nadu", phone: "", fax: "", websiteUrl: "", primaryContact: "", txnSeries: ["1"], defaultTxnSeries: "1", locationAccess: ["vijay48357@gmail.com"] },
 ];
 
-const EMPTY_LOC: Omit<Location, "id"> = {
+const EMPTY_LOC: Omit<ProductLocation, "id"> = {
     name: "", type: "Business", parentLocation: "", address: "", street1: "", street2: "",
     city: "", pinCode: "", country: "India", state: "", phone: "", fax: "", websiteUrl: "",
     primaryContact: "", txnSeries: [], defaultTxnSeries: "", isDefault: false, logo: "", locationAccess: ["vijay48357@gmail.com"],
@@ -82,7 +82,10 @@ const ORG_USERS: OrgUser[] = [
 const pvw = (p: string, n: string) => p ? `${p}${n}` : n;
 const now = () => new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
-// ── Mobile Responsive Hook ───────────────────────────────────────────────────
+const LOCATION_STORAGE_KEY = 'location_list_data';
+const SERIES_STORAGE_KEY = 'txn_series_list_data';
+
+//  Mobile Responsive Hook 
 const useResponsive = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     useEffect(() => {
@@ -93,21 +96,21 @@ const useResponsive = () => {
     return isMobile;
 };
 
-// ── Shared Styles ─────────────────────────────────────────────────────────────
+//  Shared Styles 
 const inp: React.CSSProperties = { border: "1px solid #e3e3e3", borderRadius: 6, padding: "7px 11px", fontSize: 13, outline: "none", width: "100%", color: "#333" };
 const lbl = (req = false): React.CSSProperties => ({ fontSize: 13, fontWeight: 500, marginBottom: 5, display: "block", color: req ? "#e41f07" : "#444" });
 const thStyle: React.CSSProperties = { padding: "14px 16px", fontWeight: 700, color: "#1e293b", fontSize: 14, textTransform: "capitalize", background: "transparent", borderBottom: "1px solid #f1f5f9", whiteSpace: "nowrap", userSelect: "none" };
 const tdStyle: React.CSSProperties = { padding: "14px 16px", fontSize: 13, color: "#475569", verticalAlign: "middle" };
 
-// ── Sort Icon ─────────────────────────────────────────────────────────────────
+//  Sort Icon 
 const SortIcon = ({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir; }) => (
     <span style={{ marginLeft: 4, display: "inline-flex", flexDirection: "column", gap: 1, verticalAlign: "middle" }}>
-        <span style={{ fontSize: 8, lineHeight: 1, color: sortKey === col && sortDir === "asc" ? "#e41f07" : "#ccc" }}>▲</span>
-        <span style={{ fontSize: 8, lineHeight: 1, color: sortKey === col && sortDir === "desc" ? "#e41f07" : "#ccc" }}>▼</span>
+        <span style={{ fontSize: 8, lineHeight: 1, color: sortKey === col && sortDir === "asc" ? "#e41f07" : "#ccc" }}></span>
+        <span style={{ fontSize: 8, lineHeight: 1, color: sortKey === col && sortDir === "desc" ? "#e41f07" : "#ccc" }}></span>
     </span>
 );
 
-// ── Multi-tag Series Select with Reordering ──────────────────────────────────
+//  Multi-tag Series Select with Reordering 
 const SeriesMultiSelect = ({ value, onChange, options, label, required }: {
     value: string[]; onChange: (v: string[]) => void; options: string[]; label: string; required?: boolean;
 }) => {
@@ -153,7 +156,7 @@ const SeriesMultiSelect = ({ value, onChange, options, label, required }: {
     );
 };
 
-// ── Action Menu ───────────────────────────────────────────────────────────────
+//  Action Menu 
 const ActionMenu = ({ onEdit, onDelete, onSetPrimary, isPrimary }: { onEdit: () => void; onDelete: () => void; onSetPrimary?: () => void; isPrimary?: boolean }) => {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -191,7 +194,7 @@ const ActionMenu = ({ onEdit, onDelete, onSetPrimary, isPrimary }: { onEdit: () 
     );
 };
 
-// ── Delete Modal ──────────────────────────────────────────────────────────────
+//  Delete Modal 
 const DeleteModal = ({ show, name, onConfirm, onClose }: { show: boolean; name: string; onConfirm: () => void; onClose: () => void; }) => {
     if (!show) return null;
     return (
@@ -201,18 +204,18 @@ const DeleteModal = ({ show, name, onConfirm, onClose }: { show: boolean; name: 
                 <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#fff0eb", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
                     <i className="ti ti-trash" style={{ fontSize: 28, color: "#ff6b4a" }} />
                 </div>
-                <h6 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Delete Location</h6>
+                <h6 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Delete ProductLocation</h6>
                 <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>Are you sure you want to delete <b style={{ color: "#333" }}>{name}</b>?<br /><span style={{ fontSize: 12 }}>This action cannot be undone.</span></p>
                 <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
                     <button title="Cancel deletion" onClick={onClose} style={{ background: "#f4f4f4", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Cancel</button>
-                    <button title="Confirm delete — this cannot be undone" onClick={onConfirm} style={{ background: "#e41f07", color: "#fff", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Delete</button>
+                    <button title="Confirm delete  this cannot be undone" onClick={onConfirm} style={{ background: "#e41f07", color: "#fff", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Delete</button>
                 </div>
             </div>
         </>
     );
 };
 
-// ── Primary Confirmation Modal ───────────────────────────────────────────────
+//  Primary Confirmation Modal 
 const PrimaryConfirmationModal = ({ show, name, onConfirm, onClose }: { show: boolean; name: string; onConfirm: () => void; onClose: () => void; }) => {
     if (!show) return null;
     return (
@@ -222,8 +225,8 @@ const PrimaryConfirmationModal = ({ show, name, onConfirm, onClose }: { show: bo
                 <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#fff8f7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
                     <i className="ti ti-star-filled" style={{ fontSize: 28, color: "#fcc419" }} />
                 </div>
-                <h6 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Mark as Primary Location</h6>
-                <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>Are you sure you want to set <b style={{ color: "#333" }}>{name}</b> as the primary location?<br /><span style={{ fontSize: 12 }}>This will replace the current primary location.</span></p>
+                <h6 style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>Mark as Primary ProductLocation</h6>
+                <p style={{ color: "#888", fontSize: 14, marginBottom: 24 }}>Are you sure you want to set <b style={{ color: "#333" }}>{name}</b> as the primary ProductLocation?<br /><span style={{ fontSize: 12 }}>This will replace the current primary ProductLocation.</span></p>
                 <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
                     <button title="Cancel primary change" onClick={onClose} style={{ background: "#f4f4f4", border: "none", borderRadius: 8, padding: "9px 22px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Cancel</button>
                     <button title="Confirm mark as primary" onClick={onConfirm} style={{ background: "#e41f07", color: "#fff", border: "none", borderRadius: 8, padding: "9px 22px", fontWeight: 600, cursor: "pointer", fontSize: 13 }}>Mark as Primary</button>
@@ -233,7 +236,7 @@ const PrimaryConfirmationModal = ({ show, name, onConfirm, onClose }: { show: bo
     );
 };
 
-// ── Success Toast ─────────────────────────────────────────────────────────────
+//  Success Toast 
 const SuccessToast = ({ message, onClose }: { message: string, onClose: () => void }) => {
     useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
     return (
@@ -246,8 +249,8 @@ const SuccessToast = ({ message, onClose }: { message: string, onClose: () => vo
     );
 };
 
-// ── Import Modal ──────────────────────────────────────────────────────────────
-const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () => void; onImport: (rows: Omit<Location, "id">[]) => void; }) => {
+//  Import Modal 
+const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () => void; onImport: (rows: Omit<ProductLocation, "id">[]) => void; }) => {
     const [file, setFile] = useState<File | null>(null);
     const [dragging, setDragging] = useState(false);
     const [error, setError] = useState("");
@@ -271,7 +274,7 @@ const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () =
         reader.onload = e => {
             try {
                 const lines = (e.target?.result as string).split("\n").filter(l => l.trim());
-                const rows: Omit<Location, "id">[] = lines.slice(1).map(line => {
+                const rows: Omit<ProductLocation, "id">[] = lines.slice(1).map(line => {
                     const [name, type, parentLocation, city, state, country, phone, primaryContact, txnStr, defaultTxn] = line.split(",").map(s => s.trim());
                     return { name, type: (type === "Warehouse" ? "Warehouse" : "Business") as LocationType, parentLocation: parentLocation || "", address: "", street1: "", street2: "", city: city || "", pinCode: "", country: country || "India", state: state || "", phone: phone || "", fax: "", websiteUrl: "", primaryContact: primaryContact || "", txnSeries: txnStr ? [txnStr] : [], defaultTxnSeries: defaultTxn || "", isDefault: false, locationAccess: [] };
                 }).filter(r => r.name);
@@ -295,7 +298,7 @@ const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () =
                     <div style={{ background: "#fff0eb", border: "1px solid #ffc4b4", borderRadius: 8, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <div>
                             <div style={{ fontWeight: 600, fontSize: 13, color: "#333" }}>Download CSV Template</div>
-                            <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Use this template to fill in your location data</div>
+                            <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>Use this template to fill in your ProductLocation data</div>
                         </div>
                         <button title="Download CSV template file" onClick={downloadTemplate} style={{ background: "#e41f07", color: "#fff", border: "none", borderRadius: 7, padding: "7px 16px", fontWeight: 600, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
                             <i className="ti ti-download me-1" />Download
@@ -315,7 +318,7 @@ const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () =
                         <input ref={fileRef} type="file" accept=".csv" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
                     </div>
                     {error && <div style={{ color: "#ff6b4a", fontSize: 12, marginBottom: 12 }}><i className="ti ti-alert-circle me-1" />{error}</div>}
-                    <p style={{ fontSize: 12, color: "#aaa", marginBottom: 0 }}>Supported format: CSV · Max 500 rows per import</p>
+                    <p style={{ fontSize: 12, color: "#aaa", marginBottom: 0 }}>Supported format: CSV  Max 500 rows per import</p>
                 </div>
                 <div style={{ borderTop: "1px solid #f0f0f0", padding: "14px 24px", display: "flex", gap: 10 }}>
                     <button title={file ? "Import selected CSV file" : "Select a CSV file first"} onClick={handleImport} disabled={!file} style={{ background: file ? "#e41f07" : "#fff", color: file ? "#fff" : "#aaa", border: "none", borderRadius: 8, padding: "9px 28px", fontWeight: 600, cursor: file ? "pointer" : "not-allowed", fontSize: 13 }}>Import</button>
@@ -326,7 +329,7 @@ const ImportModal = ({ show, onClose, onImport }: { show: boolean; onClose: () =
     );
 };
 
-// ── State Searchable Dropdown ─────────────────────────────────────────────────
+//  State Searchable Dropdown 
 const StateSelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => {
     const [open, setOpen] = useState(false);
     const [q, setQ] = useState("");
@@ -347,7 +350,7 @@ const StateSelect = ({ value, onChange }: { value: string; onChange: (v: string)
                     <div style={{ padding: "8px 10px", borderBottom: "1px solid #f0f0f0" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f7f7f7", borderRadius: 6, padding: "5px 10px" }}>
                             <i className="ti ti-search" style={{ fontSize: 13, color: "#aaa" }} />
-                            <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search…" style={{ border: "none", background: "none", outline: "none", fontSize: 13, width: "100%", color: "#333" }} />
+                            <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search" style={{ border: "none", background: "none", outline: "none", fontSize: 13, width: "100%", color: "#333" }} />
                         </div>
                     </div>
                     <div style={{ maxHeight: 200, overflowX: "hidden", overflowY: "auto" }}>
@@ -366,7 +369,7 @@ const StateSelect = ({ value, onChange }: { value: string; onChange: (v: string)
     );
 };
 
-// ── Transaction Series Searchable Dropdown ────────────────────────────────────
+//  Transaction Series Searchable Dropdown 
 const TransactionSeriesSelect = ({ value, onChange, options, label, required, hasSearch = true, onAddSeries }: {
     value: string; onChange: (v: string) => void; options: string[]; label: string; required?: boolean; hasSearch?: boolean; onAddSeries?: () => void;
 }) => {
@@ -391,7 +394,7 @@ const TransactionSeriesSelect = ({ value, onChange, options, label, required, ha
         <div style={{ marginBottom: 14, position: "relative" }} ref={ref}>
             <label style={lbl(required)}>{label}{required && " *"}</label>
             <div onClick={() => setOpen(o => !o)} style={{ ...inp, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none", border: "1px solid #e3e3e3" }}>
-                <span style={{ color: value ? "#333" : "#bbb" }}>{value || `Select ${label.toLowerCase()}…`}</span>
+                <span style={{ color: value ? "#333" : "#bbb" }}>{value || `Select ${label.toLowerCase()}`}</span>
                 <i className="ti ti-chevron-down" style={{ fontSize: 13, color: "#aaa", transition: "transform 0.15s", transform: open ? "rotate(180deg)" : "none" }} />
             </div>
             {open && (
@@ -402,7 +405,7 @@ const TransactionSeriesSelect = ({ value, onChange, options, label, required, ha
                                 ref={searchInputRef}
                                 value={q}
                                 onChange={e => setQ(e.target.value)}
-                                placeholder="Search transaction series…"
+                                placeholder="Search transaction series"
                                 style={{ width: "100%", border: "1px solid #e0e0e0", borderRadius: 6, padding: "8px 12px", fontSize: 13, outline: "none", transition: "all 0.2s", color: "#333", backgroundColor: "#fff" }}
                             />
                         </div>
@@ -431,16 +434,16 @@ const TransactionSeriesSelect = ({ value, onChange, options, label, required, ha
     );
 };
 
-// ── Location Modal ────────────────────────────────────────────────────────────
+//  ProductLocation Modal 
 const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLocations, onAddSeries, showSeriesModal: propShowSeriesModal, setShowSeriesModal: propSetShowSeriesModal, onSaveNewSeries, locationNamesForSeries, renderMode = "modal" }: {
-    show: boolean; onClose: () => void; onSave: (d: Omit<Location, "id">) => void;
-    editData: Location | null; seriesList: TxnSeries[]; businessLocations: string[];
+    show: boolean; onClose: () => void; onSave: (d: Omit<ProductLocation, "id">) => void;
+    editData: ProductLocation | null; seriesList: TxnSeries[]; businessLocations: string[];
     onAddSeries?: () => void; showSeriesModal?: boolean; setShowSeriesModal?: (v: boolean) => void;
     onSaveNewSeries?: (d: Omit<TxnSeries, "id">) => void; locationNamesForSeries?: string[];
     renderMode?: "modal" | "page";
 }) => {
     const isMobile = useResponsive();
-    const [form, setForm] = useState<Omit<Location, "id">>(EMPTY_LOC);
+    const [form, setForm] = useState<Omit<ProductLocation, "id">>(EMPTY_LOC);
     const [isChild, setIsChild] = useState(false);
     const [parentDropOpen, setParentDropOpen] = useState(false);
     const [logoMode, setLogoMode] = useState<"org" | "custom">("org");
@@ -526,19 +529,19 @@ const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLo
 
                 {/* Header */}
                 <div className="modal-header" style={headerStyle}>
-                    <h6 className="modal-title" style={{ fontWeight: 700, fontSize: isMobile ? 15 : 16, margin: 0, flex: 1 }}>{editData ? "Update Location" : "Add Location"}</h6>
+                    <h6 className="modal-title" style={{ fontWeight: 700, fontSize: isMobile ? 15 : 16, margin: 0, flex: 1 }}>{editData ? "Update ProductLocation" : "Add ProductLocation"}</h6>
                     {!isPageMode && <button type="button" className="btn-close custom-btn-close border p-1 me-0 d-flex align-items-center justify-content-center rounded-circle" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>}
                 </div>
 
                 {/* Body */}
                 <div style={bodyStyle}>
-                    {/* Location Type */}
+                    {/* ProductLocation Type */}
                     <div style={{ marginBottom: isMobile ? 18 : 24 }}>
-                        <label style={{ fontSize: 13, fontWeight: 500, color: "#222", marginBottom: 14, display: "block" }}>Location Type</label>
+                        <label style={{ fontSize: 13, fontWeight: 500, color: "#222", marginBottom: 14, display: "block" }}>ProductLocation Type</label>
                         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 360px))", gap: 26, alignItems: "stretch" }}>
                             {([
-                                { t: "Business" as LocationType, label: "Business Location", icon: "ti-building-store", desc: "A Business Location represents your organization or office's operational location. It is used to record transactions, assess regional performance, and monitor stock levels for items stored at this location." },
-                                { t: "Warehouse" as LocationType, label: "Warehouse Only Location", icon: "ti-building-warehouse", desc: "A Warehouse Only Location refers to where your items are stored. It helps track and monitor stock levels for items stored at this location." },
+                                { t: "Business" as LocationType, label: "Business ProductLocation", icon: "ti-building-store", desc: "A Business ProductLocation represents your organization or office's operational ProductLocation. It is used to record transactions, assess regional performance, and monitor stock levels for items stored at this ProductLocation." },
+                                { t: "Warehouse" as LocationType, label: "Warehouse Only ProductLocation", icon: "ti-building-warehouse", desc: "A Warehouse Only ProductLocation refers to where your items are stored. It helps track and monitor stock levels for items stored at this ProductLocation." },
                             ]).map(({ t, label, icon, desc }) => {
                                 const sel = form.type === t;
                                 return (
@@ -587,7 +590,7 @@ const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLo
                                         <i className="ti ti-upload" style={{ fontSize: 13 }} /> {isMobile ? "Upload" : "Upload Image"}
                                     </button>
                                     {form.logo && <button type="button" onClick={() => set("logo", "")} style={{ marginTop: 6, border: "none", background: "none", color: "#e41f07", fontSize: 12, cursor: "pointer", padding: 0, width: "100%", textAlign: "left" }}>Remove Logo</button>}
-                                    <p style={{ fontSize: 11, color: "#aaa", margin: isMobile ? "8px 0 0" : "6px 0 0", lineHeight: 1.4 }}>PNG, JPG, SVG, WebP — max 5 MB</p>
+                                    <p style={{ fontSize: 11, color: "#aaa", margin: isMobile ? "8px 0 0" : "6px 0 0", lineHeight: 1.4 }}>PNG, JPG, SVG, WebP  max 5 MB</p>
                                 </div>
                                 <input id="loc-logo-input" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (!f) return; if (f.size > 5242880) { alert("Image must be under 5 MB"); return; } const r = new FileReader(); r.onload = ev => set("logo", ev.target?.result as string); r.readAsDataURL(f); e.target.value = ""; }} />
                             </div>
@@ -595,27 +598,27 @@ const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLo
                     </div>}
 
                     {row2(
-                        field("Name", <input style={inp} value={form.name} onChange={e => set("name", e.target.value)} placeholder="Location Name" />, true),
+                        field("Name", <input style={inp} value={form.name} onChange={e => set("name", e.target.value)} placeholder="ProductLocation Name" />, true),
                         field("Primary Contact", <input style={inp} value={form.primaryContact} onChange={e => set("primaryContact", e.target.value)} placeholder="Email or name" />, !isWarehouse)
                     )}
 
-                    {/* Child Location checkbox */}
+                    {/* Child ProductLocation checkbox */}
                     {!isWarehouse && (
                         <div style={{ marginBottom: isMobile ? 12 : 14 }}>
                             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", userSelect: "none" }}>
                                 <input type="checkbox" checked={isChild} onChange={e => { setIsChild(e.target.checked); if (!e.target.checked) set("parentLocation", ""); }} style={{ width: 15, height: 15, cursor: "pointer", accentColor: "#e41f07" }} />
-                                <span style={{ fontSize: 13, color: "#444" }}>This is a Child Location</span>
+                                <span style={{ fontSize: 13, color: "#444" }}>This is a Child ProductLocation</span>
                             </label>
                         </div>
                     )}
 
-                    {/* Parent Location */}
+                    {/* Parent ProductLocation */}
                     {(isWarehouse || isChild) && (
                         <div style={{ marginBottom: 14 }} ref={parentDropRef}>
-                            <label style={lbl(true)}>Parent Location <span style={{ color: "#e41f07" }}>*</span></label>
+                            <label style={lbl(true)}>Parent ProductLocation <span style={{ color: "#e41f07" }}>*</span></label>
                             <div style={{ position: "relative" }}>
                                 <div style={{ ...inp, display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", userSelect: "none" }} onClick={() => setParentDropOpen(o => !o)}>
-                                    <span style={{ color: form.parentLocation ? "#333" : "#bbb" }}>{form.parentLocation || "Select Location"}</span>
+                                    <span style={{ color: form.parentLocation ? "#333" : "#bbb" }}>{form.parentLocation || "Select ProductLocation"}</span>
                                     <i className="ti ti-chevron-down" style={{ fontSize: 13, color: "#aaa", transition: "transform 0.15s", transform: parentDropOpen ? "rotate(180deg)" : "none" }} />
                                 </div>
                                 {parentDropOpen && (
@@ -711,16 +714,16 @@ const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLo
                         </>
                     )}
 
-                    {/* Location Access */}
+                    {/* ProductLocation Access */}
                     <div style={{ marginBottom: 8 }}>
-                        <label style={{ fontSize: 13, fontWeight: 500, color: "#222", marginBottom: 10, display: "block" }}>Location Access</label>
+                        <label style={{ fontSize: 13, fontWeight: 500, color: "#222", marginBottom: 10, display: "block" }}>ProductLocation Access</label>
                         <div style={{ border: "1px solid #e8e8e8", borderRadius: 8, overflow: "hidden" }}>
                             <div style={{ padding: "10px 16px", borderBottom: "1px solid #e8e8e8", background: "#fff" }}>
                                 <p style={{ margin: "0 0 2px", fontSize: 13, color: "#333", display: "flex", alignItems: "center", gap: 7 }}>
                                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4a90e2", display: "inline-block", flexShrink: 0 }} />
                                     <strong>{form.locationAccess.length} user(s) selected</strong>
                                 </p>
-                                <p style={{ margin: "0 0 0 15px", fontSize: 12, color: "#888" }}>Selected users can create and access transactions for this location.</p>
+                                <p style={{ margin: "0 0 0 15px", fontSize: 12, color: "#888" }}>Selected users can create and access transactions for this ProductLocation.</p>
                             </div>
                             <div style={{ display: "flex", background: "#f9f9f9", padding: "8px 16px", borderBottom: "1px solid #e8e8e8" }}>
                                 <span style={{ flex: 1, fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.5px" }}>Users</span>
@@ -773,7 +776,7 @@ const LocationModal = ({ show, onClose, onSave, editData, seriesList, businessLo
     );
 };
 
-// ── Series Generator Modal ───────────────────────────────────────────────────
+//  Series Generator Modal 
 interface GeneratorRule {
     id: string;
     type: "Module Name" | "Custom Text" | "Financial Year" | "Serial Number";
@@ -920,7 +923,7 @@ const SeriesGeneratorModal = ({ show, onClose, onApply, moduleName }: {
     );
 };
 
-// ── Add Module Modal ──────────────────────────────────────────────────────────
+//  Add Module Modal 
 const AddModuleModal = ({ show, onClose, onAdd, existingModules }: {
     show: boolean; onClose: () => void; onAdd: (m: SeriesModule) => void; existingModules: SeriesModule[];
 }) => {
@@ -1084,7 +1087,7 @@ const AddModuleModal = ({ show, onClose, onAdd, existingModules }: {
     );
 };
 
-// ── Series Modal ──────────────────────────────────────────────────────────────
+//  Series Modal 
 const SeriesModal = ({ show, onClose, onSave, editData, locationNames, defaultLocation = "" }: {
     show: boolean; onClose: () => void; onSave: (d: Omit<TxnSeries, "id">) => void; editData: TxnSeries | null; locationNames: string[]; defaultLocation?: string;
 }) => {
@@ -1142,10 +1145,10 @@ const SeriesModal = ({ show, onClose, onSave, editData, locationNames, defaultLo
                             <input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Default Transaction Series" />
                         </div>
                         <div style={{ flex: 1, minWidth: isMobile ? "100%" : 0 }}>
-                            <label style={lbl(true)}>Location</label>
+                            <label style={lbl(true)}>ProductLocation</label>
                             <div style={{ position: "relative" }} ref={locDropRef}>
                                 <div onClick={() => setOpenLocDrop(o => !o)} style={{ ...inp, minHeight: 38, cursor: "pointer", display: "flex", alignItems: "center", paddingRight: 30, position: "relative" }}>
-                                    <span style={{ color: selectedLocation ? "#333" : "#bbb" }}>{selectedLocation || "Select Location"}</span>
+                                    <span style={{ color: selectedLocation ? "#333" : "#bbb" }}>{selectedLocation || "Select ProductLocation"}</span>
                                     <i className="ti ti-chevron-down" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 13 }} />
                                 </div>
                                 {openLocDrop && (
@@ -1212,7 +1215,7 @@ const SeriesModal = ({ show, onClose, onSave, editData, locationNames, defaultLo
     );
 };
 
-// ── Duplicate Settings Modal ────────────────────────────────────────────────
+//  Duplicate Settings Modal 
 const DuplicateSettingsModal = ({ show, onClose, onSave, initValue = "All Fiscal Years" }: { show: boolean, onClose: () => void, onSave: (val: string) => void, initValue?: string }) => {
     const isMobile = useResponsive();
     const [val, setVal] = useState(initValue);
@@ -1258,7 +1261,7 @@ const DuplicateSettingsModal = ({ show, onClose, onSave, initValue = "All Fiscal
     );
 };
 
-// ── Transaction Series View ───────────────────────────────────────────────────
+//  Transaction Series View 
 const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onDelete }: {
     seriesList: TxnSeries[]; locationNames: string[]; onBack: () => void;
     onAdd: (d: Omit<TxnSeries, "id">) => void; onUpdate: (id: number, d: Omit<TxnSeries, "id">) => void; onDelete: (id: number) => void;
@@ -1319,9 +1322,9 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                             <h4 style={{ margin: 0, fontWeight: 600, fontSize: isMobile ? 18 : 22 }}>{editData ? "Edit Series" : "New Series"}</h4>
                             <nav style={{ fontSize: 12, color: "#aaa", marginTop: 3 }}>
                                 <span style={{ cursor: "pointer", color: "#0f0a09", fontSize: 14 }} onClick={onBack}>Locations</span>
-                                <span style={{ margin: "0 5px" }}>›</span>
+                                <span style={{ margin: "0 5px" }}></span>
                                 <span style={{ cursor: "pointer", color: "#060404", fontSize: 14 }} onClick={goBackToList}>Transaction Series</span>
-                                <span style={{ margin: "0 5px" }}>›</span>
+                                <span style={{ margin: "0 5px" }}></span>
                                 <span style={{ fontSize: 14 }}>{editData ? "Edit" : "New"}</span>
                             </nav>
                         </div>
@@ -1333,11 +1336,11 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                         <input style={{ ...inp, flex: 1, maxWidth: isMobile ? "100%" : "100%", width: "100%" }} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Default Transaction Series" />
                     </div>
                     <div style={{ marginBottom: 22, display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", gap: isMobile ? 8 : 40 }}>
-                        <label style={{ fontSize: 13, fontWeight: 600, color: "#444", width: isMobile ? "100%" : 140, flexShrink: 0 }}>Location</label>
+                        <label style={{ fontSize: 13, fontWeight: 600, color: "#444", width: isMobile ? "100%" : 140, flexShrink: 0 }}>ProductLocation</label>
                         <div style={{ position: "relative", flex: 1, maxWidth: isMobile ? "100%" : "100%", width: "100%" }} ref={locDropRef}>
                             <div onClick={() => setOpenLocDrop(o => !o)} style={{ ...inp, minHeight: 38, cursor: "pointer", display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center", paddingRight: 30, position: "relative", border: openLocDrop ? "1px solid #e41f07" : inp.border }}>
                                 {locs.length === 0
-                                    ? <span style={{ color: "#bbb" }}>Select Location</span>
+                                    ? <span style={{ color: "#bbb" }}>Select ProductLocation</span>
                                     : locs.map(v => (
                                         <span key={v} style={{ background: "#fff0eb", color: "#e41f07", borderRadius: 4, padding: "2px 8px", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4 }}>
                                             {v}
@@ -1624,7 +1627,7 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                         </div>
                         <nav style={{ fontSize: 12, color: "#aaa", marginTop: 3 }}>
                             <span style={{ cursor: "pointer", color: "#080707", fontSize: 14 }} onClick={onBack}>Locations</span>
-                            <span style={{ margin: "0 5px" }}>›</span>
+                            <span style={{ margin: "0 5px" }}></span>
                             <span style={{ margin: "0 5px", fontSize: 14 }}>Transaction Series</span>
                         </nav>
                     </div>
@@ -1659,7 +1662,7 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
                                     <td style={{ ...tdStyle, fontWeight: 600, color: "#e41f07", minWidth: 220 }}>{s.name}</td>
                                     {DEFAULT_MODULES.map(m => {
                                         const mod = s.modules.find(sm => sm.module === m.module);
-                                        return <td key={m.module} style={{ ...tdStyle, fontSize: 12, minWidth: 120 }}>{mod ? pvw(mod.prefix, mod.startingNumber) : "—"}</td>;
+                                        return <td key={m.module} style={{ ...tdStyle, fontSize: 12, minWidth: 120 }}>{mod ? pvw(mod.prefix, mod.startingNumber) : ""}</td>;
                                     })}
                                     <td style={{ ...tdStyle, minWidth: 180 }}>
                                         <span style={{ background: "#f0f4ff", color: "#3b5bdb", padding: "2px 8px", borderRadius: 4, fontWeight: 500 }}>{s.locations.length}</span>
@@ -1689,7 +1692,7 @@ const TxnSeriesView = ({ seriesList, locationNames, onBack, onAdd, onUpdate, onD
 };
 
 
-// ── Connector Lines Component ─────────────────────────────────────────────────
+//  Connector Lines Component 
 function ConnectorLines({
     loc, isCollapsed, onToggle,
 }: {
@@ -1764,7 +1767,7 @@ function ConnectorLines({
     );
 }
 
-// ── Inline Series Cell (table) ────────────────────────────────────────────────
+//  Inline Series Cell (table) 
 const InlineSeriesCell = ({ locId, value, seriesList, onChangeSeries, onAddSeries }: {
     locId: number; value: string; seriesList: TxnSeries[];
     onChangeSeries: (locId: number, series: string) => void;
@@ -1816,23 +1819,28 @@ const InlineSeriesCell = ({ locId, value, seriesList, onChangeSeries, onAddSerie
     );
 };
 
-// ── Main Component ────────────────────────────────────────────────────────────
+//  Main Component 
 const LocationPage = () => {
     const [view, setView] = useState<"locations" | "series" | "locationForm">("locations");
-    const [locations, setLocations] = useState<Location[]>(INIT_LOCATIONS);
+    const [locations, setLocations] = useState<ProductLocation[]>(() => {
+        try {
+            const stored = localStorage.getItem(LOCATION_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : INIT_LOCATIONS;
+        } catch { return INIT_LOCATIONS; }
+    });
     const [seriesList, setSeriesList] = useState<TxnSeries[]>(INIT_SERIES);
     const [search, setSearch] = useState("");
     const [sortKey, setSortKey] = useState<SortKey>("name");
     const [sortDir, setSortDir] = useState<SortDir>("asc");
-    const [editLoc, setEditLoc] = useState<Location | null>(null);
-    const [delTarget, setDelTarget] = useState<Location | null>(null);
+    const [editLocation, setEditLocation] = useState<ProductLocation | null>(null);
+    const [delTarget, setDelTarget] = useState<ProductLocation | null>(null);
     const [showImport, setShowImport] = useState(false);
     const [showSeriesModal, setShowSeriesModal] = useState(false);
     const [selected, setSelected] = useState<number[]>([]);
     const [exportOpen, setExportOpen] = useState(false);
     const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
-    const [primaryTarget, setPrimaryTarget] = useState<Location | null>(null);
+    const [primaryTarget, setPrimaryTarget] = useState<ProductLocation | null>(null);
     const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
     const exportRef = useRef<HTMLDivElement>(null);
     const isMobile = useResponsive();
@@ -1841,6 +1849,23 @@ const LocationPage = () => {
         const h = (e: MouseEvent) => { if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false); };
         document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h);
     }, []);
+
+    // Load data from localStorage on mount
+    useEffect(() => {
+        const storedSeries = localStorage.getItem(SERIES_STORAGE_KEY);
+        if (storedSeries) {
+            try { setSeriesList(JSON.parse(storedSeries)); } catch (e) { console.error("Failed to load series", e); }
+        }
+    }, []);
+
+    // Save data to localStorage on change
+    useEffect(() => {
+        localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(locations));
+    }, [locations]);
+
+    useEffect(() => {
+        localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(seriesList));
+    }, [seriesList]);
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -1863,7 +1888,7 @@ const LocationPage = () => {
     const pageFontFamily = "var(--crms-body-font-family, 'Golos Text', sans-serif)";
 
     const locationNameSet = new Set(filtered.map(l => l.name));
-    const childrenByParent = new Map<string, Location[]>();
+    const childrenByParent = new Map<string, ProductLocation[]>();
     filtered.forEach(loc => {
         const parentKey = loc.parentLocation?.trim();
         if (!parentKey) return;
@@ -1872,9 +1897,9 @@ const LocationPage = () => {
         childrenByParent.set(parentKey, bucket);
     });
 
-    const orderedLocations: Array<Location & { depth: number; hasChildren: boolean; isLastSibling: boolean; ancestorContinuations: boolean[] }> = [];
+    const orderedLocations: Array<ProductLocation & { depth: number; hasChildren: boolean; isLastSibling: boolean; ancestorContinuations: boolean[] }> = [];
 
-    const pushWithChildren = (loc: Location, depth: number, isLastSibling: boolean, ancestorContinuations: boolean[]) => {
+    const pushWithChildren = (loc: ProductLocation, depth: number, isLastSibling: boolean, ancestorContinuations: boolean[]) => {
         const allChildren = childrenByParent.get(loc.name) ?? [];
         const children = [...allChildren].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -1922,13 +1947,13 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
 <thead><tr><th>#</th><th>Name</th><th>Type</th><th>Default Series</th><th>Address</th><th>Primary Contact</th></tr></thead>
 <tbody>${rows.map((l, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#fff5f4"}">
 <td style="color:#9ca3af">${i + 1}</td>
-<td style="font-weight:600">${l.name}${l.isDefault ? " ★" : ""}</td>
+<td style="font-weight:600">${l.name}${l.isDefault ? " (Default)" : ""}</td>
 <td><span class="pill" style="background:${l.type === "Business" ? "#e8f5e9" : "#e3f2fd"};color:${l.type === "Business" ? "#2e7d32" : "#1565c0"}">${l.type}</span></td>
-<td>${l.defaultTxnSeries || "—"}</td>
-<td>${[l.city, l.state, l.country].filter(Boolean).join(", ") || "—"}</td>
-<td>${l.primaryContact || "—"}</td>
+<td>${l.defaultTxnSeries || "-"}</td>
+<td>${[l.city, l.state, l.country].filter(Boolean).join(", ") || "-"}</td>
+<td>${l.primaryContact || "-"}</td>
 </tr>`).join("")}</tbody></table></div>
-<div class="footer"><span>CRMS · Locations</span><span>Exported on ${date}</span></div>
+<div class="footer"><span>CRMS - Locations</span><span>Exported on ${date}</span></div>
 <script>window.onload=()=>window.print();</script></body></html>`;
         const win = window.open("", "_blank", "width=1100,height=750");
         if (win) { win.document.write(html); win.document.close(); }
@@ -1942,7 +1967,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
         ws.columns = [
             { header: "Name", key: "name", width: 22 },
             { header: "Type", key: "type", width: 14 },
-            { header: "Parent Location", key: "parentLocation", width: 20 },
+            { header: "Parent ProductLocation", key: "parentLocation", width: 20 },
             { header: "Default Transaction Series", key: "defaultTxnSeries", width: 30 },
             { header: "City", key: "city", width: 16 },
             { header: "State", key: "state", width: 16 },
@@ -1968,26 +1993,26 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
         setExportOpen(false);
     };
 
-    const openLocationForm = (loc: Location | null = null) => { setEditLoc(loc); setView("locationForm"); };
-    const closeLocationForm = () => { setEditLoc(null); setView("locations"); };
+    const openLocationForm = (loc: ProductLocation | null = null) => { setEditLocation(loc); setView("locationForm"); };
+    const closeLocationForm = () => { setEditLocation(null); setView("locations"); };
 
     const handleConfirmPrimary = () => {
         if (primaryTarget) {
             setLocations(prev => prev.map(l => ({ ...l, isDefault: l.id === primaryTarget.id })));
-            setToast({ msg: "Primary location has been successfully marked.", type: "success" });
+            setToast({ msg: "Primary ProductLocation has been successfully marked.", type: "success" });
             setPrimaryTarget(null);
         }
     };
 
-    const handleSaveLoc = (form: Omit<Location, "id">) => {
+    const handleSaveLoc = (form: Omit<ProductLocation, "id">) => {
         if (!form.name.trim()) return;
         setLocations(prev => {
             const next = prev.map(l => {
-                if (editLoc && l.id === editLoc.id) return { ...form, id: editLoc.id };
+                if (editLocation && l.id === editLocation.id) return { ...form, id: editLocation.id };
                 if (form.isDefault) return { ...l, isDefault: false };
                 return l;
             });
-            if (!editLoc) {
+            if (!editLocation) {
                 const newId = Math.max(0, ...prev.map(l => l.id)) + 1;
                 return [...next, { ...form, id: newId }];
             }
@@ -2024,12 +2049,12 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                 <button onClick={closeLocationForm} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 8px", fontSize: 20, color: "#888", display: "flex", alignItems: "center" }}>
                                     <i className="ti ti-arrow-left" />
                                 </button>
-                                <h4 style={{ margin: 0, fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>{editLoc ? "Update Location" : "Add Location"}</h4>
+                                <h4 style={{ margin: 0, fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>{editLocation ? "Update ProductLocation" : "Add ProductLocation"}</h4>
                             </div>
                             <nav style={{ fontSize: 14, color: "#aaa", marginTop: 4 }}>
                                 <span style={{ cursor: "pointer" }} onClick={() => setView("locations")}>Locations</span>
-                                <span style={{ margin: "0 6px" }}>›</span>
-                                <span style={{ color: "#0e0a0a", fontWeight: 500 }}>{editLoc ? "Update Location" : "Add Location"}</span>
+                                <span style={{ margin: "0 6px" }}></span>
+                                <span style={{ color: "#0e0a0a", fontWeight: 500 }}>{editLocation ? "Update ProductLocation" : "Add ProductLocation"}</span>
                             </nav>
                         </div>
                     </div>
@@ -2038,7 +2063,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                         renderMode="page"
                         onClose={closeLocationForm}
                         onSave={handleSaveLoc}
-                        editData={editLoc}
+                        editData={editLocation}
                         seriesList={seriesList}
                         businessLocations={businessLocations}
                         onAddSeries={() => setShowSeriesModal(true)}
@@ -2067,7 +2092,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                         <h4 className="fw-bold mb-1" style={{ color: "#1a1a2e" }}>Locations</h4>
                         <nav aria-label="breadcrumb" style={{ fontSize: 13, color: "#aaa" }}>
                             <span>Home</span>
-                            <span className="mx-2">›</span>
+                            <span className="mx-2"></span>
                             <span className="fw-medium" style={{ color: "#333" }}>Locations</span>
                         </nav>
                     </div>
@@ -2127,9 +2152,9 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                 <i className="ti ti-settings" style={{ fontSize: 18, color: "#64748b" }} />
                                 Transaction Series Preferences
                             </button>
-                            <button title="Add a new location" className="btn d-flex align-items-center gap-2" onClick={() => openLocationForm()}
+                            <button title="Add a new ProductLocation" className="btn d-flex align-items-center gap-2" onClick={() => openLocationForm()}
                                 style={{ background: "#e41f07", color: "#fff", height: 42, padding: "0 20px", borderRadius: 8, fontWeight: 600, border: "none", fontSize: 13 }}>
-                                <i className="ti ti-plus" style={{ fontSize: 18 }} />Add Location
+                                <i className="ti ti-plus" style={{ fontSize: 18 }} />Add ProductLocation
                             </button>
                         </div>
                     </div>
@@ -2157,7 +2182,10 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                     ) : (
                                         orderedLocations.map((loc) => (
                                             <tr key={loc.id}
-                                                onClick={() => openLocationForm(loc)}
+                                                onClick={() => {
+                                                    setEditLocation(loc);
+                                                    setView("locationForm");
+                                                }}
                                                 onMouseEnter={() => setHoveredRow(loc.id)}
                                                 onMouseLeave={() => setHoveredRow(null)}
                                                 style={{ borderBottom: "1px solid #e5e7eb", cursor: "pointer", background: (hoveredRow === loc.id || selected.includes(loc.id)) ? "#fff8f7" : (loc.depth > 0 ? "#fbfcff" : "#fff") }}>
@@ -2188,7 +2216,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                         <div>
                                                             <div style={{ fontWeight: 600, color: "#1e293b", fontSize: 13 }}>{loc.name}</div>
                                                             <div style={{ fontSize: 11, color: loc.depth === 0 ? "#e41f07" : "#64748b", marginTop: 2 }}>
-                                                                {loc.parentLocation ? `Child of ${loc.parentLocation}` : "Parent Location"}
+                                                                {loc.parentLocation ? `Child of ${loc.parentLocation}` : "Parent ProductLocation"}
                                                             </div>
                                                         </div>
                                                     </div>

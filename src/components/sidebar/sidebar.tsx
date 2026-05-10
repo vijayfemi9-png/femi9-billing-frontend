@@ -12,44 +12,41 @@ import { all_routes } from "../../routes/all_routes";
 
 const Sidebar = () => {
   const route = all_routes;
-  const Location = useLocation();
-  const pathname = Location.pathname;
+  const loc = useLocation();
+  const path = loc.pathname;
 
   const [subsidebar, setSubsidebar] = useState("");
   const [openMenus, setOpenMenus] = useState<{ [label: string]: boolean }>({});
 
-  // ✅ Saves menus opened by clicking — persists across mouse enter/leave
+  // Saves menus opened by clicking - persists across mouse enter/leave
   const persistentMenusRef = useRef<{ [label: string]: boolean }>({});
 
   const dispatch = useDispatch();
   const themeSettings = useSelector((state: any) => state.theme.themeSettings);
   const navigate = useNavigate();
 
-  // ─── Helper: check if a menu item matches current path ─────────────────
+  // --- Helper: check if a menu item matches current path ---
   const checkIfActive = (menuItem: any, currentPath: string): boolean => {
     if (menuItem.link === currentPath) return true;
     if (menuItem.relatedRoutes?.includes(currentPath)) return true;
-    if (menuItem.submenuItems?.length) {
-      return menuItem.submenuItems.some((item: any) =>
-        item.link === currentPath ||
-        item.relatedRoutes?.includes(currentPath) ||
-        item.submenuItems?.some(
-          (sub: any) =>
-            sub.link === currentPath ||
-            sub.relatedRoutes?.includes(currentPath)
-        )
-      );
-    }
-    return false;
+    return !!menuItem.submenuItems?.some((item: any) =>
+      item.link === currentPath ||
+      !!item.relatedRoutes?.includes(currentPath) ||
+      !!item.submenuItems?.some(
+        (sub: any) =>
+          sub.link === currentPath ||
+          !!sub.relatedRoutes?.includes(currentPath)
+      )
+    );
   };
 
-  // ─── Auto-open menus for active route ──────────────────────────────────
+  // --- Auto-open menus for active route ---
   useEffect(() => {
     const newOpenMenus: { [label: string]: boolean } = {};
     SidebarData.forEach((section) => {
       section.submenuItems?.forEach((title: any) => {
         // Only track items that have actual submenus (not flat links)
-        if (title.submenu === true && checkIfActive(title, pathname)) {
+        if (title.submenu === true && checkIfActive(title, path)) {
           newOpenMenus[title.label] = true;
         }
       });
@@ -66,9 +63,9 @@ const Sidebar = () => {
     const merged = { ...cleanedPersistent, ...newOpenMenus };
     persistentMenusRef.current = merged;
     setOpenMenus(merged);
-  }, [pathname]);
+  }, [path]);
 
-  // ─── Click: toggle menu, save into persistent ref ──────────────────────
+  // --- Click: toggle menu, save into persistent ref ---
   const handleMenuClick = (label: string) => {
     setOpenMenus((prev) => {
       const updated = { ...prev, [label]: !prev[label] };
@@ -77,7 +74,7 @@ const Sidebar = () => {
     });
   };
 
-  // ─── Sidebar mouse ENTER: restore persistent (clicked) menus ───────────
+  // --- Sidebar mouse ENTER: restore persistent (clicked) menus ---
   const onSidebarMouseEnter = () => {
     dispatch(setExpandMenu(true));
     if (themeSettings["data-layout"] === "mini") {
@@ -85,7 +82,7 @@ const Sidebar = () => {
     }
   };
 
-  // ─── Sidebar mouse LEAVE: collapse all (persistent ref unchanged) ───────
+  // --- Sidebar mouse LEAVE: collapse all (persistent ref unchanged) ---
   const onSidebarMouseLeave = () => {
     dispatch(setExpandMenu(false));
     if (themeSettings["data-layout"] === "mini") {
@@ -117,7 +114,7 @@ const Sidebar = () => {
       default: break;
     }
     dispatch(updateTheme(layoutSettings));
-    navigate("/dashboard");
+    navigate(route.dealsDashboard);
   };
 
   const mobileSidebar = useSelector((state: any) => state.sidebarSlice.mobileSidebar);
@@ -126,7 +123,7 @@ const Sidebar = () => {
   useEffect(() => {
     const rootElement: any = document.documentElement;
     Object.entries(themeSettings).forEach(([key, value]) => {
-      rootElement.setAttribute(key, value);
+      rootElement.setAttribute(key, String(value));
     });
     if (themeSettings["data-layout"] === "mini") {
       rootElement.classList.add("mini-sidebar");
@@ -143,7 +140,7 @@ const Sidebar = () => {
         onMouseEnter={onSidebarMouseEnter}
         onMouseLeave={onSidebarMouseLeave}
       >
-        {/* ── Logo ── */}
+        {/* --- Logo --- */}
         <div className="sidebar-logo">
           <div>
             <Link to={route.dealsDashboard} className="logo logo-normal">
@@ -168,7 +165,7 @@ const Sidebar = () => {
           </button>
         </div>
 
-        {/* ── Menu ── */}
+        {/* --- Menu --- */}
         <div className="sidebar-inner" data-simplebar="">
           <OverlayScrollbarsComponent style={{ height: "100%", width: "100%" }}>
             <div id="sidebar-menu" className="sidebar-menu">
@@ -181,13 +178,13 @@ const Sidebar = () => {
                     <li>
                       <ul>
                         {section?.submenuItems?.map((title: any, i: number) => {
-                          const isActive = checkIfActive(title, Location.pathname);
+                          const isActive = checkIfActive(title, loc.pathname);
                           const isMenuOpen = openMenus[title?.label] || false;
 
                           return (
                             <li className="submenu" key={`title-${i}`}>
                               <Link
-                                to={title?.submenu ? "#" : title?.link}
+                                to={title?.submenu ? "#" : (title?.link || "#")}
                                 onClick={() => {
                                   if (title?.submenu) handleMenuClick(title?.label);
                                   if (section?.title === "Layout") handleLayoutClick(title?.label);
@@ -201,14 +198,14 @@ const Sidebar = () => {
                                 )}
                               </Link>
 
-                              {/* ── Level-2 submenu ── */}
+                              {/* --- Level-2 submenu --- */}
                               {title?.submenu !== false && (
                                 <ul style={{ display: isMenuOpen ? "block" : "none" }}>
                                   {title?.submenuItems?.map((item: any, j: number) => {
-                                    const isSubActive =
-                                      item?.submenuItems?.map((l: any) => l?.link).includes(Location.pathname) ||
-                                      item?.link === Location.pathname ||
-                                      item?.relatedRoutes?.includes(Location.pathname);
+                                      const isSubActive =
+                                        item?.submenuItems?.map((sub: any) => sub?.link)?.includes(loc.pathname) ||
+                                        item?.link === loc.pathname ||
+                                        item?.relatedRoutes?.includes(loc.pathname);
 
                                     return (
                                       <li
@@ -216,7 +213,7 @@ const Sidebar = () => {
                                         key={`item-${j}`}
                                       >
                                         <Link
-                                          to={item?.submenu ? "#" : item?.link}
+                                          to={item?.submenu ? "#" : (item?.link || "#")}
                                           className={`${isSubActive ? "active subdrop" : ""} ${subsidebar === item?.label ? "subdrop" : ""}`}
                                           onClick={() => {
                                             if (item?.submenu) toggleSubsidebar(item?.label);
@@ -229,17 +226,17 @@ const Sidebar = () => {
                                           )}
                                         </Link>
 
-                                        {/* ── Level-3 submenu ── */}
+                                        {/* --- Level-3 submenu --- */}
                                         {item?.submenuItems?.length ? (
                                           <ul style={{ display: subsidebar === item?.label ? "block" : "none" }}>
                                             {item?.submenuItems?.map((subItem: any, k: number) => {
                                               const isSubSubActive =
-                                                subItem?.link === Location.pathname ||
-                                                subItem?.relatedRoutes?.includes(Location.pathname);
+                                                subItem?.link === loc.pathname ||
+                                                subItem?.relatedRoutes?.includes(loc.pathname);
                                               return (
-                                                <li key={`subitem-${k}`}>
+                                                <li key={`subItem-${k}`}>
                                                   <Link
-                                                    to={subItem?.submenu ? "#" : subItem?.link}
+                                                    to={subItem?.submenu ? "#" : (subItem?.link || "#")}
                                                     className={isSubSubActive ? "active" : ""}
                                                   >
                                                     {subItem?.label}

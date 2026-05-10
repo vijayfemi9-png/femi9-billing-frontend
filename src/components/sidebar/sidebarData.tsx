@@ -141,8 +141,10 @@ export const SidebarData = [
         base: "Invoices",
         materialicons: "start",
         dot: true,
+        relatedRoutes: [route.billingInvoiceView, route.billingInvoiceEdit],
         submenuItems: [
           { label: "All Invoices", link: route.billingInvoiceList },
+          { label: "Invoice View", link: route.billingInvoiceView, relatedRoutes: [route.billingInvoiceView] },
           { label: "Invoice Setting", link: route.billingInvoiceSetting },
         ],
       },
@@ -159,7 +161,7 @@ export const SidebarData = [
           {
             label: "Product List",
             link: route.productList,
-            relatedRoutes: [route.product],
+            relatedRoutes: [route.productList, route.product, route.productEdit],
           },
           {
             label: "Locations",
@@ -169,7 +171,7 @@ export const SidebarData = [
           {
             label: "Price Lists",
             link: route.priceList,
-            relatedRoutes: [route.priceList],
+            relatedRoutes: [route.priceList, route.priceListAdd, route.priceListEdit],
             submenu: false,
             showSubRoute: false,
             icon: "file-spreadsheet",
@@ -193,7 +195,7 @@ export const SidebarData = [
           {
             label: "Assign Location List",
             link: route.assignLocationList,
-            relatedRoutes: [route.assignLocationList],
+            relatedRoutes: [route.assignLocationList, route.assignLocation],
             submenu: false,
             showSubRoute: false,
             icon: "list",
@@ -205,7 +207,7 @@ export const SidebarData = [
           {
             label: "Customers",
             link: route.customerList,
-            relatedRoutes: [route.customerList],
+            relatedRoutes: [route.customerList, route.customerView, route.customerEdit, route.customerAdd],
             submenu: false,
             showSubRoute: false,
             icon: "users",
@@ -217,7 +219,7 @@ export const SidebarData = [
           {
             label: "Customer Category",
             link: route.userCategory,
-            relatedRoutes: [route.userCategory],
+            relatedRoutes: [route.userCategory, route.addCategory, route.newCategory, route.editCategory],
             submenu: false,
             showSubRoute: false,
             icon: "hierarchy",
@@ -229,7 +231,7 @@ export const SidebarData = [
           {
             label: "Sub Category",
             link: route.subCategory,
-            relatedRoutes: [route.subCategory],
+            relatedRoutes: [route.subCategory, route.newSubCategory],
             submenu: false,
             showSubRoute: false,
             icon: "hierarchy-2",
