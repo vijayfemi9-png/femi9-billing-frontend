@@ -47,6 +47,41 @@ const CUSTOMER_CATEGORIES = ["Category 1", "Category 2"];
 const PRICE_LISTS = ["Standard Price List", "Wholesale Price List"];
 const fmt2 = (n: number) => n.toFixed(2);
 
+const InfoTip: React.FC<{ text: string }> = ({ text }) => {
+    const [show, setShow] = useState(false);
+    const [pos, setPos] = useState({ top: 0, left: 0 });
+    const ref = useRef<HTMLSpanElement>(null);
+    const handleEnter = () => {
+        if (ref.current) {
+            const r = ref.current.getBoundingClientRect();
+            setPos({ top: r.top - 8, left: r.left + r.width / 2 });
+        }
+        setShow(true);
+    };
+    return (
+        <span ref={ref} style={{ display: "inline-flex", alignItems: "center", cursor: "default" }}
+            onMouseEnter={handleEnter} onMouseLeave={() => setShow(false)}>
+            <i className="ti ti-info-circle" style={{ fontSize: 13, color: "#6b7280", marginLeft: 3 }} />
+            {show && (
+                <div style={{
+                    position: "fixed", top: pos.top, left: pos.left, transform: "translate(-50%, -100%)",
+                    background: "#1e293b", color: "#fff", fontSize: 11, borderRadius: 5,
+                    padding: "4px 8px", whiteSpace: "nowrap", zIndex: 9999,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)", pointerEvents: "none", marginTop: -6,
+                    maxWidth: 220, lineHeight: 1.4,
+                }}>
+                    {text}
+                    <div style={{
+                        position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)",
+                        width: 0, height: 0, borderLeft: "4px solid transparent",
+                        borderRight: "4px solid transparent", borderTop: "4px solid #1e293b",
+                    }} />
+                </div>
+            )}
+        </span>
+    );
+};
+
 const AddInvoice: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id?: string }>();
@@ -62,17 +97,27 @@ const AddInvoice: React.FC = () => {
     const [dueDate, setDueDate] = useState(toInputDate(formatDate(new Date())));
     const [salesperson, setSalesperson] = useState("");
     const [subject, setSubject] = useState("");
+
+    // Toolbar states
+    const [toolbarAccount, setToolbarAccount] = useState("");
+    const [isGlobalDiscountEnabled, setIsGlobalDiscountEnabled] = useState(false);
+    const [globalDiscountValue, setGlobalDiscountValue] = useState(0);
+    const [globalDiscountType, setGlobalDiscountType] = useState<"%" | "amount">("%");
+    const [reportingTags, setReportingTags] = useState("");
+    const [editingToolbar, setEditingToolbar] = useState<"account" | "tags" | null>(null);
+    const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+    const [showTagsPopup, setShowTagsPopup] = useState(false);
     const [customerCategory, setCustomerCategory] = useState("");
     const [priceList, setPriceList] = useState("");
     const [reference, setReference] = useState("");
     const [location, setLocation] = useState("");
     const [showReferenceModal, setShowReferenceModal] = useState(false);
     const [referrals, setReferrals] = useState([
-        { id: 1, name: "Anandh", email: "anandh@gmail.com", phone: "9122044555", type: "Referral" },
-        { id: 2, name: "Ranjith", email: "ranjith123@gmail.com", phone: "9876543211", type: "Referral" }
+        { id: 1, name: "Anandh", email: "anandh@gmail.com", phone: "9122044555", type: "Reference" },
+        { id: 2, name: "Ranjith", email: "ranjith123@gmail.com", phone: "9876543211", type: "Reference" }
     ]);
     const [showAddReferralForm, setShowAddReferralForm] = useState(false);
-    const [newRef, setNewRef] = useState({ name: "", email: "", phone: "", type: "Referral" });
+    const [newRef, setNewRef] = useState({ name: "", email: "", phone: "", type: "Reference" });
     const [taxType, setTaxType] = useState<"TDS" | "TCS">("TDS");
     const [selectedTax, setSelectedTax] = useState("");
     const [courierCharges, setCourierCharges] = useState(0);
@@ -101,16 +146,32 @@ const AddInvoice: React.FC = () => {
     const [activeSearchIdx, setActiveSearchIdx] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    const INVENTORY_ITEMS = [
-        { id: 1, name: "vijay", sku: "kjhgfc", rate: 230, stock: "19,001.00 box" },
-        { id: 2, name: "Item Two", sku: "SKU002", rate: 450, stock: "150.00 pcs" },
-        { id: 3, name: "Sample Product", sku: "PRD003", rate: 1200, stock: "45.00 unit" },
-    ];
+    const INVENTORY_ITEMS = (() => {
+        try {
+            const raw: any[] = JSON.parse(localStorage.getItem("product_list_data") || "[]");
+            return raw
+                .filter((p: any) => !p.isDeleted && p.status !== "inactive")
+                .map((p: any) => ({
+                    id: p.id,
+                    name: p.name || "Unnamed",
+                    sku: p.sku || "",
+                    rate: p.selling_price ?? p.costPrice ?? 0,
+                    stock: p.stockOnHand != null ? `${p.stockOnHand}${p.unit ? " " + p.unit : ""}` : "—",
+                }));
+        } catch { return []; }
+    })();
 
     const [customers, setCustomers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [customerSearchQuery, setCustomerSearchQuery] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+    const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+    const [showCustPanel, setShowCustPanel] = useState(false);
+    const [custPanelTab, setCustPanelTab] = useState<"details" | "activity">("details");
+    const [advSearchField, setAdvSearchField] = useState("Display Name");
+    const [advSearchQuery, setAdvSearchQuery] = useState("");
+    const [advSearchPage, setAdvSearchPage] = useState(1);
+    const ADV_SEARCH_PAGE_SIZE = 10;
 
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [autoGenerate, setAutoGenerate] = useState(true);
@@ -139,8 +200,10 @@ const AddInvoice: React.FC = () => {
     const [bulkOpen, setBulkOpen] = useState(false);
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [selectedBulkItems, setSelectedBulkItems] = useState<number[]>([]);
+    const [bulkQuantities, setBulkQuantities] = useState<Record<number, string>>({});
     const [bulkSearch, setBulkSearch] = useState("");
     const bulkSearchRef = useRef<HTMLInputElement>(null);
+    const bulkQtyRefs = useRef<Record<number, HTMLInputElement | null>>({});
     const [isScannerMode, setIsScannerMode] = useState(false);
     const [scannedFeedback, setScannedFeedback] = useState("");
 
@@ -234,25 +297,32 @@ const AddInvoice: React.FC = () => {
 
     useEffect(() => {
         try {
-            const prefs = JSON.parse(localStorage.getItem("invoice_preferences") || "{}");
-            if (!prefs.advancePaymentEnabled) { setAdvanceCategoryCustomers([]); return; }
-            const savedCats: any[] = (() => { try { return JSON.parse(localStorage.getItem("categories") || "[]"); } catch { return []; } })();
-            const defaultCats = [
+            const prefs = (() => { try { return JSON.parse(localStorage.getItem("invoice_preferences") || "{}"); } catch { return {}; } })();
+            const selectedCatIds: number[] = prefs.advancePaymentCategories || [];
+            const DEFAULT_CATEGORIES = [
                 { id: 1, name: "Super_stockist" }, { id: 2, name: "mvbfy" }, { id: 3, name: "cfvgbhj" },
                 { id: 4, name: "New SS" }, { id: 5, name: "drtr" }, { id: 6, name: "New S" }, { id: 7, name: "Super_distributor" },
             ];
-            const allCats = [...defaultCats.filter(d => !savedCats.find((s: any) => s.id === d.id)), ...savedCats];
-            const advCatIds: number[] = prefs.advancePaymentCategories || [];
-            const advCatNames = allCats.filter(c => advCatIds.includes(c.id)).map(c => c.name.trim().toLowerCase());
-            const balances = JSON.parse(localStorage.getItem("customer_advance_balances") || "{}");
+            const savedCats: any[] = (() => { try { return JSON.parse(localStorage.getItem("categories") || "[]"); } catch { return []; } })();
+            const allCats = savedCats.length > 0 ? savedCats : DEFAULT_CATEGORIES;
+            const selectedCatNames = allCats
+                .filter((c: any) => selectedCatIds.includes(Number(c.id)))
+                .map((c: any) => (c.name || "").trim().toLowerCase());
+
             const allCustomers: any[] = (() => { try { return JSON.parse(localStorage.getItem("billing_customers") || "[]"); } catch { return []; } })();
-            const matched = allCustomers
-                .filter(c => advCatNames.includes((c.companyCategory || "").trim().toLowerCase()))
-                .map(c => ({
-                    name: c.displayName || c.display_name || c.companyName || "Unknown",
-                    balance: balances[String(c.id)] || 0,
-                }));
-            setAdvanceCategoryCustomers(matched);
+            const balances = (() => { try { return JSON.parse(localStorage.getItem("customer_advance_balances") || "{}"); } catch { return {}; } })();
+
+            const filtered = allCustomers.filter((c: any) => {
+                const custCat = (c.companyCategory || c.category || "").trim().toLowerCase();
+                return selectedCatNames.length === 0 || selectedCatNames.includes(custCat);
+            });
+
+            const mapped = filtered.map((c: any) => ({
+                id: String(c.id),
+                name: c.displayName || c.display_name || c.companyName || "Unknown",
+                balance: balances[String(c.id)] || 0,
+            }));
+            setAdvanceCategoryCustomers(mapped);
         } catch { setAdvanceCategoryCustomers([]); }
     }, [customers]);
 
@@ -291,17 +361,18 @@ const AddInvoice: React.FC = () => {
     const selectedCustomerObj = customers.find((c: any) => String(c.id) === customerName);
     const selectedCustomerDisplayName = selectedCustomerObj?.displayName || selectedCustomerObj?.display_name || "";
 
-    const subtotal = items.reduce((s, i) => s + i.amount, 0);
+    // Financial Calculations
+    const subtotal = items.reduce((acc, item) => acc + item.amount, 0);
 
-    function calcTaxAmount(): number {
-        if (!selectedTax) return 0;
-        const match = selectedTax.match(/(\d+(\.\d+)?)%/);
-        if (!match) return 0;
-        return (subtotal * parseFloat(match[1])) / 100;
-    }
-    const taxAmount = calcTaxAmount();
-    const totalOtherCharges = otherCharges.reduce((s, c) => s + c.amount, 0);
-    const total = subtotal + taxAmount + courierCharges + totalOtherCharges;
+    // Global Discount Calculation
+    const globalDiscountAmount = isGlobalDiscountEnabled 
+        ? (globalDiscountType === "%" ? (subtotal * globalDiscountValue / 100) : globalDiscountValue)
+        : 0;
+        
+    const taxableAmount = Math.max(0, subtotal - globalDiscountAmount);
+    const taxAmount = selectedTax ? (taxableAmount * parseFloat(selectedTax.split(" ").pop() || "0")) / 100 : 0;
+    const totalOtherCharges = otherCharges.reduce((acc, oc) => acc + oc.amount, 0);
+    const total = taxableAmount + taxAmount + courierCharges + totalOtherCharges;
     const amountReceived = paymentRows.reduce((s, r) => s + r.amount + (r.advanceAmount || 0), 0);
 
     function updateItem(index: number, field: keyof LineItem, value: string | number) {
@@ -348,7 +419,7 @@ const AddInvoice: React.FC = () => {
         if (!newRef.name) return;
         const id = referrals.length > 0 ? Math.max(...referrals.map(r => r.id)) + 1 : 1;
         setReferrals(prev => [...prev, { ...newRef, id }]);
-        setNewRef({ name: "", email: "", phone: "", type: "Referral" });
+        setNewRef({ name: "", email: "", phone: "", type: "Reference" });
         setShowAddReferralForm(false);
     }
 
@@ -501,7 +572,7 @@ const AddInvoice: React.FC = () => {
 
                 {/* Form Card */}
                 <div className="card border-0 shadow-sm" style={{ borderRadius: 5 }}>
-                    <div className="card-body p-4">
+                    <div className="card-body p-2 p-sm-3 p-md-4">
                         <div className="row g-4">
 
                             {/* ── Screenshot-style form fields ── */}
@@ -514,10 +585,18 @@ const AddInvoice: React.FC = () => {
                                     .inv-input:focus { border-color: #e41f07 !important; box-shadow: none !important; outline: none !important; }
                                     .inv-select { height: 36px; font-size: 14px; border: 1px solid #d0d5dd; border-radius: 4px; padding: 0 28px 0 10px; background: #fff; outline: none; appearance: auto; transition: border-color 0.15s; }
                                     .inv-select:focus { border-color: #e41f07 !important; box-shadow: none !important; outline: none !important; }
+                                    @media (max-width: 576px) {
+                                        .inv-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+                                        .inv-label { min-width: unset; width: 100%; }
+                                        .inv-input { width: 100% !important; max-width: 100% !important; }
+                                        .inv-select { width: 100% !important; max-width: 100% !important; }
+                                        .customer-search-container { width: 100% !important; max-width: 100% !important; flex: 1; }
+                                        .inv-row textarea { width: 100% !important; max-width: 100% !important; }
+                                    }
                                 `}</style>
 
                                 {/* Customer Name */}
-                                <div className="inv-row">
+                                <div className="inv-row" style={{ alignItems: "center", gap: 16 }}>
                                     <label className="inv-label req text-danger">Customer Name*</label>
                                     <div className="customer-search-container d-flex" style={{ flex: 1, maxWidth: 520, position: "relative" }}>
                                         <div style={{ flex: 1, position: "relative" }}>
@@ -526,7 +605,7 @@ const AddInvoice: React.FC = () => {
                                                 className="inv-input w-100"
                                                 placeholder="Select or add a customer"
                                                 style={{ borderRadius: "4px 0 0 4px", paddingRight: 30 }}
-                                                value={customerSearchQuery !== "" ? customerSearchQuery : (customers.find((c: any) => String(c.id) === customerName)?.displayName || customers.find((c: any) => String(c.id) === customerName)?.display_name || "")}
+                                                value={customerSearchQuery !== "" ? customerSearchQuery : (customers.find((c: any) => String(c.id) === customerName)?.displayName || customers.find((c: any) => String(c.id) === customerName)?.name || "")}
                                                 onChange={e => { setCustomerSearchQuery(e.target.value); setCustomerName(""); setShowCustomerDropdown(true); }}
                                                 onFocus={() => setShowCustomerDropdown(true)}
                                             />
@@ -535,36 +614,78 @@ const AddInvoice: React.FC = () => {
                                         <button
                                             type="button"
                                             style={{ width: 38, height: 36, background: "#e41f07", border: "1px solid #e41f07", borderRadius: "0 4px 4px 0", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
-                                            onClick={() => setShowCustomerDropdown(o => !o)}
+                                            onClick={() => { setAdvSearchQuery(""); setAdvSearchPage(1); setShowAdvancedSearch(true); }}
                                         >
                                             <i className="ti ti-search" style={{ fontSize: 15 }} />
                                         </button>
                                         {showCustomerDropdown && (
                                             <div className="dropdown-menu show shadow-lg border-0 p-0 overflow-hidden" style={{ position: "absolute", width: "calc(100% - 38px)", top: "100%", left: 0, zIndex: 1050, marginTop: 4, borderRadius: 8 }}>
                                                 <div style={{ maxHeight: 260, overflowY: "auto" }}>
-                                                    {customers.filter((c: any) => (c.displayName || c.display_name || "").toLowerCase().includes(customerSearchQuery.toLowerCase())).map((c: any) => (
-                                                        <button key={c.id} type="button" className="dropdown-item px-3 py-2 border-bottom d-flex align-items-center gap-3"
-                                                            onClick={() => { setCustomerName(String(c.id)); setCustomerSearchQuery(""); setShowCustomerDropdown(false); }}>
-                                                            <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 32, height: 32 }}>
-                                                                <i className="ti ti-user text-muted" style={{ fontSize: 15 }} />
-                                                            </div>
-                                                            <div>
-                                                                <div className="fw-semibold" style={{ fontSize: 14 }}>{c.displayName || c.display_name || "Unnamed Customer"}</div>
-                                                                <div className="text-muted" style={{ fontSize: 13 }}>{c.company_name || "Individual"}</div>
-                                                            </div>
-                                                        </button>
-                                                    ))}
-                                                    {customers.filter((c: any) => (c.displayName || c.display_name || "").toLowerCase().includes(customerSearchQuery.toLowerCase())).length === 0 && (
-                                                        <div className="px-3 py-4 text-center text-muted" style={{ fontSize: 14 }}>No customers found</div>
-                                                    )}
+                                                    {(() => {
+                                                        const filtered = customers.filter((c: any) =>
+                                                            (c.displayName || c.name || "").toLowerCase().includes(customerSearchQuery.toLowerCase())
+                                                        );
+                                                        return filtered.length === 0 ? (
+                                                            <div className="px-3 py-4 text-center text-muted" style={{ fontSize: 14 }}>No customers found</div>
+                                                        ) : filtered.map((c: any) => (
+                                                            <button key={c.id} type="button" className="dropdown-item px-3 py-2 border-bottom d-flex align-items-center gap-3"
+                                                                onClick={() => { setCustomerName(String(c.id)); setCustomerSearchQuery(""); setShowCustomerDropdown(false); }}>
+                                                                <div className="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 32, height: 32 }}>
+                                                                    <i className="ti ti-user text-muted" style={{ fontSize: 15 }} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="fw-semibold" style={{ fontSize: 14 }}>{c.displayName || c.name || "Unnamed Customer"}</div>
+                                                                    <div className="text-muted" style={{ fontSize: 13 }}>{c.companyName || "Individual"}</div>
+                                                                </div>
+                                                            </button>
+                                                        ));
+                                                    })()}
                                                 </div>
                                                 <button type="button" className="dropdown-item px-3 py-2 text-danger fw-semibold d-flex align-items-center gap-2 bg-white border-top" style={{ fontSize: 14 }}
-                                                    onClick={() => { setShowCustomerDropdown(false); navigate(route.addCustomer); }}>
+                                                    onClick={() => { setShowCustomerDropdown(false); navigate(route.customerAdd); }}>
                                                     <i className="ti ti-circle-plus" style={{ fontSize: 15 }} /> Add New Customer
                                                 </button>
                                             </div>
                                         )}
                                     </div>
+                                    {/* Customer details chip */}
+                                    {customerName && (() => {
+                                        const sel = customers.find((c: any) => String(c.id) === customerName);
+                                        if (!sel) return null;
+                                        const name = sel.displayName || sel.name || "Customer";
+                                        const allInvoices: any[] = (() => { try { return JSON.parse(localStorage.getItem("billing_invoices") || "[]"); } catch { return []; } })();
+                                        const unpaid = allInvoices.filter((inv: any) =>
+                                            String(inv.customerId) === customerName && inv.status !== "Paid" && inv.status !== "Void"
+                                        ).length;
+                                        return (
+                                            <button
+                                                type="button"
+                                                onClick={() => { setCustPanelTab("details"); setShowCustPanel(true); }}
+                                                style={{
+                                                    background: "#2d3748", border: "none", borderRadius: 8, color: "#fff",
+                                                    padding: "8px 14px", display: "flex", alignItems: "center", gap: 10,
+                                                    cursor: "pointer", flexShrink: 0, minWidth: 180, textAlign: "left",
+                                                }}
+                                            >
+                                                <div style={{ flex: 1 }}>
+                                                    <div className="fw-bold" style={{ fontSize: 13 }}>{name}'s Details</div>
+                                                    {unpaid > 0 && (
+                                                        <div className="d-flex align-items-center gap-1 mt-1" style={{ fontSize: 11, color: "#fbbf24" }}>
+                                                            <i className="ti ti-alert-triangle" style={{ fontSize: 12 }} />
+                                                            {unpaid} Unpaid Invoice{unpaid > 1 ? "s" : ""}
+                                                        </div>
+                                                    )}
+                                                    {unpaid === 0 && (
+                                                        <div className="d-flex align-items-center gap-1 mt-1" style={{ fontSize: 11, color: "#86efac" }}>
+                                                            <i className="ti ti-circle-check" style={{ fontSize: 12 }} />
+                                                            No pending invoices
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <i className="ti ti-chevron-right" style={{ fontSize: 14, color: "#9ca3af" }} />
+                                            </button>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Invoice # */}
@@ -643,7 +764,7 @@ const AddInvoice: React.FC = () => {
                                 {/* Subject */}
                                 <div className="inv-row" style={{ alignItems: "flex-start" }}>
                                     <label className="inv-label" style={{ paddingTop: 6 }}>
-                                        Subject <i className="ti ti-info-circle" style={{ fontSize: 13, color: "#6b7280", marginLeft: 3 }} />
+                                        Subject <InfoTip text="This will be displayed in the email sent to your customer" />
                                     </label>
                                     <textarea
                                         className="inv-input"
@@ -692,7 +813,6 @@ const AddInvoice: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-
                                 {/* Location */}
                                 <div className="inv-row">
                                     <label className="inv-label">Location</label>
@@ -710,14 +830,6 @@ const AddInvoice: React.FC = () => {
                                 <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3" style={{ position: "relative", zIndex: 20 }}>
                                     <span className="fs-14 fw-bold text-dark">Item Table</span>
                                     <div className="d-flex flex-wrap gap-2">
-                                        <button
-                                            type="button"
-                                            className="btn btn-white d-flex align-items-center gap-2 px-3 py-1 fw-medium border shadow-sm"
-                                            style={{ fontSize: 14, height: 34, color: "#111827", borderRadius: 4 }}
-                                            onClick={() => { setShowBulkModal(true); setIsScannerMode(true); }}
-                                        >
-                                            <i className="ti ti-scan fs-16" style={{ color: "#e41f07" }} /> <span style={{ color: "#e03e21ff" }}>Scan Item</span>
-                                        </button>
                                         <div style={{ position: "relative" }}>
                                             <button
                                                 type="button"
@@ -837,9 +949,13 @@ const AddInvoice: React.FC = () => {
                                                         <input
                                                             className="form-control text-end shadow-none px-2 py-2"
                                                             type="number"
+                                                            min={1}
                                                             style={{ fontSize: 14, border: "1px solid #e5e7eb", borderRadius: 6, backgroundColor: "#fff" }}
-                                                            value={item.qty}
-                                                            onChange={e => updateItem(idx, "qty", Number(e.target.value))}
+                                                            value={item.qty === 0 ? "" : item.qty}
+                                                            placeholder="1"
+                                                            onChange={e => updateItem(idx, "qty", e.target.value === "" ? 0 : Number(e.target.value))}
+                                                            onBlur={e => { if (!e.target.value || Number(e.target.value) < 1) updateItem(idx, "qty", 1); }}
+                                                            onFocus={e => e.target.select()}
                                                         />
                                                     </td>
                                                     <td className="align-middle text-end py-3">
@@ -913,6 +1029,93 @@ const AddInvoice: React.FC = () => {
                                     </table>
                                 </div>
 
+                                {/* Table Footer Toolbar */}
+                                <div className="d-flex align-items-center bg-light border-start border-end border-bottom py-1" style={{ fontSize: 13, color: "#6b7280" }}>
+                                    {/* Select an Account Dropdown */}
+                                    <div className="position-relative border-end" style={{ minWidth: 180 }}>
+                                        <div 
+                                            className="d-flex align-items-center gap-2 px-3 py-1 cursor-pointer hover-bg-white" 
+                                            style={{ height: 32 }}
+                                            onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+                                        >
+                                            <i className="ti ti-archive fs-16" />
+                                            <span className="text-truncate text-muted">{toolbarAccount || "Select an account"}</span>
+                                            <i className={`ti ti-chevron-${showAccountDropdown ? 'up' : 'down'} fs-10 ms-auto`} />
+                                        </div>
+                                        
+                                        {showAccountDropdown && (
+                                            <div className="position-absolute start-0 top-100 mt-1 bg-white border shadow-lg rounded" style={{ width: 280, zIndex: 1000, maxHeight: 400, overflowY: 'auto' }}>
+                                                <div className="p-2 border-bottom">
+                                                    <div className="input-group input-group-sm">
+                                                        <span className="input-group-text bg-white border-end-0 border-primary" style={{ borderRight: 'none' }}><i className="ti ti-search text-muted" /></span>
+                                                        <input type="text" className="form-control border-start-0 shadow-none border-primary" style={{ borderLeft: 'none' }} placeholder="Search" />
+                                                    </div>
+                                                </div>
+                                                <div className="py-1">
+                                                    <div className="px-3 py-1 fw-bold fs-12 text-uppercase text-muted bg-light">Equity</div>
+                                                    {["Dividends Paid", "Drawings", "Investments", "Opening Balance Offset", "Owner's Equity"].map(acc => (
+                                                        <div 
+                                                            key={acc} 
+                                                            className={`px-3 py-2 cursor-pointer d-flex align-items-center justify-content-between fs-13 ${toolbarAccount === acc ? 'bg-primary text-white rounded-1 mx-1' : 'hover-bg-light text-dark'}`} 
+                                                            onClick={() => { setToolbarAccount(acc); setShowAccountDropdown(false); }}
+                                                        >
+                                                            <span>{acc}</span>
+                                                            {toolbarAccount === acc && <i className="ti ti-check fs-14" />}
+                                                        </div>
+                                                    ))}
+                                                    
+                                                    <div className="px-3 py-1 fw-bold fs-12 text-uppercase text-muted bg-light mt-1">Income</div>
+                                                    {["Discount", "General Income", "Interest Income", "Late Fee Income", "Other Charges", "Sales"].map(acc => (
+                                                        <div 
+                                                            key={acc} 
+                                                            className={`px-3 py-2 cursor-pointer d-flex align-items-center justify-content-between fs-13 ${toolbarAccount === acc ? 'bg-primary text-white rounded-1 mx-1' : 'hover-bg-light text-dark'}`} 
+                                                            onClick={() => { setToolbarAccount(acc); setShowAccountDropdown(false); }}
+                                                        >
+                                                            <span>{acc}</span>
+                                                            {toolbarAccount === acc && <i className="ti ti-check fs-14" />}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Discount Toggle */}
+                                    <div className="d-flex align-items-center gap-2 px-3 py-1 cursor-pointer border-end hover-bg-white" style={{ height: 32 }} onClick={() => setIsGlobalDiscountEnabled(!isGlobalDiscountEnabled)}>
+                                        <i className="ti ti-ticket fs-16" />
+                                        <span className={`text-muted ${isGlobalDiscountEnabled ? '' : 'fw-bold'}`} style={{ lineHeight: 1 }}>Discount</span>
+                                        <i className="ti ti-chevron-down fs-10 ms-1" />
+                                    </div>
+
+                                    {/* Reporting Tags Popup */}
+                                    <div className="position-relative" style={{ minWidth: 160 }}>
+                                        <div 
+                                            className="d-flex align-items-center gap-2 px-3 py-1 cursor-pointer hover-bg-white" 
+                                            style={{ height: 32 }}
+                                            onClick={() => setShowTagsPopup(!showTagsPopup)}
+                                        >
+                                            <i className="ti ti-tag fs-16" />
+                                            <span className="text-muted">Reporting Tags</span>
+                                            <i className="ti ti-chevron-down fs-10 ms-1" />
+                                        </div>
+
+                                        {showTagsPopup && (
+                                            <div className="position-absolute start-0 top-100 mt-1 bg-white border shadow-lg rounded" style={{ width: 450, zIndex: 1000 }}>
+                                                <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                                    <span className="fw-bold fs-14">Reporting Tags</span>
+                                                    <i className="ti ti-x cursor-pointer" onClick={() => setShowTagsPopup(false)} />
+                                                </div>
+                                                <div className="p-4">
+                                                    <p className="fs-14 text-muted mb-4">
+                                                        There are no active reporting tags, or no tags have been created for association at the item level. Kindly create or edit reporting tags from Settings.
+                                                    </p>
+                                                    <button type="button" className="btn btn-sm btn-light border px-3" onClick={() => setShowTagsPopup(false)}>OK</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="d-flex flex-wrap gap-2 mt-4">
                                     <button
                                         type="button"
@@ -939,6 +1142,33 @@ const AddInvoice: React.FC = () => {
                                         <span className="text-muted">Sub Total</span>
                                         <span className="fw-semibold text-dark">{fmt2(subtotal)}</span>
                                     </div>
+
+                                    {/* Global Discount Row */}
+                                    {isGlobalDiscountEnabled && (
+                                        <div className="d-flex align-items-center justify-content-between px-3 py-2 gap-3" style={{ borderBottom: "1px solid #e5e7eb", background: "#f9fafb" }}>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <span className="text-muted fs-13 fw-medium">Discount</span>
+                                                <div className="btn-group btn-group-sm border rounded overflow-hidden" style={{ height: 24 }}>
+                                                    <button type="button" className={`btn btn-sm py-0 px-2 fs-11 ${globalDiscountType === "%" ? "text-white" : "btn-white text-dark"}`} style={{ borderRadius: 0, background: globalDiscountType === "%" ? "#dc2626" : "transparent" }} onClick={() => setGlobalDiscountType("%")}>%</button>
+                                                    <button type="button" className={`btn btn-sm py-0 px-2 fs-11 ${globalDiscountType === "amount" ? "text-white" : "btn-white text-dark"}`} style={{ borderRadius: 0, background: globalDiscountType === "amount" ? "#dc2626" : "transparent" }} onClick={() => setGlobalDiscountType("amount")}>₹</button>
+                                                </div>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm border text-end"
+                                                    style={{ maxWidth: 80, borderRadius: 4, fontSize: 13, height: 28 }}
+                                                    value={globalDiscountValue || ""}
+                                                    placeholder="0"
+                                                    onChange={e => setGlobalDiscountValue(e.target.value === "" ? 0 : +e.target.value)}
+                                                    onFocus={e => e.target.select()}
+                                                />
+                                                <span className="fw-bold fs-13 text-danger" style={{ minWidth: 60, textAlign: "right" }}>
+                                                    - {fmt2(globalDiscountAmount)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="d-flex align-items-center justify-content-between px-3 py-2 gap-2" style={{ borderBottom: "1px solid #e5e7eb" }}>
                                         <div className="d-flex align-items-center gap-3">
                                             <label className="d-flex align-items-center gap-1 mb-0" style={{ cursor: "pointer" }}>
@@ -1139,6 +1369,7 @@ const AddInvoice: React.FC = () => {
                                                                 <option>Cheque</option>
                                                                 <option>Credit Card</option>
                                                                 <option>UPI</option>
+                                                                <option>Advance Payment</option>
                                                             </select>
                                                         </div>
 
@@ -1227,26 +1458,26 @@ const AddInvoice: React.FC = () => {
 
                                     {advancePayment && (
                                         <div className="mt-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
-                                            <div className="d-flex align-items-start gap-2 p-3 rounded" style={{ background: "#fff7ed", border: "1px solid #fed7aa" }}>
-                                                <i className="ti ti-alert-triangle" style={{ color: "#ea580c", fontSize: 18, flexShrink: 0, marginTop: 1 }} />
+                                            <div className="d-flex align-items-start gap-2 p-3 rounded border" style={{ background: "#fff" }}>
+                                                <i className="ti ti-info-circle" style={{ color: "#6b7280", fontSize: 18, flexShrink: 0, marginTop: 1 }} />
                                                 <div className="flex-grow-1">
-                                                    <p className="fw-semibold mb-2 fs-14" style={{ color: "#c2410c" }}>Advance Payment Pending</p>
+                                                    <p className="fw-semibold mb-2 fs-14" style={{ color: "#374151" }}>Advance Payment Pending</p>
                                                     {advanceCategoryCustomers.length > 0 ? (
                                                         <div className="d-flex flex-column gap-2">
                                                             {advanceCategoryCustomers.map((cust, i) => (
-                                                                <div key={i} className="d-flex align-items-center justify-content-between px-3 py-2 rounded" style={{ background: "#fff", border: "1px solid #fed7aa" }}>
-                                                                    <span className="fw-semibold fs-14" style={{ color: "#92400e" }}>
-                                                                        <i className="ti ti-user me-2" style={{ color: "#ea580c" }} />
+                                                                <div key={i} className="d-flex align-items-center justify-content-between px-3 py-2 rounded border" style={{ background: "#f9fafb" }}>
+                                                                    <span className="fw-semibold fs-14 text-dark">
+                                                                        <i className="ti ti-user me-2 text-muted" />
                                                                         {cust.name}
                                                                     </span>
-                                                                    <span className="fw-bold fs-14" style={{ color: cust.balance > 0 ? "#16a34a" : "#ea580c" }}>
+                                                                    <span className="fw-bold fs-14" style={{ color: cust.balance > 0 ? "#16a34a" : "#dc2626" }}>
                                                                         ₹{fmt2(cust.balance)}
                                                                     </span>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     ) : (
-                                                        <p className="mb-0 fs-14" style={{ color: "#9a3412" }}>
+                                                        <p className="mb-0 fs-14 text-muted">
                                                             <i className="ti ti-info-circle me-1" />No customers found in advance payment categories.
                                                         </p>
                                                     )}
@@ -1282,7 +1513,7 @@ const AddInvoice: React.FC = () => {
                         <button
                             type="button"
                             className="btn fw-bold fs-14 text-white px-4"
-                            style={{ background: "#f2994a", border: "1px solid #f2994a", borderRadius: 4, height: 38, opacity: 1 }}
+                            style={{ background: "#e79111ff", border: "1px solid #e79111ff", borderRadius: 4, height: 38, opacity: 1 }}
                             onClick={() => handleSave("Draft")}
                             disabled={loading}
                         >
@@ -1328,7 +1559,7 @@ const AddInvoice: React.FC = () => {
                             <div className="form-check mb-3">
                                 <input className="form-check-input" type="radio" id="autoGen" checked={autoGenerate} onChange={() => setAutoGenerate(true)} style={{ accentColor: "#dc2626", cursor: "pointer" }} />
                                 <label className="form-check-label fs-14 fw-semibold text-dark cursor-pointer" htmlFor="autoGen" style={{ cursor: "pointer" }}>
-                                    Continue auto-generating invoice numbers <i className="ti ti-info-circle text-muted ms-1" />
+                                    Continue auto-generating invoice numbers <InfoTip text="Invoice numbers will be generated automatically based on your prefix and sequence" />
                                 </label>
                             </div>
 
@@ -1484,10 +1715,261 @@ const AddInvoice: React.FC = () => {
                     </div>
                 </div>
             )}
+            {/* Customer Details Side Panel */}
+            {showCustPanel && customerName && (() => {
+                const sel = customers.find((c: any) => String(c.id) === customerName);
+                if (!sel) return null;
+                const name = sel.displayName || sel.name || "Customer";
+                const initials = name.charAt(0).toUpperCase();
+                const allInvoices: any[] = (() => { try { return JSON.parse(localStorage.getItem("billing_invoices") || "[]"); } catch { return []; } })();
+                const custInvoices = allInvoices.filter((inv: any) => String(inv.customerId) === customerName);
+                const outstanding = custInvoices.filter((inv: any) => inv.status !== "Paid" && inv.status !== "Void").reduce((s: number, inv: any) => s + (inv.grandTotal || 0), 0);
+                return (
+                    <div style={{ position: "fixed", inset: 0, zIndex: 1070, display: "flex", justifyContent: "flex-end" }} onClick={() => setShowCustPanel(false)}>
+                        <div style={{ width: 340, height: "100%", background: "#fff", boxShadow: "-4px 0 24px rgba(0,0,0,0.13)", overflowY: "auto", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="d-flex align-items-start justify-content-between px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #f0f2f4" }}>
+                                <div className="d-flex align-items-center gap-3">
+                                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#475569" }}>
+                                        {initials}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 2 }}>Customer</div>
+                                        <div className="fw-bold d-flex align-items-center gap-2" style={{ fontSize: 15, color: "#111827" }}>
+                                            {name}
+                                            <i className="ti ti-external-link" style={{ fontSize: 13, color: "#e41f07", cursor: "pointer" }} onClick={() => window.open(route.customerList, "_blank")} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" className="btn p-0 border-0 shadow-none" onClick={() => setShowCustPanel(false)}>
+                                    <i className="ti ti-x fs-16" style={{ color: "#9ca3af" }} />
+                                </button>
+                            </div>
+                            {/* Info */}
+                            <div className="px-4 py-3" style={{ borderBottom: "1px solid #f0f2f4" }}>
+                                {sel.companyName && <div className="d-flex align-items-center gap-2 mb-1" style={{ fontSize: 13, color: "#374151" }}><i className="ti ti-building text-muted" style={{ fontSize: 13 }} />{sel.companyName}</div>}
+                                {sel.email && <div className="d-flex align-items-center gap-2" style={{ fontSize: 13, color: "#374151" }}><i className="ti ti-mail text-muted" style={{ fontSize: 13 }} />{sel.email}</div>}
+                            </div>
+                            {/* Tabs */}
+                            <div className="d-flex px-4 gap-4" style={{ borderBottom: "1px solid #e5e7eb", position: "relative", marginTop: 12 }}>
+                                {(["details", "activity"] as const).map(tab => (
+                                    <div key={tab} style={{ paddingBottom: 0, position: "relative" }}>
+                                        <button
+                                            type="button"
+                                            className="btn p-0 border-0 shadow-none"
+                                            style={{ fontSize: 13, fontWeight: 600, color: custPanelTab === tab ? "#e41f07" : "#6b7280", padding: "12px 0", background: "none", display: "block" }}
+                                            onClick={() => setCustPanelTab(tab)}
+                                        >
+                                            {tab === "details" ? "Details" : "Activity Log"}
+                                        </button>
+                                        {custPanelTab === tab && (
+                                            <div style={{ position: "absolute", bottom: -1, left: 0, right: 0, height: 2, background: "#e41f07", borderRadius: "2px 2px 0 0" }} />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Tab Content */}
+                            <div className="flex-grow-1 px-4 py-3">
+                                {custPanelTab === "details" ? (
+                                    <>
+                                        {/* Stats */}
+                                        <div className="d-flex gap-2 mb-4">
+                                            <div className="flex-1 rounded p-3 text-center" style={{ flex: 1, border: "1px solid #f0f2f4", borderRadius: 8 }}>
+                                                <i className="ti ti-alert-triangle mb-1" style={{ fontSize: 18, color: "#f59e0b", display: "block" }} />
+                                                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>Outstanding Receivables</div>
+                                                <div className="fw-bold" style={{ fontSize: 15 }}>₹{outstanding.toFixed(2)}</div>
+                                            </div>
+                                            <div className="flex-1 rounded p-3 text-center" style={{ flex: 1, border: "1px solid #f0f2f4", borderRadius: 8 }}>
+                                                <i className="ti ti-currency-rupee mb-1" style={{ fontSize: 18, color: "#10b981", display: "block" }} />
+                                                <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 4 }}>Unused Credits</div>
+                                                <div className="fw-bold" style={{ fontSize: 15 }}>₹{(sel.unusedCredits || 0).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                        {/* Contact Details */}
+                                        <div className="fw-bold mb-3" style={{ fontSize: 13, color: "#111827" }}>Contact Details</div>
+                                        {[
+                                            ["Customer Type", sel.customerType || sel.salutation || "Business"],
+                                            ["Currency", sel.currency || "INR"],
+                                            ["Payment Terms", sel.paymentTerms || "Due on Receipt"],
+                                            ["Portal Status", sel.portalStatus || "Disabled"],
+                                            ["Customer Language", sel.language || "English"],
+                                        ].map(([label, value]) => (
+                                            <div key={label} className="d-flex justify-content-between align-items-center py-2" style={{ borderBottom: "1px solid #f9fafb", fontSize: 13 }}>
+                                                <span style={{ color: "#9ca3af" }}>{label}</span>
+                                                <span style={{ color: "#111827", fontWeight: 500 }}>{value}</span>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (() => {
+                                    const activityEntries: { id: number; icon: string; message: string; datetime: string; invNum?: string }[] = [];
+                                    custInvoices.forEach((inv: any) => {
+                                        const invActivities: any[] = (() => { try { return JSON.parse(localStorage.getItem(`billing_invoice_activity_${inv.id}`) || "[]"); } catch { return []; } })();
+                                        invActivities.forEach((a: any) => activityEntries.push({ ...a, invNum: inv.invNumber || inv.id }));
+                                        if (invActivities.length === 0) {
+                                            activityEntries.push({ id: inv.id, icon: "ti-file-invoice", message: `Invoice ${inv.invNumber || "#" + inv.id} created`, datetime: inv.invoiceDate || "", invNum: inv.invNumber || inv.id });
+                                        }
+                                    });
+                                    activityEntries.sort((a, b) => b.id - a.id);
+                                    const iconMap: Record<string, { bg: string; color: string; icon: string }> = {
+                                        "invoice_created": { bg: "#fef9c3", color: "#ca8a04", icon: "ti-file-invoice" },
+                                        "invoice_updated": { bg: "#fff3cd", color: "#f59e0b", icon: "ti-edit" },
+                                        "status_changed": { bg: "#fff3cd", color: "#f59e0b", icon: "ti-edit" },
+                                        "payment": { bg: "#dcfce7", color: "#16a34a", icon: "ti-circle-check" },
+                                        "void": { bg: "#fee2e2", color: "#dc2626", icon: "ti-ban" },
+                                        "ti-file-invoice": { bg: "#fff0ef", color: "#e41f07", icon: "ti-file-invoice" },
+                                    };
+                                    if (activityEntries.length === 0) return (
+                                        <div className="text-center text-muted py-5" style={{ fontSize: 13 }}>
+                                            <i className="ti ti-history d-block mb-2" style={{ fontSize: 28 }} />
+                                            No activity recorded yet
+                                        </div>
+                                    );
+                                    return (
+                                        <div className="d-flex flex-column gap-3">
+                                            {activityEntries.map((entry, i) => {
+                                                const style = iconMap[entry.icon] || { bg: "#fff0ef", color: "#e41f07", icon: "ti-activity" };
+                                                return (
+                                                    <div key={i} className="d-flex gap-3 align-items-start">
+                                                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: style.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                            <i className={`ti ${style.icon}`} style={{ fontSize: 14, color: style.color }} />
+                                                        </div>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{entry.message}</div>
+                                                            {entry.datetime && <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{entry.datetime}</div>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* Advanced Customer Search Modal */}
+            {showAdvancedSearch && (() => {
+                const q = advSearchQuery.trim().toLowerCase();
+                const filtered = customers.filter((c: any) => {
+                    if (!q) return true;
+                    if (advSearchField === "Display Name") return (c.displayName || c.name || "").toLowerCase().includes(q);
+                    if (advSearchField === "Email") return (c.email || "").toLowerCase().includes(q);
+                    if (advSearchField === "Company Name") return (c.companyName || "").toLowerCase().includes(q);
+                    if (advSearchField === "Phone") return (c.workPhone || c.mobile || "").toLowerCase().includes(q);
+                    return true;
+                });
+                const totalPages = Math.ceil(filtered.length / ADV_SEARCH_PAGE_SIZE) || 1;
+                const page = Math.min(advSearchPage, totalPages);
+                const pageRows = filtered.slice((page - 1) * ADV_SEARCH_PAGE_SIZE, page * ADV_SEARCH_PAGE_SIZE);
+                return (
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1060, display: "flex", alignItems: "center", justifyContent: "center", padding: 12 }}>
+                        <div className="card border-0 shadow-lg" style={{ width: "100%", maxWidth: 760, borderRadius: 10, overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+                            {/* Header */}
+                            <div className="d-flex align-items-center justify-content-between px-4 py-3 bg-white" style={{ borderBottom: "1px solid #f0f2f4" }}>
+                                <h6 className="mb-0 fw-bold fs-16 text-dark">Advanced Customer Search</h6>
+                                <button type="button" className="btn p-0 border-0 shadow-none" onClick={() => setShowAdvancedSearch(false)}>
+                                    <i className="ti ti-x fs-18" style={{ color: "#9ca3af" }} />
+                                </button>
+                            </div>
+                            {/* Search Bar */}
+                            <div className="px-4 py-3 bg-white">
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                    <div className="dropdown">
+                                        <button
+                                            type="button"
+                                            className="btn btn-light border d-flex align-items-center gap-2 fw-medium"
+                                            style={{ fontSize: 14, height: 38, borderRadius: 6 }}
+                                            data-bs-toggle="dropdown"
+                                        >
+                                            {advSearchField} <i className="ti ti-chevron-down fs-13" />
+                                        </button>
+                                        <ul className="dropdown-menu shadow-sm border-0" style={{ fontSize: 14 }}>
+                                            {["Display Name", "Email", "Company Name", "Phone"].map(f => (
+                                                <li key={f}>
+                                                    <button className="dropdown-item py-2" type="button"
+                                                        onClick={() => { setAdvSearchField(f); setAdvSearchQuery(""); setAdvSearchPage(1); }}
+                                                    >{f}</button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        className="form-control shadow-none"
+                                        placeholder={`Search by ${advSearchField}...`}
+                                        style={{ flex: 1, minWidth: 160, height: 38, fontSize: 14, borderRadius: 6 }}
+                                        value={advSearchQuery}
+                                        autoFocus
+                                        onChange={e => { setAdvSearchQuery(e.target.value); setAdvSearchPage(1); }}
+                                        onKeyDown={e => e.key === "Enter" && setAdvSearchPage(1)}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="btn fw-bold text-white"
+                                        style={{ background: "#e41f07", border: "none", height: 38, borderRadius: 6, paddingInline: 24, fontSize: 14 }}
+                                        onClick={() => setAdvSearchPage(1)}
+                                    >
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Table */}
+                            <div style={{ overflowY: "auto", flex: 1, padding: "0 16px" }}>
+                                <table style={{ width: "100%", fontSize: 14, borderCollapse: "collapse" }}>
+                                    <thead>
+                                        <tr style={{ background: "#f3f4f6" }}>
+                                            {[["CUSTOMER NAME", "160px"], ["EMAIL", "auto"], ["COMPANY NAME", "140px"], ["PHONE", "120px"]].map(([label, w]) => (
+                                                <th key={label} style={{ fontSize: 13, fontWeight: 700, color: "#6b7280", letterSpacing: "0.05em", padding: "12px 16px", border: "none", background: "#f3f4f6", whiteSpace: "nowrap", width: w }}>{label}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {pageRows.length === 0 ? (
+                                            <tr><td colSpan={4} className="text-center text-muted py-5" style={{ fontSize: 14 }}>No customers found</td></tr>
+                                        ) : pageRows.map((c: any) => (
+                                            <tr
+                                                key={c.id}
+                                                style={{ cursor: "pointer" }}
+                                                onMouseEnter={e => (e.currentTarget.style.background = "#fff5f5")}
+                                                onMouseLeave={e => (e.currentTarget.style.background = "")}
+                                                onClick={() => { setCustomerName(String(c.id)); setCustomerSearchQuery(""); setShowAdvancedSearch(false); }}
+                                            >
+                                                <td style={{ padding: "12px 16px", fontWeight: 600, color: "#e41f07", fontSize: 14, whiteSpace: "nowrap" }}>
+                                                    {c.displayName || c.name || "—"}
+                                                </td>
+                                                <td style={{ padding: "12px 16px", color: "#374151", fontSize: 14 }}>{c.email || "—"}</td>
+                                                <td style={{ padding: "12px 16px", color: "#374151", fontSize: 14, whiteSpace: "nowrap" }}>{c.companyName || "—"}</td>
+                                                <td style={{ padding: "12px 16px", color: "#374151", fontSize: 14, whiteSpace: "nowrap" }}>{c.workPhone || c.mobile || "—"}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {/* Pagination */}
+                            {filtered.length > 0 && (
+                                <div className="d-flex justify-content-end align-items-center px-4 py-3 bg-white" style={{ gap: 8 }}>
+                                    <button type="button" className="btn btn-light border btn-sm" style={{ borderRadius: 6, width: 32, height: 32 }} disabled={page === 1} onClick={() => setAdvSearchPage(p => p - 1)}>
+                                        <i className="ti ti-chevron-left fs-14" />
+                                    </button>
+                                    <span className="fw-medium" style={{ fontSize: 14, minWidth: 60, textAlign: "center" }}>
+                                        {(page - 1) * ADV_SEARCH_PAGE_SIZE + 1} - {Math.min(page * ADV_SEARCH_PAGE_SIZE, filtered.length)}
+                                    </span>
+                                    <button type="button" className="btn btn-light border btn-sm" style={{ borderRadius: 6, width: 32, height: 32 }} disabled={page * ADV_SEARCH_PAGE_SIZE >= filtered.length} onClick={() => setAdvSearchPage(p => p + 1)}>
+                                        <i className="ti ti-chevron-right fs-14" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Manage Referrals / References Modal */}
             {showReferenceModal && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div className="card border-0 shadow-lg" style={{ width: 800, borderRadius: 8, overflow: "hidden" }}>
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 1050, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
+                    <div className="card border-0 shadow-lg" style={{ width: "100%", maxWidth: 800, borderRadius: 8, overflow: "hidden", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
                         <div className="card-header d-flex align-items-center justify-content-between bg-white py-3 px-4" style={{ borderBottom: "1px solid #f0f2f4" }}>
                             <div className="d-flex align-items-center gap-2">
                                 <i className="ti ti-users fs-20 text-primary" />
@@ -1501,8 +1983,8 @@ const AddInvoice: React.FC = () => {
                                 <i className="ti ti-x text-dark fs-18 fw-bold" />
                             </button>
                         </div>
-                        <div className="card-body p-4">
-                            <div className="d-flex align-items-center justify-content-between mb-4">
+                        <div className="card-body p-3 p-md-4" style={{ overflowY: "auto", flex: 1 }}>
+                            <div className="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
                                 <div className="input-group" style={{ width: 220 }}>
                                     <span className="input-group-text bg-white border-end-0 py-1" style={{ height: 32 }}>
                                         <i className="ti ti-search text-muted fs-14" />
@@ -1549,7 +2031,7 @@ const AddInvoice: React.FC = () => {
                                                 onChange={e => setNewRef({ ...newRef, email: e.target.value })}
                                             />
                                         </div>
-                                        <div className="col-md-2">
+                                        <div className="col-md-3">
                                             <label className="form-label mb-1 fw-bold text-dark" style={{ fontSize: 14 }}>Phone</label>
                                             <input
                                                 type="text"
@@ -1560,7 +2042,7 @@ const AddInvoice: React.FC = () => {
                                                 onChange={e => setNewRef({ ...newRef, phone: e.target.value })}
                                             />
                                         </div>
-                                        <div className="col-md-2">
+                                        <div className="col-md-3">
                                             <label className="form-label mb-1 fw-bold text-dark" style={{ fontSize: 14 }}>Type <span className="text-danger">*</span></label>
                                             <select
                                                 className="form-select border shadow-none bg-white"
@@ -1568,20 +2050,19 @@ const AddInvoice: React.FC = () => {
                                                 value={newRef.type}
                                                 onChange={e => setNewRef({ ...newRef, type: e.target.value })}
                                             >
-                                                <option>Referral</option>
                                                 <option>Reference</option>
                                             </select>
                                         </div>
-                                        <div className="col-md-2 d-flex align-items-end gap-2 pb-1">
-                                            <button type="button" className="btn btn-primary btn-sm px-3 fw-bold" style={{ fontSize: 14, height: 36 }} onClick={handleSaveReferral}>Save</button>
-                                            <button type="button" className="btn btn-light btn-sm border px-2 text-muted" style={{ fontSize: 14, height: 36 }} onClick={() => setShowAddReferralForm(false)}>Cancel</button>
+                                        <div className="col-12 d-flex justify-content-end gap-2">
+                                            <button type="button" className="btn btn-danger px-4 fw-bold" style={{ fontSize: 14, height: 36 }} onClick={handleSaveReferral}>Save</button>
+                                            <button type="button" className="btn btn-light border px-3 text-muted" style={{ fontSize: 14, height: 36 }} onClick={() => setShowAddReferralForm(false)}>Cancel</button>
                                         </div>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="border rounded" style={{ overflow: "visible" }}>
-                                <table className="table table-hover align-middle mb-0" style={{ fontSize: 14 }}>
+                            <div className="border rounded" style={{ overflowX: "auto", overflowY: "auto", maxHeight: 320 }}>
+                                <table className="table table-hover align-middle mb-0" style={{ fontSize: 14, minWidth: 600 }}>
                                     <thead className="table-light">
                                         <tr>
                                             <th className="fw-bold text-muted ps-4 py-3">NAME</th>
@@ -1650,11 +2131,11 @@ const AddInvoice: React.FC = () => {
             {/* ══ Bulk Add Modal ══ */}
             {showBulkModal && (
                 <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.45)", zIndex: 1100 }}>
-                    <div className="modal-dialog modal-lg modal-dialog-centered" style={{ maxWidth: 850 }}>
+                    <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 820 }}>
                         <div className="modal-content border-0 shadow-lg" style={{ borderRadius: 12, overflow: "hidden" }}>
                             {/* Header */}
-                            <div className="modal-header border-0 px-4 pt-4 pb-0 d-flex align-items-center justify-content-between">
-                                <h5 className="modal-title fw-bold fs-18 text-dark" style={{ letterSpacing: "-0.01em" }}>{isScannerMode ? "Scan Items" : "Add Items in Bulk"}</h5>
+                            <div className="modal-header border-0 px-3 pt-3 pb-0 d-flex align-items-center justify-content-between">
+                                <h5 className="modal-title fw-bold fs-16 text-dark">{isScannerMode ? "Scan Items" : "Add Items in Bulk"}</h5>
                                 <button
                                     type="button"
                                     className="btn d-flex align-items-center justify-content-center p-0 rounded-circle border-0"
@@ -1666,17 +2147,17 @@ const AddInvoice: React.FC = () => {
                             </div>
 
                             {/* Body */}
-                            <div className="modal-body px-0 pt-3 pb-0">
+                            <div className="modal-body px-0 pt-2 pb-0">
                                 {/* Search Bar Area */}
-                                <div className="px-4 pb-3">
-                                    <div className="d-flex align-items-center justify-content-between gap-3">
-                                        <div className="position-relative flex-grow-1" style={{ maxWidth: 400 }}>
-                                            <i className="ti ti-search position-absolute text-muted" style={{ left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 16 }} />
+                                <div className="px-3 pb-2">
+                                    <div className="d-flex align-items-center justify-content-between gap-2">
+                                        <div className="position-relative" style={{ width: 260 }}>
+                                            <i className="ti ti-search position-absolute text-muted" style={{ left: 9, top: "50%", transform: "translateY(-50%)", fontSize: 12 }} />
                                             <input
                                                 ref={bulkSearchRef}
                                                 type="text"
-                                                className="form-control ps-5 py-2 fs-14 border shadow-none"
-                                                style={{ borderRadius: 6, borderColor: "#e5e7eb", background: "#fff", height: 42 }}
+                                                className="form-control ps-4 fs-13 border shadow-none"
+                                                style={{ borderRadius: 6, borderColor: "#e5e7eb", background: "#fff", height: 32 }}
                                                 placeholder={isScannerMode ? "Scan barcode or type SKU..." : "Search items..."}
                                                 autoFocus
                                                 value={bulkSearch}
@@ -1717,12 +2198,12 @@ const AddInvoice: React.FC = () => {
                                 </div>
 
                                 {/* Table Area */}
-                                <div className="px-4">
-                                    <div style={{ maxHeight: "460px", overflowY: "auto" }}>
+                                <div className="px-3">
+                                    <div>
                                         <table className="table mb-0 fs-14 align-middle" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
                                             <thead className="sticky-top" style={{ top: 0, zIndex: 10, backgroundColor: "#f3f4f6" }}>
                                                 <tr>
-                                                    <th className="py-3 border-bottom-0 text-center" style={{ width: 60, backgroundColor: "#f3f4f6" }}>
+                                                    <th className="py-2 border-bottom-0 text-center" style={{ width: 48, backgroundColor: "#f3f4f6" }}>
                                                         <input
                                                             type="checkbox"
                                                             className="form-check-input shadow-none m-0"
@@ -1734,42 +2215,66 @@ const AddInvoice: React.FC = () => {
                                                             }}
                                                         />
                                                     </th>
-                                                    <th className="py-3 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6" }}>Item Name</th>
-                                                    <th className="py-3 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6" }}>SKU</th>
-                                                    <th className="py-3 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6" }}>Rate</th>
-                                                    <th className="py-3 border-bottom-0 fw-bold text-dark text-end pe-4" style={{ backgroundColor: "#f3f4f6" }}>Stock</th>
+                                                    <th className="py-2 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6", fontSize: 13 }}>Item Name</th>
+                                                    <th className="py-2 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6", fontSize: 13 }}>SKU</th>
+                                                    <th className="py-2 border-bottom-0 fw-bold text-dark" style={{ backgroundColor: "#f3f4f6", fontSize: 13 }}>Rate</th>
+                                                    <th className="py-2 border-bottom-0 fw-bold text-dark text-center" style={{ backgroundColor: "#f3f4f6", width: 90, fontSize: 13 }}>Quantity</th>
+                                                    <th className="py-2 border-bottom-0 fw-bold text-dark text-end pe-3" style={{ backgroundColor: "#f3f4f6", fontSize: 13 }}>Stock</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {INVENTORY_ITEMS.filter(item =>
                                                     item.name.toLowerCase().includes(bulkSearch.toLowerCase()) ||
                                                     item.sku.toLowerCase().includes(bulkSearch.toLowerCase())
-                                                ).map(item => (
-                                                    <tr key={item.id}
-                                                        onClick={() => {
-                                                            if (selectedBulkItems.includes(item.id)) {
-                                                                setSelectedBulkItems(prev => prev.filter(id => id !== item.id));
-                                                            } else {
-                                                                setSelectedBulkItems(prev => [...prev, item.id]);
-                                                            }
-                                                        }}
-                                                        style={{ cursor: "pointer", borderTop: "1px solid #f3f4f6" }}
-                                                    >
-                                                        <td className="py-3 text-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                className="form-check-input shadow-none m-0"
-                                                                style={{ width: 18, height: 18, borderRadius: 4, cursor: "pointer", verticalAlign: "middle" }}
-                                                                checked={selectedBulkItems.includes(item.id)}
-                                                                readOnly
-                                                            />
-                                                        </td>
-                                                        <td className="py-3 fw-medium text-dark">{item.name}</td>
-                                                        <td className="py-3 text-muted" style={{ fontSize: 14 }}>{item.sku}</td>
-                                                        <td className="py-3 fw-bold text-dark">₹{fmt2(item.rate)}</td>
-                                                        <td className="py-3 text-end pe-4 text-muted" style={{ fontSize: 14 }}>{item.stock}</td>
-                                                    </tr>
-                                                ))}
+                                                ).map(item => {
+                                                    const isSelected = selectedBulkItems.includes(item.id);
+                                                    return (
+                                                        <tr key={item.id}
+                                                            onClick={() => {
+                                                                if (isSelected) {
+                                                                    setSelectedBulkItems(prev => prev.filter(id => id !== item.id));
+                                                                    setBulkQuantities(prev => { const n = { ...prev }; delete n[item.id]; return n; });
+                                                                } else {
+                                                                    setSelectedBulkItems(prev => [...prev, item.id]);
+                                                                    setBulkQuantities(prev => ({ ...prev, [item.id]: prev[item.id] ?? "1" }));
+                                                                    setTimeout(() => bulkQtyRefs.current[item.id]?.focus(), 0);
+                                                                }
+                                                            }}
+                                                            style={{ cursor: "pointer", borderTop: "1px solid #f3f4f6" }}
+                                                        >
+                                                            <td className="py-3 text-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="form-check-input shadow-none m-0"
+                                                                    style={{ width: 18, height: 18, borderRadius: 4, cursor: "pointer", verticalAlign: "middle" }}
+                                                                    checked={isSelected}
+                                                                    readOnly
+                                                                />
+                                                            </td>
+                                                            <td className="py-3 fw-medium" style={{ color: "#111827" }}>{item.name}</td>
+                                                            <td className="py-3 text-muted" style={{ fontSize: 14 }}>{item.sku}</td>
+                                                            <td className="py-3 fw-bold" style={{ color: "#111827" }}>₹{fmt2(item.rate)}</td>
+                                                            <td className="py-3 text-center" onClick={e => e.stopPropagation()}>
+                                                                <input
+                                                                    ref={el => bulkQtyRefs.current[item.id] = el}
+                                                                    type="number"
+                                                                    min={1}
+                                                                    value={bulkQuantities[item.id] ?? "1"}
+                                                                    disabled={!isSelected}
+                                                                    onChange={e => setBulkQuantities(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                                                    onBlur={e => {
+                                                                        const v = parseInt(e.target.value);
+                                                                        setBulkQuantities(prev => ({ ...prev, [item.id]: String(isNaN(v) || v < 1 ? 1 : v) }));
+                                                                        e.target.style.borderColor = "#d1d5db";
+                                                                    }}
+                                                                    style={{ width: 72, border: "1px solid #d1d5db", borderRadius: 6, padding: "5px 8px", fontSize: 13, textAlign: "center", outline: "none", background: isSelected ? "#fff" : "#f9fafb", color: isSelected ? "#111827" : "#9ca3af" }}
+                                                                    onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                                                />
+                                                            </td>
+                                                            <td className="py-3 text-end pe-4 text-muted" style={{ fontSize: 14 }}>{item.stock}</td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1777,7 +2282,7 @@ const AddInvoice: React.FC = () => {
                             </div>
 
                             {/* Footer */}
-                            <div className="modal-footer border-0 px-4 py-4 d-flex align-items-center justify-content-between bg-white">
+                            <div className="modal-footer border-0 px-3 py-3 d-flex align-items-center justify-content-between bg-white">
                                 <span className="text-muted fs-14 fw-medium">{selectedBulkItems.length} items selected</span>
                                 <div className="d-flex gap-2">
                                     <button
@@ -1794,19 +2299,23 @@ const AddInvoice: React.FC = () => {
                                         style={{ backgroundColor: "#e41f07", borderRadius: 6, minWidth: 140, padding: "10px 24px" }}
                                         onClick={() => {
                                             const selected = INVENTORY_ITEMS.filter(i => selectedBulkItems.includes(i.id));
-                                            const newItems = selected.map(s => ({
-                                                id: Date.now() + Math.random(),
-                                                description: s.name,
-                                                qty: 1,
-                                                rate: s.rate,
-                                                discount: 0,
-                                                discountType: "%",
-                                                amount: s.rate
-                                            }));
+                                            const newItems = selected.map(s => {
+                                                const qty = Math.max(1, parseInt(bulkQuantities[s.id] ?? "1") || 1);
+                                                return {
+                                                    id: Date.now() + Math.random(),
+                                                    description: s.name,
+                                                    qty,
+                                                    rate: s.rate,
+                                                    discount: 0,
+                                                    discountType: "%",
+                                                    amount: s.rate * qty
+                                                };
+                                            });
                                             const baseItems = items.filter(i => i.description.trim() !== "" || i.rate !== 0);
                                             setItems([...baseItems, ...newItems]);
                                             setShowBulkModal(false);
                                             setSelectedBulkItems([]);
+                                            setBulkQuantities({});
                                         }}
                                     >
                                         Add Items

@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy } from 'react'; // router links
 import { Navigate, Route } from "react-router";
 import { all_routes } from "./all_routes";
 const Login = lazy(() => import("../feature-module/Authentication/login/login"));
@@ -198,11 +198,11 @@ const DatabaseBackup = lazy(() => import("../feature-module/Pages/settings/other
 const SystemUpdate = lazy(() => import("../feature-module/Pages/settings/other-settings/systemUpdate"));
 const Notifications = lazy(() => import("../feature-module/Pages/notifications/notifications"));
 const Dashboard = lazy(() => import("../feature-module/Pages/super-admin/dashboard"));
-const UserCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/customer-category"));
-const AddCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/add-category"));
-const NewCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/new-category"));
-const SubCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/sub-category"));
-const NewSubCategory = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/category/new-sub-category"));
+const UserCategory = lazy(() => import("../feature-module/Pages/billing-application/category/customer-category"));
+const AddCategory = lazy(() => import("../feature-module/Pages/billing-application/category/add-category"));
+const NewCategory = lazy(() => import("../feature-module/Pages/billing-application/category/new-category"));
+const SubCategory = lazy(() => import("../feature-module/Pages/billing-application/category/sub-category"));
+const NewSubCategory = lazy(() => import("../feature-module/Pages/billing-application/category/new-sub-category"));
 const Company = lazy(() => import("../feature-module/Pages/super-admin/company"));
 const Subscription = lazy(() => import("../feature-module/Pages/super-admin/subscription"));
 const Packages = lazy(() => import("../feature-module/Pages/super-admin/packages"));
@@ -211,22 +211,25 @@ const PurchaseTransaction = lazy(() => import("../feature-module/Pages/super-adm
 const MapsLeaflet = lazy(() => import("../feature-module/Pages/ui-module/map/leaflet"));
 const FormSelect2 = lazy(() => import("../feature-module/Pages/ui-module/forms/form-select2/formSelect2"));
 const UiSweetAlerts = lazy(() => import("../feature-module/Pages/ui-module/ui-advance/uiSweetAlerts"));
-const ProductPreference = lazy(() => import("../feature-module/Pages/billing-application/product-setting/productpreference"));
-const Product = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/product"));
-const ProductList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/product-list"));
-const Locations = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/location"));
-const PriceList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/price-list"));
-const CompositeItem = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/composite-item"));
-const AssignLocationList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/assign-location/assign-location-list"));
+const ProductPreference = lazy(() => import("../feature-module/Pages/billing-application/settings/productpreference"));
+const Product = lazy(() => import("../feature-module/Pages/billing-application/product/product"));
+const ProductList = lazy(() => import("../feature-module/Pages/billing-application/product/product-list"));
+const Locations = lazy(() => import("../feature-module/Pages/billing-application/location/location"));
+const PriceList = lazy(() => import("../feature-module/Pages/billing-application/product/price-list"));
+const CompositeItem = lazy(() => import("../feature-module/Pages/billing-application/product/composite-item"));
+const AssignLocationList = lazy(() => import("../feature-module/Pages/billing-application/location/assign-location-list"));
 
-const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-list"));
-const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-add"));
-const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-view"));
-const CustomerSetting = lazy(() => import("../feature-module/Pages/billing-application/product-setting/product/customer/customer-setting"));
+const CustomerList = lazy(() => import("../feature-module/Pages/billing-application/customer/customer-list"));
+const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/customer/customer-add"));
+const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/customer/customer-view"));
+const CustomerSetting = lazy(() => import("../feature-module/Pages/billing-application/settings/customer-preference"));
 const BillingInvoiceSetting = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-setting"));
 const BillingInvoiceList = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-list"));
 const BillingInvoiceView = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-view"));
 const BillingInvoiceAdd = lazy(() => import("../feature-module/Pages/billing-application/invoice/add-invoice"));
+const PaymentReceivedList = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-recevied-list"));
+const AddPayment = lazy(() => import("../feature-module/Pages/billing-application/payment/add-payment"));
+const PaymentView = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-view"));
 
 const route = all_routes;
 
@@ -1796,6 +1799,27 @@ export const publicRoutes = [
     element: <BillingInvoiceAdd />,
     route: Route,
     meta_title: "Edit Invoice",
+  },
+  {
+    id: "222",
+    path: route.paymentReceivedList,
+    element: <PaymentReceivedList />,
+    route: Route,
+    meta_title: "Received Payments",
+  },
+  {
+    id: "223",
+    path: route.paymentReceivedAdd,
+    element: <AddPayment />,
+    route: Route,
+    meta_title: "Record Payment",
+  },
+  {
+    id: "224",
+    path: route.paymentReceivedView,
+    element: <PaymentView />,
+    route: Route,
+    meta_title: "Payment Receipt",
   },
   {
     id: "216",

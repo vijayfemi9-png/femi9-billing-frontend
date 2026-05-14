@@ -1,8 +1,9 @@
 // @ts-nocheck
+// Force reload invoice-list.tsx - version 2
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
-import "../billing-application.scss";
+import "../product/billing-application.scss";
 import Datatable from "../../../../components/dataTable";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
 import PageHeader from "../../../../components/page-header/pageHeader";
@@ -132,7 +133,8 @@ const InvoiceList: any = () => {
     const navigate = useNavigate();
 
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [searchFocused, setSearchFocused] = useState(false);
     const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
@@ -148,34 +150,38 @@ const InvoiceList: any = () => {
     const [del, setDel] = useState<{ invoiceNumber: string; onConfirm: () => void } | null>(null);
 
     const fetchInvoices = async () => {
-        try {
-            setLoading(true);
-            const localData = loadInvoices();
+        // Show localStorage data instantly — no waiting
+        const localData = loadInvoices();
+        if (localData.length === 0) setLoading(true);
+        setInvoices(localData);
 
-            try {
-                const response = await api.get("/invoices");
-                const rawInvoices = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-                const apiInvoices = rawInvoices.map((inv: any) => ({
-                    id: inv.id,
-                    invoiceNumber: inv.invoice_number,
-                    date: inv.invoice_date,
-                    orderNumber: inv.order_number || "",
-                    customerName: inv.customer?.display_name || "Unknown",
-                    status: inv.status,
-                    dueDate: inv.due_date,
-                    amount: inv.grand_total,
-                }));
-                // Merge: local data takes priority for same id
-                const merged = [
-                    ...localData.filter(l => !apiInvoices.find((a: Invoice) => a.id === l.id)),
-                    ...apiInvoices,
-                ];
-                setInvoices(merged);
-            } catch {
-                setInvoices(localData);
-            }
+        // Sync with API in background
+        setSyncing(true);
+        try {
+            const response = await api.get("/invoices");
+            const rawInvoices = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+            const apiInvoices: Invoice[] = rawInvoices.map((inv: any) => ({
+                id: inv.id,
+                invoiceNumber: inv.invoice_number,
+                date: inv.invoice_date,
+                orderNumber: inv.order_number || "",
+                customerName: inv.customer?.display_name || "Unknown",
+                status: inv.status,
+                dueDate: inv.due_date,
+                amount: inv.grand_total,
+            }));
+            // O(1) merge using Map — local data takes priority for same id
+            const localMap = new Map(localData.map((l) => [l.id, l]));
+            const merged = [
+                ...localData,
+                ...apiInvoices.filter((a) => !localMap.has(a.id)),
+            ];
+            setInvoices(merged);
+        } catch {
+            // Keep showing local data — no error flash
         } finally {
             setLoading(false);
+            setSyncing(false);
         }
     };
 
@@ -271,8 +277,8 @@ const InvoiceList: any = () => {
             sorter: (a: any, b: any) => (a.invoiceNumber || "").localeCompare(b.invoiceNumber || ""),
             render: (_: unknown, record: Invoice) => (
                 <button
-                    className="border-0 bg-transparent p-0 text-start fw-medium"
-                    style={{ color: "#e41f07", cursor: "pointer", fontSize: "14px" }}
+                    className="border-0 bg-transparent p-0 text-start fw-medium inv-number-btn"
+                    style={{ cursor: "pointer", fontSize: "14px" }}
                     onClick={(e) => { e.stopPropagation(); navigate(route.billingInvoiceView.replace(":id", String(record.id))); }}
                 >
                     {record.invoiceNumber}
@@ -610,8 +616,8 @@ const InvoiceList: any = () => {
                                                             <div className="d-flex align-items-center justify-content-between flex-wrap mb-3 border-bottom pb-3">
                                                                 <div>
                                                                     <button
-                                                                        className="border-0 bg-transparent p-0 fw-bold fs-14"
-                                                                        style={{ color: "#e41f07", cursor: "pointer" }}
+                                                                        className="border-0 bg-transparent p-0 fw-bold fs-14 inv-number-btn"
+                                                                        style={{ cursor: "pointer" }}
                                                                         onClick={() => navigate(route.billingInvoiceView.replace(":id", String(inv.id)))}
                                                                     >
                                                                         {inv.invoiceNumber}

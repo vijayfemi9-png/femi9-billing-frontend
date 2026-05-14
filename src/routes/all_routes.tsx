@@ -319,4 +319,7 @@ export const all_routes = {
   billingInvoiceAdd: "/billing-application/invoices/new",
   billingInvoiceView: "/billing-application/invoices/:id",
   billingInvoiceEdit: "/billing-application/invoices/:id/edit",
+  paymentReceivedList: "/billing-application/payments-received",
+  paymentReceivedAdd: "/billing-application/payments-received/new",
+  paymentReceivedView: "/billing-application/payments-received/:id",
 };

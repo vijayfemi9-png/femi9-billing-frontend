@@ -2036,3 +2036,133 @@
     }
 }
 }
+
+// ── Edit Payment Modal — Mobile Responsive ────────────────────────────────────
+@media (max-width: 640px) {
+    .ep-overlay {
+        align-items: flex-end !important;
+    }
+
+    .ep-modal-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 95vh !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .ep-body {
+        padding: 12px 14px !important;
+    }
+
+    .ep-two-col {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .ep-side-panel {
+        width: 100% !important;
+    }
+
+    .ep-form-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        margin-bottom: 14px !important;
+    }
+
+    .ep-label {
+        width: auto !important;
+        margin-bottom: 4px;
+    }
+
+    .ep-form-row > input,
+    .ep-form-row > select,
+    .ep-form-row > div {
+        width: 100% !important;
+        flex: unset !important;
+    }
+
+    .ep-details-panel {
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        border-left: none !important;
+        box-shadow: none !important;
+    }
+
+    .ep-table-wrap {
+        -webkit-overflow-scrolling: touch;
+        overflow-x: auto;
+
+        table {
+            th, td {
+                padding: 8px 10px !important;
+                white-space: nowrap;
+            }
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            min-width: 110px;
+        }
+    }
+}
+
+// ── Record Payment Modal — Mobile Responsive ──────────────────────────────────
+@media (max-width: 640px) {
+    .rp-overlay {
+        padding: 0 !important;
+        align-items: flex-end !important;
+    }
+
+    .rp-modal-box {
+        max-width: 100% !important;
+        max-height: 95vh !important;
+        border-radius: 12px 12px 0 0 !important;
+    }
+
+    .rp-body {
+        padding: 10px !important;
+    }
+
+    .rp-section {
+        padding: 14px 12px !important;
+    }
+
+    .rp-row {
+        grid-template-columns: 1fr !important;
+        margin-bottom: 12px !important;
+    }
+
+    .rp-lbl {
+        text-align: left !important;
+        padding-right: 0 !important;
+        padding-top: 0 !important;
+        margin-bottom: 4px;
+    }
+
+    // Hide the empty placeholder cell in Payment# row on mobile
+    .rp-row-3col > div:last-child:empty {
+        display: none;
+    }
+
+    .rp-details-panel {
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .rp-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+
+        table {
+            min-width: 560px;
+
+            th, td {
+                padding: 8px 10px !important;
+                white-space: nowrap;
+            }
+        }
+    }
+}

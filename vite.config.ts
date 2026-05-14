@@ -9,6 +9,8 @@ export default defineConfig({
     allowedHosts: ['vijay.neksomo.com'],
     hmr: {
       overlay: false,
+      host: 'vijay.neksomo.com',
+      port: 8001,
     },
     proxy: {
       '/api': {

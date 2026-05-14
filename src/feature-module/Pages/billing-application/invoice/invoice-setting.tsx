@@ -1,5 +1,5 @@
-﻿import React, { useState, useCallback, useEffect } from 'react';
-import "../billing-application.scss";
+import React, { useState, useCallback, useEffect } from 'react';
+import "../product/billing-application.scss";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import SettingsTopbar from "../../settings/settings-topbar/settingsTopbar";
 import CommonSelect from "../../../../components/common-select/commonSelect";
