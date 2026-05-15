@@ -161,7 +161,7 @@ const AddInvoice: React.FC = () => {
         } catch { return []; }
     })();
 
-    const [customers, setCustomers] = useState<any[]>([]);
+    const [customers, setCustomers] = useState<any[]>(() => { try { return JSON.parse(localStorage.getItem("billing_customers") || "[]"); } catch { return []; } });
     const [loading, setLoading] = useState(false);
     const [customerSearchQuery, setCustomerSearchQuery] = useState("");
     const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
@@ -199,6 +199,29 @@ const AddInvoice: React.FC = () => {
 
     const [bulkOpen, setBulkOpen] = useState(false);
     const [showBulkModal, setShowBulkModal] = useState(false);
+    const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+    const NEW_CUST_DEFAULT = {
+        customerType: "Business",
+        salutation: "Mr.", firstName: "", lastName: "", companyName: "", companyCategory: "", displayName: "",
+        email: "", workPhonePrefix: "+91", workPhone: "", mobilePrefix: "+91", mobile: "",
+        language: "English", pan: "", currency: "INR- Indian Rupee", paymentTerms: "Due on Receipt",
+        enablePortal: false, phone: "", salesperson: "", priceList: "",
+        gstin: "", tds: "", website: "", openingBalance: "",
+        billingAttention: "", billingCountry: "India", billingStreet1: "", billingStreet2: "",
+        billingCity: "", billingState: "", billingZip: "", billingPhone: "", billingFax: "",
+        shippingAttention: "", shippingCountry: "India", shippingStreet1: "", shippingStreet2: "",
+        shippingCity: "", shippingState: "", shippingZip: "", shippingPhone: "", shippingFax: "",
+        remarks: "",
+    };
+    const custCategories: { id: number; name: string }[] = (() => { try { return JSON.parse(localStorage.getItem("categories") || "[]"); } catch { return []; } })();
+    const custPriceLists: { id: number; name: string }[] = (() => { try { return JSON.parse(localStorage.getItem("priceListData") || "[]"); } catch { return []; } })();
+    const custSalespersons: string[] = (() => { try { const d = JSON.parse(localStorage.getItem("billing_salespersons") || "[]"); return d.length > 0 ? d : SALESPERSONS; } catch { return SALESPERSONS; } })();
+    const [newCustForm, setNewCustForm] = useState(NEW_CUST_DEFAULT);
+    const [newCustTab, setNewCustTab] = useState("Other Details");
+    const [newCustShowMore, setNewCustShowMore] = useState(false);
+    const [newCustCustomFields, setNewCustCustomFields] = useState<{name: string; value: string}[]>([]);
+    const [newCustTags, setNewCustTags] = useState<string[]>([]);
+    const [newCustTagInput, setNewCustTagInput] = useState("");
     const [selectedBulkItems, setSelectedBulkItems] = useState<number[]>([]);
     const [bulkQuantities, setBulkQuantities] = useState<Record<number, string>>({});
     const [bulkSearch, setBulkSearch] = useState("");
@@ -401,6 +424,58 @@ const AddInvoice: React.FC = () => {
         setPaymentRows(prev => [...prev, { paymentMode: "Bank Transfer", depositTo: "Savings Account", advanceAmount: 0, amount: 0 }]);
     }
 
+    function handleSaveNewCustomer() {
+        const f = newCustForm;
+        const displayName = f.displayName || [f.firstName, f.lastName].filter(Boolean).join(" ") || f.companyName;
+        if (!displayName) return;
+        const existing: any[] = (() => { try { return JSON.parse(localStorage.getItem("billing_customers") || "[]"); } catch { return []; } })();
+        const nextId = existing.length > 0 ? Math.max(...existing.map((c: any) => Number(c.id) || 0)) + 1 : 1;
+        const newCustomer = {
+            id: nextId,
+            customerType: f.customerType,
+            salutation: f.salutation,
+            firstName: f.firstName,
+            lastName: f.lastName,
+            companyName: f.companyName,
+            companyCategory: f.companyCategory,
+            displayName,
+            name: displayName,
+            email: f.email,
+            phone: f.workPhone || f.mobile || f.phone,
+            mobile: f.mobile,
+            workPhone: f.workPhone,
+            language: f.language,
+            pan: f.pan,
+            gstin: f.gstin,
+            website: f.website,
+            currency: f.currency,
+            paymentTerms: f.paymentTerms,
+            priceList: f.priceList,
+            salesperson: f.salesperson,
+            enablePortal: f.enablePortal,
+            openingBalance: f.openingBalance,
+            billingAddress: { attention: f.billingAttention, country: f.billingCountry, street1: f.billingStreet1, street2: f.billingStreet2, city: f.billingCity, state: f.billingState, zip: f.billingZip, phone: f.billingPhone, fax: f.billingFax },
+            shippingAddress: { attention: f.shippingAttention, country: f.shippingCountry, street1: f.shippingStreet1, street2: f.shippingStreet2, city: f.shippingCity, state: f.shippingState, zip: f.shippingZip, phone: f.shippingPhone, fax: f.shippingFax },
+            customFields: newCustCustomFields,
+            reportingTags: newCustTags,
+            remarks: f.remarks,
+            receivables: 0,
+            unusedCredits: 0,
+        };
+        const updated = [...existing, newCustomer];
+        localStorage.setItem("billing_customers", JSON.stringify(updated));
+        setCustomers(updated);
+        setCustomerName(String(nextId));
+        setNewCustForm(NEW_CUST_DEFAULT);
+        setNewCustTab("Other Details");
+        setNewCustShowMore(false);
+        setNewCustCustomFields([]);
+        setNewCustTags([]);
+        setNewCustTagInput("");
+        setShowAddCustomerModal(false);
+        setShowCustomerDropdown(false);
+    }
+
     function handleDeleteReferral(id: number) {
         setReferrals(prev => prev.filter(r => r.id !== id));
     }
@@ -583,7 +658,7 @@ const AddInvoice: React.FC = () => {
                                     .inv-label.req { color: #c0392b; }
                                     .inv-input { height: 36px; font-size: 14px; border: 1px solid #d0d5dd; border-radius: 4px; padding: 0 10px; background: #fff; outline: none; transition: border-color 0.15s; }
                                     .inv-input:focus { border-color: #e41f07 !important; box-shadow: none !important; outline: none !important; }
-                                    .inv-select { height: 36px; font-size: 14px; border: 1px solid #d0d5dd; border-radius: 4px; padding: 0 28px 0 10px; background: #fff; outline: none; appearance: auto; transition: border-color 0.15s; }
+                                    .inv-select { height: 36px; font-size: 14px; border: 1px solid #d0d5dd; border-radius: 4px; padding: 0 28px 0 10px; background: #fff url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") no-repeat right 8px center / 10px 10px; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer; transition: border-color 0.15s; }
                                     .inv-select:focus { border-color: #e41f07 !important; box-shadow: none !important; outline: none !important; }
                                     @media (max-width: 576px) {
                                         .inv-row { flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -642,7 +717,7 @@ const AddInvoice: React.FC = () => {
                                                     })()}
                                                 </div>
                                                 <button type="button" className="dropdown-item px-3 py-2 text-danger fw-semibold d-flex align-items-center gap-2 bg-white border-top" style={{ fontSize: 14 }}
-                                                    onClick={() => { setShowCustomerDropdown(false); navigate(route.customerAdd); }}>
+                                                    onClick={() => { setShowCustomerDropdown(false); setShowAddCustomerModal(true); }}>
                                                     <i className="ti ti-circle-plus" style={{ fontSize: 15 }} /> Add New Customer
                                                 </button>
                                             </div>
@@ -837,7 +912,7 @@ const AddInvoice: React.FC = () => {
                                                 style={{ fontSize: 14, height: 34, color: "#4b4c4dff", borderRadius: 4 }}
                                                 onClick={() => setBulkOpen(o => !o)}
                                             >
-                                                <i className="ti ti-circle-check fs-16" style={{ color: "#e41f07" }} /> <span style={{ color: "#e03e21ff" }}>Bulk Actions</span> <i className="ti ti-chevron-down ms-1" style={{ fontSize: 10 }} />
+                                                <i className="ti ti-circle-check fs-16" style={{ color: "#e41f07" }} /> <span style={{ color: "#e03e21ff" }}>Bulk Actions</span> <i className="ti ti-chevron-down ms-1" style={{ fontSize: 10, color: "#9ca3af" }} />
                                             </button>
                                             {bulkOpen && (
                                                 <ul
@@ -1084,7 +1159,7 @@ const AddInvoice: React.FC = () => {
                                     <div className="d-flex align-items-center gap-2 px-3 py-1 cursor-pointer border-end hover-bg-white" style={{ height: 32 }} onClick={() => setIsGlobalDiscountEnabled(!isGlobalDiscountEnabled)}>
                                         <i className="ti ti-ticket fs-16" />
                                         <span className={`text-muted ${isGlobalDiscountEnabled ? '' : 'fw-bold'}`} style={{ lineHeight: 1 }}>Discount</span>
-                                        <i className="ti ti-chevron-down fs-10 ms-1" />
+                                        <i className="ti ti-chevron-down fs-10 ms-1" style={{ color: "#9ca3af" }} />
                                     </div>
 
                                     {/* Reporting Tags Popup */}
@@ -1096,7 +1171,7 @@ const AddInvoice: React.FC = () => {
                                         >
                                             <i className="ti ti-tag fs-16" />
                                             <span className="text-muted">Reporting Tags</span>
-                                            <i className="ti ti-chevron-down fs-10 ms-1" />
+                                            <i className="ti ti-chevron-down fs-10 ms-1" style={{ color: "#9ca3af" }} />
                                         </div>
 
                                         {showTagsPopup && (
@@ -1313,6 +1388,61 @@ const AddInvoice: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Advance Payment Section */}
+                            <div className="col-12">
+                                <div className="border rounded p-3" style={{ borderRadius: 5, fontSize: 14 }}>
+
+                                    <div className="d-flex align-items-center gap-2 mb-3">
+                                        <input
+                                            type="checkbox"
+                                            id="advancePayment"
+                                            checked={advancePayment}
+                                            onChange={e => { setAdvancePayment(e.target.checked); setPaymentReceived(e.target.checked); }}
+                                            style={{ width: 16, height: 16, accentColor: "#dc2626", cursor: "pointer", outline: "none", boxShadow: "none" }}
+                                        />
+                                        <label htmlFor="advancePayment" className="fw-semibold mb-0 fs-14" style={{ cursor: "pointer", color: "#374151" }}>
+                                            Advance Payment
+                                        </label>
+                                    </div>
+
+                                    {advancePayment && (
+                                        <div className="mt-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
+                                            {!customerName ? (
+                                                <div className="d-flex align-items-center gap-2 p-3 rounded border" style={{ background: "#fefce8", borderColor: "#fde68a" }}>
+                                                    <i className="ti ti-alert-triangle" style={{ color: "#d97706", fontSize: 18, flexShrink: 0 }} />
+                                                    <p className="mb-0 fs-14 fw-medium" style={{ color: "#92400e" }}>Please select a customer first to view advance balance.</p>
+                                                </div>
+                                            ) : customerAdvanceBalance > 0 ? (
+                                                <div className="d-flex align-items-center justify-content-between p-3 rounded border" style={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}>
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <i className="ti ti-circle-check" style={{ color: "#16a34a", fontSize: 20, flexShrink: 0 }} />
+                                                        <div>
+                                                            <p className="fw-semibold mb-0 fs-14" style={{ color: "#15803d" }}>
+                                                                {selectedCustomerDisplayName} has <span className="fw-bold">₹{fmt2(customerAdvanceBalance)}</span> advance balance
+                                                            </p>
+                                                            <p className="mb-0 fs-13 text-muted">This will be applied against the invoice amount.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="d-flex align-items-center gap-2 px-3 py-2 rounded border" style={{ background: "#fff", borderColor: "#d1d5db", flexShrink: 0 }}>
+                                                        <span className="fw-bold fs-15" style={{ color: "#16a34a" }}>₹{fmt2(customerAdvanceBalance)}</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="d-flex align-items-center gap-2 p-3 rounded border" style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+                                                    <i className="ti ti-info-circle" style={{ color: "#dc2626", fontSize: 18, flexShrink: 0 }} />
+                                                    <div>
+                                                        <p className="fw-semibold mb-0 fs-14" style={{ color: "#374151" }}>
+                                                            <i className="ti ti-user me-1 text-muted" />{selectedCustomerDisplayName}
+                                                        </p>
+                                                        <p className="mb-0 fs-13 text-muted">No advance balance available for this customer.</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Payment Received Section */}
                             <div className="col-12">
                                 <div className="border rounded p-3" style={{ borderRadius: 5, fontSize: 14 }}>
@@ -1433,55 +1563,6 @@ const AddInvoice: React.FC = () => {
 
                                                 {/* Mirroring col-md-1 (Trash icon space) */}
                                                 <div className="col-md-1 d-none d-md-block"></div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Advance Payment Section */}
-                            <div className="col-12">
-                                <div className="border rounded p-3" style={{ borderRadius: 5, fontSize: 14 }}>
-
-                                    <div className="d-flex align-items-center gap-2 mb-3">
-                                        <input
-                                            type="checkbox"
-                                            id="advancePayment"
-                                            checked={advancePayment}
-                                            onChange={e => { setAdvancePayment(e.target.checked); setPaymentReceived(e.target.checked); }}
-                                            style={{ width: 16, height: 16, accentColor: "#dc2626", cursor: "pointer", outline: "none", boxShadow: "none" }}
-                                        />
-                                        <label htmlFor="advancePayment" className="fw-semibold mb-0 fs-14" style={{ cursor: "pointer", color: "#374151" }}>
-                                            Advance Payment
-                                        </label>
-                                    </div>
-
-                                    {advancePayment && (
-                                        <div className="mt-2 pt-3" style={{ borderTop: "1px solid #f1f5f9" }}>
-                                            <div className="d-flex align-items-start gap-2 p-3 rounded border" style={{ background: "#fff" }}>
-                                                <i className="ti ti-info-circle" style={{ color: "#6b7280", fontSize: 18, flexShrink: 0, marginTop: 1 }} />
-                                                <div className="flex-grow-1">
-                                                    <p className="fw-semibold mb-2 fs-14" style={{ color: "#374151" }}>Advance Payment Pending</p>
-                                                    {advanceCategoryCustomers.length > 0 ? (
-                                                        <div className="d-flex flex-column gap-2">
-                                                            {advanceCategoryCustomers.map((cust, i) => (
-                                                                <div key={i} className="d-flex align-items-center justify-content-between px-3 py-2 rounded border" style={{ background: "#f9fafb" }}>
-                                                                    <span className="fw-semibold fs-14 text-dark">
-                                                                        <i className="ti ti-user me-2 text-muted" />
-                                                                        {cust.name}
-                                                                    </span>
-                                                                    <span className="fw-bold fs-14" style={{ color: cust.balance > 0 ? "#16a34a" : "#dc2626" }}>
-                                                                        ₹{fmt2(cust.balance)}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <p className="mb-0 fs-14 text-muted">
-                                                            <i className="ti ti-info-circle me-1" />No customers found in advance payment categories.
-                                                        </p>
-                                                    )}
-                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1883,7 +1964,7 @@ const AddInvoice: React.FC = () => {
                                             style={{ fontSize: 14, height: 38, borderRadius: 6 }}
                                             data-bs-toggle="dropdown"
                                         >
-                                            {advSearchField} <i className="ti ti-chevron-down fs-13" />
+                                            {advSearchField} <i className="ti ti-chevron-down fs-13" style={{ color: "#9ca3af" }} />
                                         </button>
                                         <ul className="dropdown-menu shadow-sm border-0" style={{ fontSize: 14 }}>
                                             {["Display Name", "Email", "Company Name", "Phone"].map(f => (
@@ -2322,6 +2403,392 @@ const AddInvoice: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Add New Customer Modal */}
+            {showAddCustomerModal && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                    <div className="bg-white shadow-lg" style={{ width: "100%", maxWidth: 640, borderRadius: 8, overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "95vh" }}>
+
+                        {/* Header */}
+                        <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ borderBottom: "1px solid #e5e7eb" }}>
+                            <span className="fw-bold" style={{ fontSize: 16, color: "#111827" }}>New Customer</span>
+                            <button type="button" className="btn p-0 shadow-none border-0" onClick={() => setShowAddCustomerModal(false)}>
+                                <i className="ti ti-x" style={{ fontSize: 18, color: "#9ca3af" }} />
+                            </button>
+                        </div>
+
+                        {/* Scrollable Body */}
+                        <div style={{ overflowY: "auto", flex: 1, padding: "20px 28px" }}>
+
+                            {/* Customer Type */}
+                            <div className="d-flex align-items-center mb-3" style={{ gap: 32 }}>
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140 }}>Customer Type</label>
+                                <div className="d-flex gap-4">
+                                    {["Business", "Individual"].map(t => (
+                                        <label key={t} className="d-flex align-items-center gap-2" style={{ fontSize: 14, cursor: "pointer", fontWeight: newCustForm.customerType === t ? 600 : 400 }}>
+                                            <input type="radio" name="custType" value={t} checked={newCustForm.customerType === t}
+                                                onChange={() => setNewCustForm(p => ({ ...p, customerType: t }))}
+                                                style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
+                                            {t}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Primary Contact */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Primary Contact</label>
+                                <div className="d-flex gap-2 flex-grow-1">
+                                    <select className="form-select shadow-none" style={{ width: 110, height: 36, fontSize: 13, borderRadius: 4, flexShrink: 0 }}
+                                        value={newCustForm.salutation}
+                                        onChange={e => setNewCustForm(p => ({ ...p, salutation: e.target.value }))}>
+                                        {["Salutation", "Mr.", "Mrs.", "Ms.", "Dr.", "Prof."].map(s => <option key={s} value={s === "Salutation" ? "" : s}>{s}</option>)}
+                                    </select>
+                                    <input type="text" className="form-control shadow-none" placeholder="First Name" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                        value={newCustForm.firstName}
+                                        onChange={e => {
+                                            const v = e.target.value;
+                                            setNewCustForm(p => {
+                                                const auto = [v, p.lastName].filter(Boolean).join(" ") || p.companyName;
+                                                return { ...p, firstName: v, displayName: p.displayName || auto };
+                                            });
+                                        }} />
+                                    <input type="text" className="form-control shadow-none" placeholder="Last Name" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                        value={newCustForm.lastName}
+                                        onChange={e => {
+                                            const v = e.target.value;
+                                            setNewCustForm(p => {
+                                                const auto = [p.firstName, v].filter(Boolean).join(" ") || p.companyName;
+                                                return { ...p, lastName: v, displayName: p.displayName || auto };
+                                            });
+                                        }} />
+                                </div>
+                            </div>
+
+                            {/* Company Name */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Company Name</label>
+                                <input type="text" className="form-control shadow-none" placeholder="" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                    value={newCustForm.companyName}
+                                    onChange={e => setNewCustForm(p => ({ ...p, companyName: e.target.value }))} />
+                            </div>
+
+                            {/* Customer Category */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Customer Category</label>
+                                <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                    value={newCustForm.companyCategory}
+                                    onChange={e => setNewCustForm(p => ({ ...p, companyCategory: e.target.value }))}>
+                                    <option value="">Select Category</option>
+                                    {custCategories.length > 0
+                                        ? custCategories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)
+                                        : ["Technology","Manufacturing","Retail","Healthcare","Finance & Banking","Education","Real Estate","Logistics & Transport","Food & Beverage","Hospitality & Tourism","Construction","Agriculture","Consulting","E-Commerce","Pharmaceutical","Automotive","Textile & Apparel","Legal Services","Others"].map(n => <option key={n} value={n}>{n}</option>)
+                                    }
+                                </select>
+                            </div>
+
+                            {/* Display Name */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, minWidth: 140, flexShrink: 0 }}>
+                                    <span style={{ color: "#e41f07", fontWeight: 600 }}>Display Name*</span>
+                                </label>
+                                <input type="text" className="form-control shadow-none" placeholder="Select or type to add"
+                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                    value={newCustForm.displayName}
+                                    onChange={e => setNewCustForm(p => ({ ...p, displayName: e.target.value }))} />
+                            </div>
+
+                            {/* Email Address */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Email Address</label>
+                                <input type="email" className="form-control shadow-none" placeholder=""
+                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                    value={newCustForm.email}
+                                    onChange={e => setNewCustForm(p => ({ ...p, email: e.target.value }))} />
+                            </div>
+
+                            {/* Phone */}
+                            <div className="d-flex align-items-center mb-3">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Phone</label>
+                                <div className="d-flex gap-2 flex-grow-1">
+                                    <div className="d-flex" style={{ flex: 1 }}>
+                                        <select className="form-select shadow-none" style={{ width: 72, height: 36, fontSize: 13, borderRadius: "4px 0 0 4px", flexShrink: 0 }}
+                                            value={newCustForm.workPhonePrefix}
+                                            onChange={e => setNewCustForm(p => ({ ...p, workPhonePrefix: e.target.value }))}>
+                                            {["+91", "+1", "+44", "+61"].map(c => <option key={c}>{c}</option>)}
+                                        </select>
+                                        <input type="text" className="form-control shadow-none" placeholder="Work Phone"
+                                            style={{ height: 36, fontSize: 13, borderRadius: "0 4px 4px 0", borderLeft: "none" }}
+                                            value={newCustForm.workPhone}
+                                            onChange={e => setNewCustForm(p => ({ ...p, workPhone: e.target.value }))} />
+                                    </div>
+                                    <div className="d-flex" style={{ flex: 1 }}>
+                                        <select className="form-select shadow-none" style={{ width: 72, height: 36, fontSize: 13, borderRadius: "4px 0 0 4px", flexShrink: 0 }}
+                                            value={newCustForm.mobilePrefix}
+                                            onChange={e => setNewCustForm(p => ({ ...p, mobilePrefix: e.target.value }))}>
+                                            {["+91", "+1", "+44", "+61"].map(c => <option key={c}>{c}</option>)}
+                                        </select>
+                                        <input type="text" className="form-control shadow-none" placeholder="Mobile"
+                                            style={{ height: 36, fontSize: 13, borderRadius: "0 4px 4px 0", borderLeft: "none" }}
+                                            value={newCustForm.mobile}
+                                            onChange={e => setNewCustForm(p => ({ ...p, mobile: e.target.value }))} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Customer Language */}
+                            <div className="d-flex align-items-center mb-4">
+                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Customer Language</label>
+                                <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4, maxWidth: 220 }}
+                                    value={newCustForm.language}
+                                    onChange={e => setNewCustForm(p => ({ ...p, language: e.target.value }))}>
+                                    {["English", "Tamil", "Hindi", "Telugu", "Kannada", "Malayalam"].map(l => <option key={l}>{l}</option>)}
+                                </select>
+                            </div>
+
+                            {/* Tabs */}
+                            <div style={{ borderBottom: "1px solid #e5e7eb", marginBottom: 16 }}>
+                                <div className="d-flex gap-0">
+                                    {["Other Details", "Address", "Custom Fields", "Reporting Tags", "Remarks"].map(tab => (
+                                        <button key={tab} type="button" onClick={() => setNewCustTab(tab)}
+                                            className="btn btn-link shadow-none p-0 me-4 pb-2"
+                                            style={{ fontSize: 13, textDecoration: "none", color: newCustTab === tab ? "#e41f07" : "#6b7280", fontWeight: newCustTab === tab ? 600 : 400, borderBottom: newCustTab === tab ? "2px solid #e41f07" : "2px solid transparent", borderRadius: 0 }}>
+                                            {tab}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tab Content */}
+                            {newCustTab === "Other Details" && (
+                                <div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>PAN</label>
+                                        <input type="text" className="form-control shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustForm.pan} onChange={e => setNewCustForm(p => ({ ...p, pan: e.target.value }))} />
+                                    </div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Currency</label>
+                                        <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustForm.currency} onChange={e => setNewCustForm(p => ({ ...p, currency: e.target.value }))}>
+                                            <option>INR- Indian Rupee</option><option>USD- US Dollar</option><option>EUR- Euro</option><option>GBP- British Pound</option>
+                                        </select>
+                                    </div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Payment Terms</label>
+                                        <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustForm.paymentTerms} onChange={e => setNewCustForm(p => ({ ...p, paymentTerms: e.target.value }))}>
+                                            <option>Due on Receipt</option><option>Net 15</option><option>Net 30</option><option>Net 45</option><option>Net 60</option>
+                                        </select>
+                                    </div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Salesperson</label>
+                                        <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustForm.salesperson} onChange={e => setNewCustForm(p => ({ ...p, salesperson: e.target.value }))}>
+                                            <option value="">Select Salesperson</option>
+                                            {custSalespersons.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Price List</label>
+                                        <select className="form-select shadow-none" style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustForm.priceList} onChange={e => setNewCustForm(p => ({ ...p, priceList: e.target.value }))}>
+                                            <option value="">Select Price List</option>
+                                            {custPriceLists.map(pl => <option key={pl.id} value={pl.name}>{pl.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="d-flex align-items-center mb-3">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Enable Portal?</label>
+                                        <label className="d-flex align-items-center gap-2" style={{ fontSize: 13, cursor: "pointer", color: "#374151" }}>
+                                            <input type="checkbox" checked={newCustForm.enablePortal}
+                                                onChange={e => setNewCustForm(p => ({ ...p, enablePortal: e.target.checked }))}
+                                                style={{ width: 15, height: 15, accentColor: "#e41f07" }} />
+                                            Allow portal access for this customer
+                                        </label>
+                                    </div>
+                                    <div className="d-flex align-items-center mb-1">
+                                        <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Documents</label>
+                                        <button type="button" className="btn border shadow-none d-flex align-items-center gap-2"
+                                            style={{ height: 34, fontSize: 13, borderRadius: 4, color: "#374151" }}>
+                                            <i className="ti ti-upload" style={{ fontSize: 14 }} /> Upload File
+                                        </button>
+                                    </div>
+                                    <div style={{ marginLeft: 140, fontSize: 12, color: "#9ca3af", paddingLeft: 4, marginBottom: 12 }}>
+                                        You can upload a maximum of 10 files, 10MB each
+                                    </div>
+
+                                    {/* Add more details toggle */}
+                                    <button type="button" className="btn btn-link shadow-none p-0 mb-2"
+                                        style={{ fontSize: 13, color: "#e41f07", textDecoration: "none", fontWeight: 500 }}
+                                        onClick={() => setNewCustShowMore(p => !p)}>
+                                        <i className={`ti ti-chevron-${newCustShowMore ? "up" : "down"} me-1`} />
+                                        {newCustShowMore ? "Hide details" : "Add more details"}
+                                    </button>
+
+                                    {newCustShowMore && (
+                                        <div>
+                                            <div className="d-flex align-items-center mb-3">
+                                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>GSTIN</label>
+                                                <input type="text" className="form-control shadow-none" placeholder="GST Identification Number"
+                                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                                    value={newCustForm.gstin} onChange={e => setNewCustForm(p => ({ ...p, gstin: e.target.value }))} />
+                                            </div>
+                                            <div className="d-flex align-items-center mb-3">
+                                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>TDS</label>
+                                                <input type="text" className="form-control shadow-none" placeholder="TDS %"
+                                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                                    value={newCustForm.tds} onChange={e => setNewCustForm(p => ({ ...p, tds: e.target.value }))} />
+                                            </div>
+                                            <div className="d-flex align-items-center mb-3">
+                                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Website</label>
+                                                <input type="text" className="form-control shadow-none" placeholder="https://"
+                                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                                    value={newCustForm.website} onChange={e => setNewCustForm(p => ({ ...p, website: e.target.value }))} />
+                                            </div>
+                                            <div className="d-flex align-items-center mb-3">
+                                                <label style={{ fontSize: 13, color: "#374151", minWidth: 140, flexShrink: 0 }}>Opening Balance</label>
+                                                <input type="number" className="form-control shadow-none" placeholder="0.00"
+                                                    style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                                    value={newCustForm.openingBalance} onChange={e => setNewCustForm(p => ({ ...p, openingBalance: e.target.value }))} />
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {newCustTab === "Address" && (() => {
+                                const addrField = (label: string, fKey: string, placeholder = "") => (
+                                    <div className="d-flex align-items-center mb-2" key={fKey}>
+                                        <label style={{ fontSize: 12, color: "#6b7280", minWidth: 110, flexShrink: 0 }}>{label}</label>
+                                        <input type="text" className="form-control shadow-none" placeholder={placeholder}
+                                            style={{ height: 32, fontSize: 13, borderRadius: 4 }}
+                                            value={(newCustForm as any)[fKey]}
+                                            onChange={e => setNewCustForm(p => ({ ...p, [fKey]: e.target.value }))} />
+                                    </div>
+                                );
+                                return (
+                                    <div className="row g-3">
+                                        <div className="col-12 col-md-6">
+                                            <p className="fw-semibold mb-2" style={{ fontSize: 13, color: "#374151" }}>Billing Address</p>
+                                            {addrField("Attention", "billingAttention")}
+                                            {addrField("Country", "billingCountry", "India")}
+                                            {addrField("Street 1", "billingStreet1")}
+                                            {addrField("Street 2", "billingStreet2")}
+                                            {addrField("City", "billingCity")}
+                                            {addrField("State", "billingState")}
+                                            {addrField("ZIP Code", "billingZip")}
+                                            {addrField("Phone", "billingPhone")}
+                                            {addrField("Fax", "billingFax")}
+                                        </div>
+                                        <div className="col-12 col-md-6">
+                                            <div className="d-flex align-items-center justify-content-between mb-2">
+                                                <p className="fw-semibold mb-0" style={{ fontSize: 13, color: "#374151" }}>Shipping Address</p>
+                                                <button type="button" className="btn btn-link p-0 shadow-none"
+                                                    style={{ fontSize: 12, color: "#e41f07", textDecoration: "none" }}
+                                                    onClick={() => setNewCustForm(p => ({ ...p, shippingAttention: p.billingAttention, shippingCountry: p.billingCountry, shippingStreet1: p.billingStreet1, shippingStreet2: p.billingStreet2, shippingCity: p.billingCity, shippingState: p.billingState, shippingZip: p.billingZip, shippingPhone: p.billingPhone, shippingFax: p.billingFax }))}>
+                                                    Copy Billing Address
+                                                </button>
+                                            </div>
+                                            {addrField("Attention", "shippingAttention")}
+                                            {addrField("Country", "shippingCountry", "India")}
+                                            {addrField("Street 1", "shippingStreet1")}
+                                            {addrField("Street 2", "shippingStreet2")}
+                                            {addrField("City", "shippingCity")}
+                                            {addrField("State", "shippingState")}
+                                            {addrField("ZIP Code", "shippingZip")}
+                                            {addrField("Phone", "shippingPhone")}
+                                            {addrField("Fax", "shippingFax")}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {newCustTab === "Custom Fields" && (
+                                <div>
+                                    {newCustCustomFields.map((cf, i) => (
+                                        <div key={i} className="d-flex align-items-center gap-2 mb-2">
+                                            <input type="text" className="form-control shadow-none" placeholder="Field Name"
+                                                style={{ height: 34, fontSize: 13, borderRadius: 4 }}
+                                                value={cf.name}
+                                                onChange={e => setNewCustCustomFields(prev => prev.map((x, idx) => idx === i ? { ...x, name: e.target.value } : x))} />
+                                            <input type="text" className="form-control shadow-none" placeholder="Value"
+                                                style={{ height: 34, fontSize: 13, borderRadius: 4 }}
+                                                value={cf.value}
+                                                onChange={e => setNewCustCustomFields(prev => prev.map((x, idx) => idx === i ? { ...x, value: e.target.value } : x))} />
+                                            <button type="button" className="btn p-0 shadow-none border-0"
+                                                onClick={() => setNewCustCustomFields(prev => prev.filter((_, idx) => idx !== i))}>
+                                                <i className="ti ti-trash text-danger" style={{ fontSize: 16 }} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    <button type="button" className="btn btn-link shadow-none p-0 mt-1"
+                                        style={{ fontSize: 13, color: "#e41f07", textDecoration: "none", fontWeight: 500 }}
+                                        onClick={() => setNewCustCustomFields(prev => [...prev, { name: "", value: "" }])}>
+                                        <i className="ti ti-circle-plus me-1" />Add Custom Field
+                                    </button>
+                                </div>
+                            )}
+
+                            {newCustTab === "Reporting Tags" && (
+                                <div>
+                                    <div className="d-flex gap-2 mb-3">
+                                        <input type="text" className="form-control shadow-none" placeholder="Type a tag and press Enter"
+                                            style={{ height: 36, fontSize: 13, borderRadius: 4 }}
+                                            value={newCustTagInput}
+                                            onChange={e => setNewCustTagInput(e.target.value)}
+                                            onKeyDown={e => {
+                                                if (e.key === "Enter" && newCustTagInput.trim()) {
+                                                    e.preventDefault();
+                                                    setNewCustTags(p => [...p, newCustTagInput.trim()]);
+                                                    setNewCustTagInput("");
+                                                }
+                                            }} />
+                                        <button type="button" className="btn fw-semibold shadow-none"
+                                            style={{ background: "#e41f07", color: "#fff", borderRadius: 4, fontSize: 13, height: 36, padding: "0 16px", flexShrink: 0 }}
+                                            onClick={() => { if (newCustTagInput.trim()) { setNewCustTags(p => [...p, newCustTagInput.trim()]); setNewCustTagInput(""); } }}>
+                                            Add
+                                        </button>
+                                    </div>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {newCustTags.length === 0 && <span className="text-muted" style={{ fontSize: 13 }}>No tags added yet.</span>}
+                                        {newCustTags.map((tag, i) => (
+                                            <span key={i} className="d-flex align-items-center gap-1 px-3 py-1 rounded-pill"
+                                                style={{ background: "#fef2f2", border: "1px solid #fecaca", fontSize: 13, color: "#374151" }}>
+                                                {tag}
+                                                <button type="button" className="btn p-0 shadow-none border-0 ms-1"
+                                                    onClick={() => setNewCustTags(p => p.filter((_, idx) => idx !== i))}>
+                                                    <i className="ti ti-x" style={{ fontSize: 12, color: "#e41f07" }} />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {newCustTab === "Remarks" && (
+                                <div>
+                                    <textarea className="form-control shadow-none" rows={5} placeholder="Add remarks or notes about this customer..."
+                                        style={{ fontSize: 13, borderRadius: 4, resize: "vertical", width: "100%" }}
+                                        value={newCustForm.remarks}
+                                        onChange={e => setNewCustForm(p => ({ ...p, remarks: e.target.value }))} />
+                                    <p className="text-muted mt-1 mb-0" style={{ fontSize: 12 }}>These remarks are for internal use only.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="d-flex justify-content-end gap-2 px-4 py-3" style={{ borderTop: "1px solid #e5e7eb" }}>
+                            <button type="button" className="btn border fw-semibold shadow-none" style={{ fontSize: 13, borderRadius: 6, color: "#4b5563", height: 36, padding: "0 20px" }}
+                                onClick={() => setShowAddCustomerModal(false)}>
+                                Cancel
+                            </button>
+                            <button type="button" className="btn fw-bold text-white shadow-none" style={{ background: "#e41f07", border: "1px solid #e41f07", fontSize: 13, borderRadius: 6, height: 36, padding: "0 20px" }}
+                                onClick={handleSaveNewCustomer}>
+                                Save Customer
+                            </button>
                         </div>
                     </div>
                 </div>

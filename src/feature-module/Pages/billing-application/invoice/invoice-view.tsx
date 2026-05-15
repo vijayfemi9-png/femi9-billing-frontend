@@ -30,6 +30,22 @@ const SK = "billing_invoices";
 const SK_ITEMS = (id: number) => `billing_invoice_items_${id}`;
 const SK_ACTIVITY = (id: number) => `billing_invoice_activity_${id}`;
 const SK_PAYMENTS = (id: number) => `billing_invoice_payments_${id}`;
+const SK_REMINDERS = (id: number) => `billing_invoice_reminders_${id}`;
+
+interface ReminderRecord {
+    id: number;
+    date: string;
+    time: string;
+    message: string;
+    done: boolean;
+    createdAt: string;
+}
+function loadReminders(id: number): ReminderRecord[] {
+    try { return JSON.parse(localStorage.getItem(SK_REMINDERS(id)) || "[]"); } catch { return []; }
+}
+function saveReminders(id: number, data: ReminderRecord[]) {
+    try { localStorage.setItem(SK_REMINDERS(id), JSON.stringify(data)); } catch { }
+}
 
 interface PaymentRecord {
     id: number;
@@ -467,8 +483,8 @@ const TBtn: React.FC<{ icon: string; label: string; caret?: boolean; onClick?: (
     );
 
 // ── Invoice Document Preview ──────────────────────────────────────────────────
-const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: number; taxTotal: number; grandTotal: number }> =
-    ({ invoice, items, subtotal, taxTotal, grandTotal }) => {
+const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: number; taxTotal: number; grandTotal: number; onReopen?: () => void }> =
+    ({ invoice, items, subtotal, taxTotal, grandTotal, onReopen }) => {
         const overdueDays = daysOverdue(invoice.dueDate);
         const sc = SC[invoice.status];
         return (
@@ -481,13 +497,27 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
                     </div>
                 )}
                 {invoice.status === "Overdue" && (
-                    <div style={{ position: "absolute", top: 0, left: 0, width: 130, height: 130, overflow: "hidden", pointerEvents: "none" }}>
-                        <div style={{ position: "absolute", top: 32, left: -38, width: 190, background: "#e67e22", color: "#fff", textAlign: "center", transform: "rotate(-45deg)", padding: "8px 0", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>Overdue</div>
+                    <div style={{ position: "absolute", top: 0, left: 0, width: 140, height: 140, overflow: "hidden", cursor: onReopen ? "pointer" : "default" }} onClick={onReopen} title="Click to Re-open this invoice">
+                        <div style={{ position: "absolute", top: 32, left: -38, width: 200, background: "#e67e22", color: "#fff", textAlign: "center", transform: "rotate(-45deg)", padding: "8px 0", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>
+                            OVERDUE
+                            {onReopen && <div style={{ fontSize: 9, opacity: 0.9, marginTop: 1 }}>↺ Re-open</div>}
+                        </div>
                     </div>
                 )}
                 {invoice.status === "Void" && (
-                    <div style={{ position: "absolute", top: 0, left: 0, width: 120, height: 120, overflow: "hidden", pointerEvents: "none" }}>
-                        <div style={{ position: "absolute", top: 28, left: -36, width: 180, background: "#999", color: "#fff", textAlign: "center", transform: "rotate(-45deg)", padding: "7px 0", fontSize: 12, fontWeight: 700, letterSpacing: 1 }}>VOID</div>
+                    <div style={{ position: "absolute", top: 0, left: 0, width: 130, height: 130, overflow: "hidden", cursor: onReopen ? "pointer" : "default" }} onClick={onReopen} title="Click to Re-open this invoice">
+                        <div style={{ position: "absolute", top: 28, left: -36, width: 190, background: "#6b7280", color: "#fff", textAlign: "center", transform: "rotate(-45deg)", padding: "7px 0", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>
+                            VOID
+                            {onReopen && <div style={{ fontSize: 9, opacity: 0.9, marginTop: 1 }}>↺ Re-open</div>}
+                        </div>
+                    </div>
+                )}
+                {invoice.status === "Draft" && (
+                    <div style={{ position: "absolute", top: 0, left: 0, width: 130, height: 130, overflow: "hidden", cursor: onReopen ? "pointer" : "default" }} onClick={onReopen} title="Click to Re-open this invoice">
+                        <div style={{ position: "absolute", top: 28, left: -36, width: 190, background: "#9ca3af", color: "#fff", textAlign: "center", transform: "rotate(-45deg)", padding: "7px 0", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>
+                            DRAFT
+                            {onReopen && <div style={{ fontSize: 9, opacity: 0.9, marginTop: 1 }}>↺ Re-open</div>}
+                        </div>
                     </div>
                 )}
 
@@ -636,6 +666,9 @@ const InvoiceView: React.FC = () => {
     const [showDetail, setShowDetail] = useState(!!id);
     const [payments, setPayments] = useState<PaymentRecord[]>([]);
     const [paymentsCollapsed, setPaymentsCollapsed] = useState(false);
+    const [showReminders, setShowReminders] = useState(false);
+    const [reminders, setReminders] = useState<ReminderRecord[]>([]);
+    const [reminderForm, setReminderForm] = useState({ date: "", time: "09:00", message: "" });
     useEffect(() => { if (id) setShowDetail(true); }, [id]);
 
     useEffect(() => {
@@ -656,6 +689,7 @@ const InvoiceView: React.FC = () => {
             }
             setActivities(acts);
             setPayments(loadPayments(found.id));
+            setReminders(loadReminders(found.id));
         }
     }, [id]);
 
@@ -684,6 +718,19 @@ const InvoiceView: React.FC = () => {
             };
             const m = msgMap[status];
             if (m) addActivity({ icon: m.icon, user: "femi9kiruthika", datetime: nowDatetime(), message: m.msg, highlights: [] });
+        }
+    };
+
+    const handleReopenById = (invId: number, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const all = getAllRaw();
+        const updated = all.map(x => x.id === invId ? { ...x, status: "Sent" as Invoice["status"] } : x);
+        saveAll(updated);
+        setInvoices(updated.filter(i => !i.isDeleted));
+        if (invoice?.id === invId) {
+            setInvoice(prev => prev ? { ...prev, status: "Sent" } : prev);
+            addActivity({ icon: "status_changed", user: "femi9kiruthika", datetime: nowDatetime(), message: `Invoice reopened`, highlights: [] });
         }
     };
 
@@ -1049,11 +1096,23 @@ const InvoiceView: React.FC = () => {
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <TBtn icon="ti-pencil" label="Edit" onClick={() => navigate(route.billingInvoiceEdit.replace(":id", String(invoice.id)))} />
+                                    {(invoice.status === "Draft" || invoice.status === "Void" || invoice.status === "Overdue") && (
+                                        <button
+                                            onClick={() => updateStatus("Sent")}
+                                            style={{ display: "flex", alignItems: "center", gap: 6, height: 34, padding: "0 16px", background: "#16a34a", border: "none", borderRadius: 4, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                                            <i className="ti ti-refresh" style={{ fontSize: 14 }} /> Re-open
+                                        </button>
+                                    )}
                                     <div className="dropdown">
                                         <button data-bs-toggle="dropdown" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid #e0e0e0", borderRadius: 4, width: 34, height: 34, cursor: "pointer", color: "#666" }}>
                                             <i className="ti ti-dots" style={{ fontSize: 16 }} />
                                         </button>
                                         <div className="dropdown-menu dropdown-menu-end shadow border-0 zinv-more-dropdown">
+                                            {(invoice.status === "Draft" || invoice.status === "Void" || invoice.status === "Overdue") && (
+                                                <button className="zinv-more-item" onClick={() => updateStatus("Sent")}>
+                                                    <i className="ti ti-refresh" style={{ color: "#16a34a" }} /> Re-open Invoice
+                                                </button>
+                                            )}
                                             <button className="zinv-more-item" onClick={() => updateStatus("Void")} disabled={invoice.status === "Void" || invoice.status === "Paid"}>
                                                 <i className="ti ti-ban" /> Mark as Void
                                             </button>
@@ -1093,7 +1152,7 @@ const InvoiceView: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                                <TBtn icon="ti-bell" label="Reminders" onClick={() => { }} />
+                                <TBtn icon="ti-bell" label="Reminders" onClick={() => setShowReminders(true)} />
 
                                 <TBtn icon="ti-printer" label="Print" onClick={handlePrint} />
                                 <TBtn icon="ti-file-type-pdf" label="PDF" onClick={handlePrint} />
@@ -1195,7 +1254,8 @@ const InvoiceView: React.FC = () => {
 
                                 {/* Invoice document */}
                                 <div className="inv-doc-scroll">
-                                    <InvoiceDoc invoice={invoice} items={items} subtotal={subtotal} taxTotal={taxTotal} grandTotal={grandTotal} />
+                                    <InvoiceDoc invoice={invoice} items={items} subtotal={subtotal} taxTotal={taxTotal} grandTotal={grandTotal}
+                                        onReopen={(invoice.status === "Void" || invoice.status === "Draft" || invoice.status === "Overdue") ? () => updateStatus("Sent") : undefined} />
                                 </div>
 
                             </div>
@@ -1292,6 +1352,135 @@ const InvoiceView: React.FC = () => {
                     onCancel={() => setShowRefundPayment(false)}
                     onSave={handleRecordRefund}
                 />
+            )}
+
+            {/* ── Reminders Modal ── */}
+            {showReminders && invoice && (
+                <div onClick={e => { if (e.target === e.currentTarget) setShowReminders(false); }}
+                    style={{ position: "fixed", inset: 0, zIndex: 5000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+                    <div style={{ background: "#fff", borderRadius: 10, width: "100%", maxWidth: 520, maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 20px 60px rgba(0,0,0,0.2)", overflow: "hidden" }}>
+
+                        {/* Header */}
+                        <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f2f4", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <i className="ti ti-bell" style={{ fontSize: 18, color: "#e41f07" }} />
+                                <span style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>Reminders</span>
+                                <span style={{ background: "#fef2f2", color: "#e41f07", border: "1px solid #fecaca", borderRadius: 12, fontSize: 11, fontWeight: 600, padding: "1px 8px" }}>
+                                    {invoice.invoiceNumber}
+                                </span>
+                            </div>
+                            <button onClick={() => setShowReminders(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#9ca3af" }}>
+                                <i className="ti ti-x" style={{ fontSize: 18 }} />
+                            </button>
+                        </div>
+
+                        {/* Add Reminder Form */}
+                        <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f2f4", background: "#fafafa" }}>
+                            <p style={{ fontSize: 12, fontWeight: 600, color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>New Reminder</p>
+                            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Date</label>
+                                    <input type="date" value={reminderForm.date}
+                                        onChange={e => setReminderForm(p => ({ ...p, date: e.target.value }))}
+                                        style={{ width: "100%", height: 34, border: "1px solid #d0d5dd", borderRadius: 6, padding: "0 10px", fontSize: 13, outline: "none", background: "#fff" }}
+                                        onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                        onBlur={e => e.target.style.borderColor = "#d0d5dd"} />
+                                </div>
+                                <div style={{ width: 110 }}>
+                                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Time</label>
+                                    <input type="time" value={reminderForm.time}
+                                        onChange={e => setReminderForm(p => ({ ...p, time: e.target.value }))}
+                                        style={{ width: "100%", height: 34, border: "1px solid #d0d5dd", borderRadius: 6, padding: "0 10px", fontSize: 13, outline: "none", background: "#fff" }}
+                                        onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                        onBlur={e => e.target.style.borderColor = "#d0d5dd"} />
+                                </div>
+                            </div>
+                            <div style={{ marginBottom: 10 }}>
+                                <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Message</label>
+                                <textarea value={reminderForm.message} rows={2}
+                                    onChange={e => setReminderForm(p => ({ ...p, message: e.target.value }))}
+                                    placeholder="e.g. Follow up on payment for this invoice..."
+                                    style={{ width: "100%", border: "1px solid #d0d5dd", borderRadius: 6, padding: "7px 10px", fontSize: 13, outline: "none", background: "#fff", resize: "none", fontFamily: "inherit" }}
+                                    onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                    onBlur={e => e.target.style.borderColor = "#d0d5dd"} />
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (!reminderForm.date || !reminderForm.message.trim()) return;
+                                    const newR: ReminderRecord = {
+                                        id: Date.now(),
+                                        date: reminderForm.date,
+                                        time: reminderForm.time,
+                                        message: reminderForm.message.trim(),
+                                        done: false,
+                                        createdAt: new Date().toISOString(),
+                                    };
+                                    const updated = [...reminders, newR];
+                                    setReminders(updated);
+                                    saveReminders(invoice.id, updated);
+                                    setReminderForm({ date: "", time: "09:00", message: "" });
+                                }}
+                                style={{ height: 34, padding: "0 18px", background: "#e41f07", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                                <i className="ti ti-circle-plus me-1" /> Add Reminder
+                            </button>
+                        </div>
+
+                        {/* Reminder List */}
+                        <div style={{ flex: 1, overflowY: "auto", padding: "12px 20px" }}>
+                            {reminders.length === 0 ? (
+                                <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>
+                                    <i className="ti ti-bell-off" style={{ fontSize: 36, display: "block", marginBottom: 8 }} />
+                                    <p style={{ fontSize: 13, margin: 0 }}>No reminders set for this invoice.</p>
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                    {reminders.slice().sort((a, b) => a.date.localeCompare(b.date)).map(r => (
+                                        <div key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", borderRadius: 8, border: `1px solid ${r.done ? "#e5e7eb" : "#fecaca"}`, background: r.done ? "#f9fafb" : "#fff9f9", opacity: r.done ? 0.65 : 1 }}>
+                                            <button
+                                                onClick={() => {
+                                                    const updated = reminders.map(x => x.id === r.id ? { ...x, done: !x.done } : x);
+                                                    setReminders(updated);
+                                                    saveReminders(invoice.id, updated);
+                                                }}
+                                                style={{ background: "none", border: `2px solid ${r.done ? "#16a34a" : "#d0d5dd"}`, borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: 2, padding: 0 }}>
+                                                {r.done && <i className="ti ti-check" style={{ fontSize: 11, color: "#16a34a" }} />}
+                                            </button>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ margin: 0, fontSize: 13, color: "#1a1a1a", textDecoration: r.done ? "line-through" : "none", wordBreak: "break-word" }}>{r.message}</p>
+                                                <p style={{ margin: "3px 0 0", fontSize: 11, color: "#6b7280" }}>
+                                                    <i className="ti ti-calendar me-1" />
+                                                    {new Date(r.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })} &nbsp;
+                                                    <i className="ti ti-clock me-1" />{r.time}
+                                                    {r.done && <span style={{ marginLeft: 8, color: "#16a34a", fontWeight: 600 }}>✓ Done</span>}
+                                                </p>
+                                            </div>
+                                            <button
+                                                onClick={() => {
+                                                    const updated = reminders.filter(x => x.id !== r.id);
+                                                    setReminders(updated);
+                                                    saveReminders(invoice.id, updated);
+                                                }}
+                                                style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", padding: 2, flexShrink: 0 }}
+                                                onMouseEnter={e => (e.currentTarget.style.color = "#e41f07")}
+                                                onMouseLeave={e => (e.currentTarget.style.color = "#9ca3af")}>
+                                                <i className="ti ti-trash" style={{ fontSize: 15 }} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ padding: "12px 20px", borderTop: "1px solid #f0f2f4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 12, color: "#9ca3af" }}>{reminders.filter(r => !r.done).length} pending · {reminders.filter(r => r.done).length} done</span>
+                            <button onClick={() => setShowReminders(false)}
+                                style={{ height: 32, padding: "0 16px", border: "1px solid #e0e0e0", borderRadius: 6, background: "#fff", fontSize: 13, cursor: "pointer", color: "#374151" }}>
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

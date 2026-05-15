@@ -1526,8 +1526,8 @@ const Product: any = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {openingStockRows.map(row => (
-                                            <tr key={row.id} style={{ borderBottom: '1px solid #efefef' }}>
+                                        {openingStockRows.map((row, idx) => (
+                                            <tr key={row.id} style={{ borderBottom: idx < openingStockRows.length - 1 ? '1px solid #efefef' : 'none' }}>
                                                 <td style={{ padding: '10px 8px', verticalAlign: 'middle', borderRight: '1px solid #efefef' }}>
                                                     <Select
                                                         options={locationOptions}

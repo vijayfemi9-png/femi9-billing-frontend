@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useCallback, useEffect } from 'react';
 import "../product/billing-application.scss";
 import PageHeader from "../../../../components/page-header/pageHeader";

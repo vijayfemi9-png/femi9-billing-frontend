@@ -254,39 +254,39 @@ const SearchModal = ({
     const Row = ({ label, field, type = "text", options = [] }: {
         label: string; field: keyof SearchForm; type?: string; options?: string[];
     }) => {
-            return (
-                <div className="sm-row" style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "start", gap: 0 }}>
-                    <span className="sm-lbl" style={labelCls}>{label}</span>
-                    <div style={{ position: "relative" }}>
-                        {type === "select" ? (
-                            <>
-                                <select
-                                    value={form[field]}
-                                    onChange={e => set(field, e.target.value)}
-                                    onFocus={() => setFocused(field)}
-                                    onBlur={() => setFocused("")}
-                                    style={selectCls(field)}
-                                >
-                                    <option value=""></option>
-                                    {options.map(o => <option key={o} value={o}>{o}</option>)}
-                                </select>
-                                <i className="ti ti-chevron-down"
-                                    style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#6c757d", pointerEvents: "none" }} />
-                            </>
-                        ) : (
-                            <input
-                                ref={field === "itemName" ? itemNameRef : undefined}
-                                type="text"
+        return (
+            <div className="sm-row" style={{ display: "grid", gridTemplateColumns: "140px 1fr", alignItems: "start", gap: 0 }}>
+                <span className="sm-lbl" style={labelCls}>{label}</span>
+                <div style={{ position: "relative" }}>
+                    {type === "select" ? (
+                        <>
+                            <select
                                 value={form[field]}
                                 onChange={e => set(field, e.target.value)}
                                 onFocus={() => setFocused(field)}
                                 onBlur={() => setFocused("")}
-                                style={inputCls(field)} />
-                        )}
-                    </div>
+                                style={selectCls(field)}
+                            >
+                                <option value=""></option>
+                                {options.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <i className="ti ti-chevron-down"
+                                style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "#6c757d", pointerEvents: "none" }} />
+                        </>
+                    ) : (
+                        <input
+                            ref={field === "itemName" ? itemNameRef : undefined}
+                            type="text"
+                            value={form[field]}
+                            onChange={e => set(field, e.target.value)}
+                            onFocus={() => setFocused(field)}
+                            onBlur={() => setFocused("")}
+                            style={inputCls(field)} />
+                    )}
                 </div>
-            );
-        };
+            </div>
+        );
+    };
 
     return (
         <>
@@ -821,7 +821,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                 </div>
             )}
 
-         
+
             {/* INR INR  Import Modal INR INR  */}
             {importModalOpen && (
                 <div className="modal fade show d-block" style={{ background: "rgba(0,0,0,0.4)", zIndex: 1055 }}>
@@ -1274,12 +1274,12 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                 <div className="d-flex" style={{ border: "1px solid #e3e3e3", borderRadius: 4, overflow: "hidden" }}>
                                                                     <button
                                                                         className="btn btn-sm px-3 py-1"
-                                                                        style={{ fontSize: 12, fontWeight: 600, borderRadius: 0, border: "none", background: locStockView === "accounting" ? "#0d6efd" : "#fff", color: locStockView === "accounting" ? "#fff" : "#555" }}
+                                                                        style={{ fontSize: 12, fontWeight: 600, borderRadius: 0, border: "none", background: locStockView === "accounting" ? "#e41f07" : "#fff", color: locStockView === "accounting" ? "#fff" : "#555" }}
                                                                         onClick={() => setLocStockView("accounting")}
                                                                     >Accounting Stock</button>
                                                                     <button
                                                                         className="btn btn-sm px-3 py-1"
-                                                                        style={{ fontSize: 12, fontWeight: 600, borderRadius: 0, border: "none", borderLeft: "1px solid #e3e3e3", background: locStockView === "physical" ? "#0d6efd" : "#fff", color: locStockView === "physical" ? "#fff" : "#555" }}
+                                                                        style={{ fontSize: 12, fontWeight: 600, borderRadius: 0, border: "none", borderLeft: "1px solid #e3e3e3", background: locStockView === "physical" ? "#e41f07" : "#fff", color: locStockView === "physical" ? "#fff" : "#555" }}
                                                                         onClick={() => setLocStockView("physical")}
                                                                     >Physical Stock</button>
                                                                 </div>
@@ -1290,7 +1290,7 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                                 <table className="table table-nowrap mb-0" style={{ fontSize: 13 }}>
                                                                     <thead>
                                                                         <tr style={{ background: "#f5f7fa" }}>
-                                                                            <th className="py-2 px-3 fw-semibold border-0" style={{ fontSize: 11, color: "#0d6efd", textTransform: "uppercase", letterSpacing: 0.5 }}>Location Name</th>
+                                                                            <th className="py-2 px-3 fw-semibold border-0" style={{ fontSize: 11, color: "#e41f07", textTransform: "uppercase", letterSpacing: 0.5 }}>Location Name</th>
                                                                             <th colSpan={3} className="py-2 px-3 fw-semibold border-0 text-center" style={{ fontSize: 11, color: "#555", textTransform: "uppercase", letterSpacing: 0.5 }}>
                                                                                 {locStockView === "accounting" ? "Accounting Stock" : "Physical Stock"}
                                                                             </th>
@@ -1742,84 +1742,85 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                 </button>
                             </div>
 
-                            {/* Table with side gaps + side border lines */}
-                            <div style={{ maxHeight: 400, overflowY: 'auto', background: '#fff', padding: '0 18px' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderLeft: '1px solid #e0e0e0', borderRight: '1px solid #e0e0e0', marginTop: 12, marginBottom: 8 }}>
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
-                                            <th style={{ width: '36%', padding: '6px 8px', color: '#e47700', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'left', borderRight: '1px solid #e0e0e0' }}>
-                                                Location
-                                            </th>
-                                            <th style={{ width: '26%', padding: '6px 8px', color: '#e41f07', textAlign: 'right', borderRight: '1px solid #e0e0e0' }}>
-                                                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opening Stock</div>
-                                                <button
-                                                    type="button"
-                                                    style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#e41f07', cursor: 'pointer', fontWeight: 500 }}
-                                                    onClick={() => {
-                                                        if (locations.length === 0) return;
-                                                        const firstVal = openingStockForm[locations[0].id] || '0';
-                                                        const copy: Record<number, string> = {};
-                                                        locations.forEach(loc => { copy[loc.id] = firstVal; });
-                                                        setOpeningStockForm(copy);
-                                                    }}
-                                                >Copy To All</button>
-                                            </th>
-                                            <th style={{ width: '30%', padding: '6px 8px', color: '#e41f07', textAlign: 'right', borderRight: '1px solid #e0e0e0' }}>
-                                                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opening Stock Value</div>
-                                                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Per Unit</div>
-                                                <button
-                                                    type="button"
-                                                    style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#e41f07', cursor: 'pointer', fontWeight: 500 }}
-                                                    onClick={() => {
-                                                        if (locations.length === 0) return;
-                                                        const firstVal = openingStockValueForm[locations[0].id] || '0';
-                                                        const copy: Record<number, string> = {};
-                                                        locations.forEach(loc => { copy[loc.id] = firstVal; });
-                                                        setOpeningStockValueForm(copy);
-                                                    }}
-                                                >Copy To All</button>
-                                            </th>
-                                            <th style={{ width: '8%', padding: '6px 0' }} />
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {locations.map((loc) => (
-                                            <tr key={loc.id} style={{ borderBottom: '1px solid #efefef' }}>
-                                                <td style={{ padding: '10px 8px', fontSize: 13, color: '#333', fontWeight: 500, verticalAlign: 'middle', borderRight: '1px solid #efefef' }}>
-                                                    {loc.name}
-                                                </td>
-                                                <td style={{ padding: '8px 8px', verticalAlign: 'middle', borderRight: '1px solid #efefef' }}>
-                                                    <input
-                                                        type="number"
-                                                        value={openingStockForm[loc.id] ?? '0'}
-                                                        onChange={e => setOpeningStockForm(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                                                        style={{ width: '100%', textAlign: 'right', border: '1px solid #d9d9d9', borderRadius: 3, padding: '4px 8px', fontSize: 13, outline: 'none', color: '#333', background: '#fff' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '8px 8px', verticalAlign: 'middle' }}>
-                                                    <input
-                                                        type="number"
-                                                        value={openingStockValueForm[loc.id] ?? '0'}
-                                                        onChange={e => setOpeningStockValueForm(prev => ({ ...prev, [loc.id]: e.target.value }))}
-                                                        style={{ width: '100%', textAlign: 'right', border: '1px solid #d9d9d9', borderRadius: 3, padding: '4px 8px', fontSize: 13, outline: 'none', color: '#333', background: '#fff' }}
-                                                    />
-                                                </td>
-                                                <td style={{ padding: '8px 4px', verticalAlign: 'middle', textAlign: 'center' }}>
+                            {/* Table with Zoho style formatting */}
+                            <div style={{ maxHeight: 400, overflowY: 'auto', background: '#fff', padding: '16px 18px' }}>
+                                <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, overflow: 'hidden' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                                        <thead style={{ background: '#f9fafb' }}>
+                                            <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                                <th style={{ width: '36%', padding: '12px 16px', color: '#333', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'left', verticalAlign: 'middle' }}>
+                                                    Location
+                                                </th>
+                                                <th style={{ width: '26%', padding: '12px 16px', color: '#333', textAlign: 'right', verticalAlign: 'middle' }}>
+                                                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opening Stock</div>
                                                     <button
                                                         type="button"
-                                                        style={{ background: 'none', border: 'none', padding: '2px 4px', cursor: 'pointer', color: '#e41f07', lineHeight: 1 }}
+                                                        style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#0d6efd', cursor: 'pointer', fontWeight: 500, marginTop: 4 }}
                                                         onClick={() => {
-                                                            setOpeningStockForm(prev => { const n = { ...prev }; delete n[loc.id]; return n; });
-                                                            setOpeningStockValueForm(prev => { const n = { ...prev }; delete n[loc.id]; return n; });
+                                                            if (locations.length === 0) return;
+                                                            const firstVal = openingStockForm[locations[0].id] || '0';
+                                                            const copy: Record<number, string> = {};
+                                                            locations.forEach(loc => { copy[loc.id] = firstVal; });
+                                                            setOpeningStockForm(copy);
                                                         }}
-                                                    >
-                                                        <i className="ti ti-trash" style={{ fontSize: 15 }} />
-                                                    </button>
-                                                </td>
+                                                    >Copy To All</button>
+                                                </th>
+                                                <th style={{ width: '30%', padding: '12px 16px', color: '#333', textAlign: 'right', verticalAlign: 'middle' }}>
+                                                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Opening Stock Value</div>
+                                                    <button
+                                                        type="button"
+                                                        style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: '#0d6efd', cursor: 'pointer', fontWeight: 500, marginTop: 4 }}
+                                                        onClick={() => {
+                                                            if (locations.length === 0) return;
+                                                            const firstVal = openingStockValueForm[locations[0].id] || '0';
+                                                            const copy: Record<number, string> = {};
+                                                            locations.forEach(loc => { copy[loc.id] = firstVal; });
+                                                            setOpeningStockValueForm(copy);
+                                                        }}
+                                                    >Copy To All</button>
+                                                </th>
+                                                <th style={{ width: '8%', padding: '12px 16px', verticalAlign: 'middle', textAlign: 'center' }} />
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {locations.map((loc, idx) => (
+                                                <tr key={loc.id} style={{ borderBottom: idx < locations.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                                                    <td style={{ padding: '12px 16px', fontSize: 13, color: '#333', fontWeight: 500, verticalAlign: 'middle' }}>
+                                                        {loc.name}
+                                                    </td>
+                                                    <td style={{ padding: '8px 16px', verticalAlign: 'middle' }}>
+                                                        <input
+                                                            type="number"
+                                                            value={openingStockForm[loc.id] ?? '0'}
+                                                            onChange={e => setOpeningStockForm(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                                                            style={{ width: '100%', textAlign: 'right', border: '1px solid #e5e7eb', borderRadius: 4, padding: '6px 12px', fontSize: 13, outline: 'none', color: '#333', background: '#fff' }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: '8px 16px', verticalAlign: 'middle' }}>
+                                                        <input
+                                                            type="number"
+                                                            value={openingStockValueForm[loc.id] ?? '0'}
+                                                            onChange={e => setOpeningStockValueForm(prev => ({ ...prev, [loc.id]: e.target.value }))}
+                                                            style={{ width: '100%', textAlign: 'right', border: '1px solid #e5e7eb', borderRadius: 4, padding: '6px 12px', fontSize: 13, outline: 'none', color: '#333', background: '#fff' }}
+                                                        />
+                                                    </td>
+                                                    <td style={{ padding: '8px 8px', verticalAlign: 'middle', textAlign: 'center' }}>
+                                                        <button
+                                                            type="button"
+                                                            style={{ background: 'none', border: 'none', padding: '4px', cursor: 'pointer', lineHeight: 1 }}
+                                                            onClick={() => {
+                                                                setOpeningStockForm(prev => { const n = { ...prev }; delete n[loc.id]; return n; });
+                                                                setOpeningStockValueForm(prev => { const n = { ...prev }; delete n[loc.id]; return n; });
+                                                            }}
+                                                        >
+                                                            <i className="ti ti-circle-x text-danger" style={{ fontSize: 18 }} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
 
                             {/* Footer */}
