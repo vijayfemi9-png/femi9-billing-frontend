@@ -347,3 +347,11 @@
     .text-dark { color: #e41f07 !important; }
   }
 }
+
+.pay-ms-200 {
+  margin-left: 0;
+  
+  @media (min-width: 768px) {
+    margin-left: 200px;
+  }
+}

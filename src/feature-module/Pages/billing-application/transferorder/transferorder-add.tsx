@@ -125,36 +125,31 @@ const AddTransferOrder: React.FC = () => {
 
     return (
         <>
-        {/* ── Backdrop ── */}
-        <div
-            onClick={() => navigate(route.transferOrderList)}
-            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1199 }}
-        />
+        <div className="page-wrapper" style={{ background: "#f8fafc", minHeight: "100vh" }}>
+            <div className="content container-fluid" style={{ padding: "24px 32px", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
 
-        {/* ── Right-side Drawer ── */}
-        <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(800px, 90vw)", background: "#fff", zIndex: 1200, display: "flex", flexDirection: "column", fontFamily: "'Segoe UI', system-ui, sans-serif", boxShadow: "-6px 0 32px rgba(0,0,0,0.18)" }}>
-
-            {/* ── Header ───────────────────────────────────────────────── */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", height: 54, borderBottom: "1px solid #e5e7eb", flexShrink: 0, background: "#fff" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <i className="ti ti-transfer" style={{ fontSize: 20, color: "#374151" }} />
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "#111827" }}>
-                        {editId ? "Edit Transfer Order" : "New Transfer Order"}
-                    </span>
+                {/* ── Page Header ── */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                    <div>
+                        <h4 style={{ fontWeight: 700, fontSize: 20, marginBottom: 4, color: "#111827" }}>
+                            {editId ? "Edit Transfer Order" : "Transfer Orders"}
+                        </h4>
+                        <ol style={{ display: "flex", gap: 6, alignItems: "center", listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: "#6b7280" }}>
+                            <li>Home</li><li>›</li><li>Transfer Orders</li><li>›</li>
+                            <li style={{ color: "#111827", fontWeight: 500 }}>{editId ? "Edit" : "New"}</li>
+                        </ol>
+                    </div>
+                    <button onClick={() => navigate(route.transferOrderList)}
+                        style={{ width: 36, height: 36, borderRadius: 4, background: "#fff", border: "1px solid #e5e9ef", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                        <i className="ti ti-x" style={{ fontSize: 16, color: "#374151" }} />
+                    </button>
                 </div>
-                <button onClick={() => navigate(route.transferOrderList)} style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", fontSize: 20, display: "flex", alignItems: "center", padding: 4 }}>
-                    <i className="ti ti-x" />
-                </button>
-            </div>
-
-            {/* ── Scrollable Body ───────────────────────────────────────── */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", background: "#f8fafc" }}>
 
                 {/* ── Document Paper ── */}
-                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 0, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
 
                     {/* ── Document Header: Company (left) + Title (right) ── */}
-                    <div style={{ padding: "24px 32px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", borderBottom: "2.5px solid #e41f07" }}>
+                    <div style={{ padding: "24px 32px 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", borderBottom: "1px solid #e5e7eb" }}>
                         {/* Left: Company */}
                         <div>
                             <div style={{ fontSize: 17, fontWeight: 800, color: "#111827", letterSpacing: -0.5 }}>Femi9 Pvt Ltd</div>
@@ -163,14 +158,14 @@ const AddTransferOrder: React.FC = () => {
                         </div>
                         {/* Right: Title + editable TO# + Date */}
                         <div style={{ textAlign: "right" }}>
-                            <div style={{ fontSize: 20, fontWeight: 900, color: "#e41f07", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Transfer Order</div>
+                            <div style={{ fontSize: 20, fontWeight: 900, color: "#111827", letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Transfer Order</div>
                             <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 500, whiteSpace: "nowrap" }}>Order #</span>
                                     <div style={{ position: "relative" }}>
                                         <input value={toNum} onChange={e => setToNum(e.target.value)}
-                                            style={{ width: 140, padding: "5px 28px 5px 10px", fontSize: 13, fontWeight: 600, color: "#e41f07", border: "1px solid #fecaca", borderRadius: 4, textAlign: "right", background: "#fff8f8", outline: "none" }} />
-                                        <i className="ti ti-settings" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#fca5a5", cursor: "pointer" }} />
+                                            style={{ width: 140, padding: "5px 28px 5px 10px", fontSize: 13, fontWeight: 600, color: "#111827", border: "1px solid #d1d5db", borderRadius: 4, textAlign: "right", background: "#fff", outline: "none" }} />
+                                        <i className="ti ti-settings" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#9ca3af", cursor: "pointer" }} />
                                     </div>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -183,34 +178,34 @@ const AddTransferOrder: React.FC = () => {
                     </div>
 
                     {/* ── Source → Destination ── */}
-                    <div style={{ padding: "20px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "stretch", gap: 0 }}>
+                    <div style={{ padding: "24px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 20 }}>
                         {/* Source box */}
-                        <div style={{ flex: 1, background: "#fff8f8", border: `1px solid ${errors.sourceLoc ? "#e41f07" : "#fee2e2"}`, borderRadius: "8px 0 0 8px", padding: "16px 20px" }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: "#e41f07", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Source Location *</div>
+                        <div style={{ flex: 1, background: "#fff", border: `1px solid ${errors.sourceLoc ? "#c0392b" : "#e5e7eb"}`, borderRadius: 8, padding: "16px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Source Location *</div>
                             <select value={sourceLoc} onChange={e => setSourceLoc(e.target.value)}
-                                style={{ width: "100%", padding: "7px 10px", fontSize: 13, border: `1px solid ${errors.sourceLoc ? "#e41f07" : "#fecaca"}`, borderRadius: 4, background: "#fff", color: sourceLoc ? "#111827" : "#9ca3af", outline: "none", cursor: "pointer" }}>
+                                style={{ width: "100%", padding: "7px 10px", fontSize: 13, border: `1px solid ${errors.sourceLoc ? "#c0392b" : "#d1d5db"}`, borderRadius: 4, background: "#fff", color: sourceLoc ? "#111827" : "#9ca3af", outline: "none", cursor: "pointer" }}>
                                 <option value="">Select source location...</option>
                                 {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
                             </select>
-                            {errors.sourceLoc && <div style={{ fontSize: 11, color: "#e41f07", marginTop: 4 }}>{errors.sourceLoc}</div>}
+                            {errors.sourceLoc && <div style={{ fontSize: 11, color: "#c0392b", marginTop: 4 }}>{errors.sourceLoc}</div>}
                             {sourceLoc && <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>Tamil Nadu, India</div>}
                         </div>
                         {/* Arrow — click to swap */}
-                        <div style={{ width: 56, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <div style={{ width: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <button onClick={swapLocations} title="Swap locations"
-                                style={{ width: 36, height: 36, borderRadius: "50%", background: "#e41f07", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 2px 8px rgba(228,31,7,0.3)" }}>
-                                <i className="ti ti-arrow-right" style={{ fontSize: 17, color: "#fff" }} />
+                                style={{ width: 44, height: 44, borderRadius: "50%", background: "#fff", border: "1px solid #d1d5db", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 2px 6px rgba(0,0,0,0.06)" }}>
+                                <i className="ti ti-exchange" style={{ fontSize: 20, color: "#6b7280" }} />
                             </button>
                         </div>
                         {/* Destination box */}
-                        <div style={{ flex: 1, background: "#fff8f8", border: `1px solid ${errors.destLoc ? "#e41f07" : "#fee2e2"}`, borderRadius: "0 8px 8px 0", padding: "16px 20px" }}>
-                            <div style={{ fontSize: 10, fontWeight: 700, color: "#e41f07", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Destination Location *</div>
+                        <div style={{ flex: 1, background: "#fff", border: `1px solid ${errors.destLoc ? "#c0392b" : "#e5e7eb"}`, borderRadius: 8, padding: "16px 20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                            <div style={{ fontSize: 10, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Destination Location *</div>
                             <select value={destLoc} onChange={e => setDestLoc(e.target.value)}
-                                style={{ width: "100%", padding: "7px 10px", fontSize: 13, border: `1px solid ${errors.destLoc ? "#e41f07" : "#fecaca"}`, borderRadius: 4, background: "#fff", color: destLoc ? "#111827" : "#9ca3af", outline: "none", cursor: "pointer" }}>
+                                style={{ width: "100%", padding: "7px 10px", fontSize: 13, border: `1px solid ${errors.destLoc ? "#c0392b" : "#d1d5db"}`, borderRadius: 4, background: "#fff", color: destLoc ? "#111827" : "#9ca3af", outline: "none", cursor: "pointer" }}>
                                 <option value="">Select destination location...</option>
                                 {LOCATIONS.filter(l => l !== sourceLoc).map(l => <option key={l} value={l}>{l}</option>)}
                             </select>
-                            {errors.destLoc && <div style={{ fontSize: 11, color: "#e41f07", marginTop: 4 }}>{errors.destLoc}</div>}
+                            {errors.destLoc && <div style={{ fontSize: 11, color: "#c0392b", marginTop: 4 }}>{errors.destLoc}</div>}
                             {destLoc && <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>Tamil Nadu, India</div>}
                         </div>
                     </div>
@@ -220,7 +215,7 @@ const AddTransferOrder: React.FC = () => {
                         <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Reason</label>
                         <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3}
                             style={{ width: "100%", padding: "8px 12px", fontSize: 13, border: "1px solid #e5e7eb", borderRadius: 4, outline: "none", resize: "vertical", fontFamily: "inherit", color: "#374151", lineHeight: 1.6 }}
-                            onFocus={e => (e.target.style.borderColor = "#e41f07")}
+                            onFocus={e => (e.target.style.borderColor = "#2563eb")}
                             onBlur={e => (e.target.style.borderColor = "#e5e7eb")} />
                     </div>
 
@@ -240,13 +235,13 @@ const AddTransferOrder: React.FC = () => {
                         </div>
                         <table style={{ width: "100%", borderCollapse: "collapse" }}>
                             <thead>
-                                <tr style={{ background: "#e41f07" }}>
+                                <tr style={{ background: "#f9fafb", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb" }}>
                                     <th style={{ width: 30, padding: "9px 6px" }}></th>
                                     <th style={{ width: 38, padding: "9px 6px" }}></th>
-                                    <th style={{ padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>Item Details</th>
-                                    <th style={{ width: 120, padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>Source Stock</th>
-                                    <th style={{ width: 140, padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>Dest. Stock</th>
-                                    <th style={{ width: 130, padding: "9px 12px", textAlign: "right", fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.5px", textTransform: "uppercase" }}>Transfer Qty</th>
+                                    <th style={{ padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#374151", letterSpacing: "0.5px", textTransform: "uppercase" }}>Item Details</th>
+                                    <th style={{ width: 120, padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#374151", letterSpacing: "0.5px", textTransform: "uppercase" }}>Source Stock</th>
+                                    <th style={{ width: 140, padding: "9px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#374151", letterSpacing: "0.5px", textTransform: "uppercase" }}>Dest. Stock</th>
+                                    <th style={{ width: 130, padding: "9px 12px", textAlign: "right", fontSize: 11, fontWeight: 700, color: "#374151", letterSpacing: "0.5px", textTransform: "uppercase" }}>Transfer Qty</th>
                                     <th style={{ width: 36, padding: "9px 6px" }}></th>
                                 </tr>
                             </thead>
@@ -267,11 +262,9 @@ const AddTransferOrder: React.FC = () => {
                                                 style={{ width: "100%", border: "none", outline: "none", fontSize: 13, color: "#374151", background: "transparent" }} />
                                         </td>
                                         <td style={{ padding: "10px 12px" }}>
-                                            <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 1 }}>Source Stock</div>
                                             <div style={{ fontSize: 13, color: "#374151" }}>{item.sourceStock || "—"}</div>
                                         </td>
                                         <td style={{ padding: "10px 12px" }}>
-                                            <div style={{ fontSize: 11, color: "#9ca3af", marginBottom: 1 }}>Dest. Stock</div>
                                             <div style={{ fontSize: 13, color: "#374151" }}>{item.destStock || "—"}</div>
                                         </td>
                                         <td style={{ padding: "10px 12px", textAlign: "right" }}>
@@ -292,10 +285,10 @@ const AddTransferOrder: React.FC = () => {
                         </table>
                         {/* Add row footer */}
                         <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "10px 16px", borderTop: "1px solid #f1f5f9", background: "#fafafa" }}>
-                            <button onClick={addItem} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#e41f07", fontWeight: 500 }}>
+                            <button onClick={addItem} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#2563eb", fontWeight: 500 }}>
                                 <i className="ti ti-circle-plus" style={{ fontSize: 15 }} /> Add New Row
                             </button>
-                            <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#e41f07", fontWeight: 500 }}>
+                            <button style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#2563eb", fontWeight: 500 }}>
                                 <i className="ti ti-circle-plus" style={{ fontSize: 15 }} /> Add Items in Bulk
                             </button>
                         </div>
@@ -331,28 +324,28 @@ const AddTransferOrder: React.FC = () => {
                         <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 6 }}>You can upload a maximum of 5 files, 10MB each</div>
                     </div>
 
-                </div>
-            </div>
+                    {/* ── Form Actions ── */}
+                    <div style={{ padding: "20px 32px 32px", display: "flex", alignItems: "center", gap: 10, background: "#fff" }}>
+                        <button onClick={() => save("Draft")} disabled={saving}
+                            style={{ padding: "8px 20px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
+                            Save as Draft
+                        </button>
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                            <button onClick={() => save("Transferred")} disabled={saving}
+                                style={{ padding: "8px 18px", borderRadius: "4px 0 0 4px", border: "none", background: "#e41f07", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                                {saving ? "Saving..." : "Initiate Transfer"}
+                            </button>
+                            <button style={{ padding: "8px 10px", borderRadius: "0 4px 4px 0", border: "none", borderLeft: "1px solid rgba(255,255,255,0.2)", background: "#e41f07", color: "#fff", fontSize: 13, cursor: "pointer" }}>
+                                <i className="ti ti-chevron-down" style={{ fontSize: 13 }} />
+                            </button>
+                        </div>
+                        <button onClick={() => navigate(route.transferOrderList)}
+                            style={{ padding: "8px 18px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                            Cancel
+                        </button>
+                    </div>
 
-            {/* ── Footer ───────────────────────────────────────────────── */}
-            <div style={{ borderTop: "1px solid #e5e7eb", padding: "12px 32px", display: "flex", alignItems: "center", gap: 10, background: "#fff", flexShrink: 0 }}>
-                <button onClick={() => save("Draft")} disabled={saving}
-                    style={{ padding: "8px 20px", borderRadius: 4, border: "none", background: "#e41f07", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
-                    Save as Draft
-                </button>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <button onClick={() => save("Transferred")} disabled={saving}
-                        style={{ padding: "8px 18px", borderRadius: "4px 0 0 4px", border: "1px solid #d1d5db", borderRight: "none", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                        {saving ? "Saving..." : "Initiate Transfer"}
-                    </button>
-                    <button style={{ padding: "8px 10px", borderRadius: "0 4px 4px 0", border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, cursor: "pointer" }}>
-                        <i className="ti ti-chevron-down" style={{ fontSize: 13 }} />
-                    </button>
                 </div>
-                <button onClick={() => navigate(route.transferOrderList)}
-                    style={{ padding: "8px 18px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                    Cancel
-                </button>
             </div>
         </div>
         </>

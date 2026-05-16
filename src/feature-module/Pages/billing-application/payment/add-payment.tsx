@@ -825,9 +825,9 @@ const AddPayment: React.FC = () => {
 
                         {/* Top Form Fields (Customer, Payment #, Date) */}
                         <div style={{ padding: "20px 32px", borderBottom: "1px solid #e5e7eb" }}>
-                            <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Customer Name*</label>
-                                <div style={{ flex: 1, maxWidth: 520, display: "flex", alignItems: "center", gap: 10 }}>
+                            <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Customer Name*</label>
+                                <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center" style={{ flex: 1, maxWidth: 520, gap: 10 }}>
                                     <select value={custName} onChange={e => { setCustName(e.target.value); setErrors({}); setShowPanel(false); }}
                                         style={{ flex: 1, height: 36, padding: "0 10px", fontSize: 13, border: `1px solid ${errors.custName ? "#e41f07" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none" }}>
                                         <option value="">Select or add a customer</option>
@@ -842,9 +842,9 @@ const AddPayment: React.FC = () => {
                                     )}
                                 </div>
                             </div>
-                            {errors.custName && <div style={{ color: "#e41f07", fontSize: 11, marginTop: 4, marginLeft: 200 }}>{errors.custName}</div>}
+                            {errors.custName && <div className="pay-ms-200" style={{ color: "#e41f07", fontSize: 11, marginTop: 4 }}>{errors.custName}</div>}
                             {custName && cust && (
-                                <div style={{ marginTop: 12, marginLeft: 200, display: "flex", gap: 40, fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
+                                <div className="pay-ms-200 d-flex flex-column flex-md-row" style={{ marginTop: 12, gap: "16px 40px", fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
                                     <div>
                                         <div style={{ fontWeight: 600, marginBottom: 4, color: "#111827" }}>Billing Address</div>
                                         {cust.billingAddress && (cust.billingAddress.street1 || cust.billingAddress.city) ? (
@@ -895,8 +895,8 @@ const AddPayment: React.FC = () => {
                                 <div style={{ padding: "20px 32px 8px", borderBottom: "1px solid #f1f5f9" }}>
 
                                     {/* Payment # */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment #*</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment #*</label>
                                         <div style={{ flex: 1, maxWidth: 200 }}>
                                             <input value={payNum} onChange={e => setPayNum(e.target.value)}
                                                 style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, color: "#111827", border: `1px solid ${errors.payNum ? "#c0392b" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none", transition: "border-color 0.15s" }}
@@ -906,8 +906,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Payment Date */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment Date*</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment Date*</label>
                                         <div style={{ flex: 1, maxWidth: 200 }}>
                                             <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
                                                 style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, color: "#111827", border: `1px solid ${errors.payDate ? "#c0392b" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none", transition: "border-color 0.15s" }}
@@ -917,8 +917,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Location */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Location</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Location</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <select value={location} onChange={e => setLocation(e.target.value)}
                                                 style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, background: "#fff", outline: "none" }}>
@@ -929,8 +929,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Amount Received */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Amount Received*</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Amount Received*</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <div style={{ display: "flex", height: 36, border: `1px solid ${errors.amount ? "#e41f07" : "#d0d5dd"}`, borderRadius: 4, overflow: "hidden" }}>
                                                 <span style={{ padding: "0 12px", background: "#f9fafb", borderRight: "1px solid #d0d5dd", display: "flex", alignItems: "center", fontSize: 13, fontWeight: 600, color: "#374151" }}>INR</span>
@@ -942,8 +942,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Bank Charges */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Bank Charges (if any)</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Bank Charges (if any)</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <input type="number" min="0" step="0.01" placeholder="0.00" value={bankCharge} onChange={e => setBankCharge(e.target.value)}
                                                 style={{ width: "100%", height: 36, padding: "0 12px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, outline: "none" }} />
@@ -951,8 +951,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Payment Mode */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Payment Mode</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Payment Mode</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <SearchableDropdown value={payMode} placeholder="Choose payment mode" options={customModes} onChange={setPayMode}
                                                 footer={
@@ -968,8 +968,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Deposit To */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Deposit To*</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Deposit To*</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <SearchableDropdown value={depositTo} placeholder="Select an account" groups={DEPOSIT_GROUPS} onChange={setDepositTo} error={!!errors.depositTo} />
                                             {errors.depositTo && <div style={{ color: "#e41f07", fontSize: 11, marginTop: 3 }}>{errors.depositTo}</div>}
@@ -977,8 +977,8 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Reference # */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Reference #</label>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Reference #</label>
                                         <div style={{ flex: 1, maxWidth: 420 }}>
                                             <input type="text" value={reference} onChange={e => setReference(e.target.value)}
                                                 style={{ width: "100%", height: 36, padding: "0 12px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, outline: "none" }} />
@@ -986,9 +986,9 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Tax Deducted */}
-                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
-                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Tax Deducted?</label>
-                                        <div style={{ flex: 1, display: "flex", gap: 24, paddingTop: 4 }}>
+                                    <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
+                                        <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Tax Deducted?</label>
+                                        <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: "8px 24px", paddingTop: 4 }}>
                                             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
                                                 <input type="radio" name="taxDed" checked={taxDed === "no"} onChange={() => setTaxDed("no")} style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
                                                 No Tax deducted
@@ -1016,12 +1016,12 @@ const AddPayment: React.FC = () => {
                                             <button type="button" onClick={clearApplied} style={{ background: "none", border: "none", cursor: "pointer", color: "#e41f07", fontSize: 12, fontWeight: 500 }}>Clear Applied Amount</button>
                                         )}
                                     </div>
-                                    <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
-                                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                    <div className="table-responsive" style={{ border: "1px solid #e5e7eb", borderRadius: 6 }}>
+                                        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 600 }}>
                                             <thead>
                                                 <tr style={{ background: "#f9fafb", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb" }}>
                                                     {["Date", "Invoice #", "Location", "Invoice Amount", "Amount Due", "Received On", "Payment"].map(h => (
-                                                        <th key={h} style={{ padding: "9px 12px", fontSize: 11, fontWeight: 700, color: "#374151", textAlign: ["Invoice Amount", "Amount Due", "Payment"].includes(h) ? "right" : "left", letterSpacing: "0.3px", textTransform: "uppercase" }}>{h}</th>
+                                                        <th key={h} style={{ padding: "9px 12px", fontSize: 11, fontWeight: 700, color: "#374151", textAlign: ["Invoice Amount", "Amount Due", "Payment"].includes(h) ? "right" : "left", letterSpacing: "0.3px", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
                                                     ))}
                                                 </tr>
                                             </thead>
@@ -1030,8 +1030,8 @@ const AddPayment: React.FC = () => {
                                                     <tr><td colSpan={7} style={{ textAlign: "center", color: "#9ca3af", padding: "28px 14px", fontSize: 13 }}>No unpaid invoices for this customer</td></tr>
                                                 ) : rows.map((r, i) => (
                                                     <tr key={r.invoice.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                                                        <td style={{ padding: "10px 12px", fontSize: 13, color: "#374151" }}>{r.invoice.date}</td>
-                                                        <td style={{ padding: "10px 12px" }}><span style={{ color: "#e41f07", fontWeight: 500, fontSize: 13 }}>{r.invoice.invoiceNumber}</span></td>
+                                                        <td style={{ padding: "10px 12px", fontSize: 13, color: "#374151", whiteSpace: "nowrap" }}>{r.invoice.date}</td>
+                                                        <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}><span style={{ color: "#111827", fontWeight: 600, fontSize: 13 }}>{r.invoice.invoiceNumber}</span></td>
                                                         <td style={{ padding: "10px 12px", fontSize: 13, color: "#6b7280" }}>{location || "—"}</td>
                                                         <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#374151" }}>{fmt(r.invoice.amount)}</td>
                                                         <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#374151" }}>{fmt(r.amountDue)}</td>
