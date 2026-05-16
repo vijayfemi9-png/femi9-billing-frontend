@@ -225,6 +225,20 @@ export const SidebarData = [
           { label: "Payment Received", link: route.paymentReceivedList },
         ],
       },
+      {
+        label: "Inventory",
+        link: route.transferOrderList,
+        submenu: true,
+        showSubRoute: false,
+        icon: "package",
+        base: "Inventory",
+        materialicons: "start",
+        dot: true,
+        relatedRoutes: [route.transferOrderList, route.transferOrderAdd, route.transferOrderView],
+        submenuItems: [
+          { label: "Transfer Orders", link: route.transferOrderList },
+        ],
+      },
     ],
   },
 

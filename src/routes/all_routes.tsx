@@ -322,4 +322,7 @@ export const all_routes = {
   paymentReceivedList: "/billing-application/payments-received",
   paymentReceivedAdd: "/billing-application/payments-received/new",
   paymentReceivedView: "/billing-application/payments-received/:id",
+  transferOrderList: "/billing-application/transfer-orders",
+  transferOrderAdd: "/billing-application/transfer-orders/new",
+  transferOrderView: "/billing-application/transfer-orders/:id",
 };

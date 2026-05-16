@@ -1,11 +1,17 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { all_routes } from "../../../../routes/all_routes";
+import "./payment.scss";
 
+interface AddressBlock {
+    attention?: string; country?: string; street1?: string; street2?: string;
+    city?: string; state?: string; zipCode?: string; phone?: string; fax?: string;
+}
 interface Customer {
     id: number; name: string; companyName: string; email?: string;
     workPhone?: string; receivables?: number; unusedCredits?: number; status?: string;
+    billingAddress?: AddressBlock; shippingAddress?: AddressBlock;
 }
 interface Invoice  { id: number; invoiceNumber: string; date: string; customerName: string; amount: number; status: string; }
 interface UnpaidRow { invoice: Invoice; amountDue: number; paymentReceived: string; }
@@ -446,30 +452,56 @@ const CustomerPanel: React.FC<{ cust: Customer; onClose: () => void }> = ({ cust
 
                     {/* ── Address (collapsible) ─────────────────────── */}
                     {sectionHdr("Address", null, showAddress, () => setShowAddress(o => !o))}
-                    {showAddress && (
-                        <div style={{ padding: "14px 16px", background: "#fafafa", borderTop: "1px solid #f3f4f6" }}>
-                            {/* Billing Address */}
-                            <div style={{ marginBottom: 16 }}>
-                                <div className="d-flex align-items-center gap-2 mb-2">
-                                    <i className="ti ti-file-description" style={{ fontSize: 14, color: "#6b7280" }} />
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Billing Address</span>
+                    {showAddress && (() => {
+                        const ba = cust?.billingAddress;
+                        const sa = cust?.shippingAddress;
+                        const hasBilling = ba && (ba.street1 || ba.street2 || ba.city || ba.state || ba.country || ba.zipCode || ba.attention);
+                        const hasShipping = sa && (sa.street1 || sa.street2 || sa.city || sa.state || sa.country || sa.zipCode || sa.attention);
+                        const renderAddr = (addr: AddressBlock) => {
+                            const lines: string[] = [];
+                            if (addr.attention) lines.push(addr.attention);
+                            if (addr.street1)   lines.push(addr.street1);
+                            if (addr.street2)   lines.push(addr.street2);
+                            const cityLine = [addr.city, addr.state, addr.zipCode].filter(Boolean).join(", ");
+                            if (cityLine)       lines.push(cityLine);
+                            if (addr.country)   lines.push(addr.country);
+                            if (addr.phone)     lines.push("Ph: " + addr.phone);
+                            if (addr.fax)       lines.push("Fax: " + addr.fax);
+                            return lines;
+                        };
+                        return (
+                            <div style={{ padding: "14px 16px", background: "#fafafa", borderTop: "1px solid #f3f4f6" }}>
+                                {/* Billing Address */}
+                                <div style={{ marginBottom: 16 }}>
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <i className="ti ti-file-description" style={{ fontSize: 14, color: "#6b7280" }} />
+                                        <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Billing Address</span>
+                                    </div>
+                                    <div style={{ paddingLeft: 22, borderLeft: "2px solid #e5e7eb" }}>
+                                        {hasBilling ? renderAddr(ba!).map((line, i) => (
+                                            <div key={i} style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>{line}</div>
+                                        )) : (
+                                            <span style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic" }}>No Billing Address</span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div style={{ paddingLeft: 22, borderLeft: "2px solid #e5e7eb" }}>
-                                    <span style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic" }}>No Billing Address</span>
+                                {/* Shipping Address */}
+                                <div>
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <i className="ti ti-truck" style={{ fontSize: 14, color: "#6b7280" }} />
+                                        <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Shipping Address</span>
+                                    </div>
+                                    <div style={{ paddingLeft: 22, borderLeft: "2px solid #e5e7eb" }}>
+                                        {hasShipping ? renderAddr(sa!).map((line, i) => (
+                                            <div key={i} style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>{line}</div>
+                                        )) : (
+                                            <span style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic" }}>No Shipping Address</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            {/* Shipping Address */}
-                            <div>
-                                <div className="d-flex align-items-center gap-2 mb-2">
-                                    <i className="ti ti-truck" style={{ fontSize: 14, color: "#6b7280" }} />
-                                    <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Shipping Address</span>
-                                </div>
-                                <div style={{ paddingLeft: 22, borderLeft: "2px solid #e5e7eb" }}>
-                                    <span style={{ fontSize: 13, color: "#9ca3af", fontStyle: "italic" }}>No Shipping Address</span>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                 </div>
             )}
@@ -508,9 +540,11 @@ const CustomerPanel: React.FC<{ cust: Customer; onClose: () => void }> = ({ cust
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 const AddPayment: React.FC = () => {
-    const navigate = useNavigate();
-    const route    = all_routes;
-    const fileRef  = useRef<HTMLInputElement>(null);
+    const navigate     = useNavigate();
+    const route        = all_routes;
+    const fileRef      = useRef<HTMLInputElement>(null);
+    const [searchParams] = useSearchParams();
+    const editId       = searchParams.get("edit");
 
     const [customers,   setCustomers]   = useState<Customer[]>([]);
     const [custName,    setCustName]    = useState("");
@@ -526,6 +560,7 @@ const AddPayment: React.FC = () => {
     const [rows,        setRows]        = useState<UnpaidRow[]>([]);
     const [notes,       setNotes]       = useState("");
     const [thankYou,    setThankYou]    = useState(true);
+    const [draftError,  setDraftError]  = useState("");
     const [files,       setFiles]       = useState<File[]>([]);
     const [errors,      setErrors]      = useState<Record<string,string>>({});
     const [saving,      setSaving]      = useState(false);
@@ -549,6 +584,30 @@ const AddPayment: React.FC = () => {
     useEffect(() => { setCustomers(loadCustomers()); }, []);
 
     useEffect(() => {
+        if (!editId) return;
+        try {
+            const all = JSON.parse(localStorage.getItem("billing_received_payments") || "[]");
+            const p   = all.find((x: any) => String(x.id) === editId);
+            if (!p) return;
+            setCustName(p.customerName || "");
+            setAmount(String(p.amount || ""));
+            setPayMode(p.mode || "");
+            setReference(p.referenceNumber || "");
+            setPayNum(p.paymentNumber || "");
+            // Convert dd/MM/yyyy → yyyy-MM-dd for the date input
+            const parts = (p.date || "").split("/");
+            if (parts.length === 3) setPayDate(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            setLocation(p.location || "");
+            setBankCharge(p.bankCharge || "");
+            setDepositTo(p.depositTo || "");
+            setTaxDed(p.taxDed || "no");
+            setNotes(p.notes || "");
+            if (p.pan) setPanValue(p.pan);
+            setThankYou(p.sendThankYou !== false);
+        } catch { /**/ }
+    }, [editId]);
+
+    useEffect(() => {
         if (!custName) { setRows([]); setShowPanel(false); return; }
         setRows(loadInvoicesByCustomer(custName).map(inv => ({ invoice: inv, amountDue: inv.amount || 0, paymentReceived: "" })));
     }, [custName]);
@@ -567,49 +626,101 @@ const AddPayment: React.FC = () => {
     };
 
     const save = (status: "Draft" | "Received") => {
-        if (!validate()) return;
+        setDraftError("");
+        if (status === "Draft" && thankYou) {
+            setDraftError("You can only send a thank-you email for payments marked as Paid. Kindly uncheck the email option to proceed.");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+        if (!validate()) {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
         setSaving(true);
+        let targetId = editId;
         try {
             const existing = JSON.parse(localStorage.getItem("billing_received_payments") || "[]");
-            const id = existing.length ? Math.max(...existing.map((p: any) => p.id)) + 1 : 1;
             const inv = rows.find(r => parseFloat(r.paymentReceived) > 0);
-            localStorage.setItem("billing_received_payments", JSON.stringify([
-                ...existing,
-                { id, paymentNumber: payNum, date: isoToDisplay(payDate), referenceNumber: reference,
-                  customerName: custName, invoiceNumber: inv?.invoice.invoiceNumber || "",
-                  mode: payMode || "Cash", amount: parseFloat(amount), unusedAmount: excess, status },
-            ]));
-        } catch { /**/ }
+            if (editId) {
+                const updated = existing.map((p: any) =>
+                    String(p.id) === editId
+                        ? { ...p, 
+                            paymentNumber: payNum, 
+                            date: isoToDisplay(payDate), 
+                            referenceNumber: reference,
+                            customerName: custName, 
+                            invoiceNumber: inv?.invoice.invoiceNumber || p.invoiceNumber,
+                            mode: payMode || "Cash", 
+                            amount: parseFloat(amount), 
+                            unusedAmount: excess, 
+                            status,
+                            location,
+                            bankCharge: parseFloat(bankCharge) || 0,
+                            depositTo,
+                            taxDed,
+                            notes,
+                            pan: panValue,
+                            email,
+                            sendThankYou: thankYou
+                          }
+                        : p
+                );
+                localStorage.setItem("billing_received_payments", JSON.stringify(updated));
+            } else {
+                const id = existing.length ? Math.max(...existing.map((p: any) => p.id)) + 1 : 1;
+                targetId = String(id);
+                localStorage.setItem("billing_received_payments", JSON.stringify([
+                    ...existing,
+                    { 
+                        id, 
+                        paymentNumber: payNum, 
+                        date: isoToDisplay(payDate), 
+                        referenceNumber: reference,
+                        customerName: custName, 
+                        invoiceNumber: inv?.invoice.invoiceNumber || "",
+                        mode: payMode || "Cash", 
+                        amount: parseFloat(amount), 
+                        unusedAmount: excess, 
+                        status,
+                        location,
+                        bankCharge: parseFloat(bankCharge) || 0,
+                        depositTo,
+                        taxDed,
+                        notes,
+                        pan: panValue,
+                        email,
+                        sendThankYou: thankYou
+                    },
+                ]));
+            }
+
+            // Automatic Send Logic
+            if (status === "Received" && thankYou && email) {
+                const subject = encodeURIComponent(`Payment Receipt ${payNum}`);
+                const body = encodeURIComponent(
+                    `Dear ${custName},\n\nWe have received your payment of ${fmt(parseFloat(amount) || 0)} on ${isoToDisplay(payDate)}.\n\nReceipt Number: ${payNum}\nMode: ${payMode || "Cash"}\n\nThank you for your business!`
+                );
+                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+            }
+        } catch (err) {
+            console.error("Save failed:", err);
+            setSaving(false);
+            return;
+        }
         setSaving(false);
-        navigate(route.paymentReceivedList);
+        // Ensure we navigate after state updates
+        setTimeout(() => {
+            if (targetId) {
+                navigate(route.paymentReceivedView.replace(":id", targetId));
+            } else {
+                navigate(route.paymentReceivedList);
+            }
+        }, 100);
     };
 
     return (
         <>
-            <style>{`
-                .pay-ctrl:focus { border-color:#e41f07 !important; box-shadow:0 0 0 3px rgba(228,31,7,.08) !important; }
-                .pay-reveal { animation:paySlide .22s ease; }
-                @keyframes paySlide { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-                .pay-row { display:flex; align-items:flex-start; margin-bottom:16px; }
-                .pay-lbl { min-width:200px; max-width:200px; padding-top:9px; font-size:13px; font-weight:500; flex-shrink:0; }
-                .pay-lbl-req { color:#e41f07; }
-                .pay-lbl-opt { color:#374151; }
-                .pay-field { flex:1; max-width:540px; }
-                .pay-err { color:#e41f07; font-size:11px; margin-top:4px; }
-                .pay-tbl th { font-size:11px; font-weight:600; color:#6b7280; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; padding:10px 14px; background:#f8fafc; border-bottom:2px solid #e5e7eb; }
-                .pay-tbl td { padding:10px 14px; font-size:13px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
-                .pay-tbl tr:last-child td { border-bottom:none; }
-                .pay-tbl tbody tr:hover td { background:#fafbfc; }
-                .pay-sum-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; font-size:13px; }
-                .pay-divider { height:1px; background:#e5e7eb; margin:20px 0; }
-                .pay-check { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#374151; margin:0; }
-                .pay-detail-btn { display:inline-flex; align-items:center; gap:5px; background:#1e293b; color:#fff; border:none; border-radius:4px; padding:5px 10px; font-size:12px; font-weight:500; cursor:pointer; white-space:nowrap; }
-                .pay-detail-btn:hover { background:#0f172a; }
-                .form-check-input:checked { background-color:#e41f07 !important; border-color:#e41f07 !important; }
-                .input-group-text { background:#f9fafb; border-color:#d1d5db; color:#6b7280; font-size:13px; font-weight:500; }
-            `}</style>
-
-            {/* Payment Mode Config Modal */}
+            {/* ── Modals ── */}
             {showModeModal && (
                 <PaymentModeModal
                     modes={customModes} defaultMode={defaultMode}
@@ -617,9 +728,8 @@ const AddPayment: React.FC = () => {
                     onSave={(m, d) => { setCustomModes(m); setDefaultMode(d); setShowModeModal(false); }}
                 />
             )}
-
-            {/* PAN Modal */}
             {showPanModal && <PANModal onClose={() => setShowPanModal(false)} onSave={v => { setPanValue(v); setShowPanModal(false); }} />}
+            {showPanel && cust && <CustomerPanel cust={cust} onClose={() => setShowPanel(false)} />}
 
             {/* Date Range Filter Modal */}
             {showDateFilter && (
@@ -676,144 +786,175 @@ const AddPayment: React.FC = () => {
                 </div>
             )}
 
-            {/* Customer Detail Side Panel */}
-            {showPanel && cust && <CustomerPanel cust={cust} onClose={() => setShowPanel(false)} />}
-
             <div className="page-wrapper">
-                <div className="content">
+            <div className="content">
 
-                    {/* Page Header */}
-                    <div className="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <h4 className="fw-bold mb-1 fs-20">Record Payment</h4>
-                            <nav aria-label="breadcrumb">
-                                <ol className="breadcrumb mb-0 fs-13">
-                                    <li className="breadcrumb-item"><Link to="/" className="text-muted">Home</Link></li>
-                                    <li className="breadcrumb-item"><Link to={route.paymentReceivedList} className="text-muted">Payments Received</Link></li>
-                                    <li className="breadcrumb-item active text-dark fw-medium">New</li>
-                                </ol>
-                            </nav>
-                        </div>
-                        <button onClick={() => navigate(route.paymentReceivedList)}
-                            className="btn btn-white border shadow-none d-flex align-items-center justify-content-center"
-                            style={{ width: 34, height: 34, borderRadius: 6 }}>
-                            <i className="ti ti-x fs-16 text-muted" />
-                        </button>
+                {/* Page Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                    <div>
+                        <h4 style={{ fontWeight: 700, fontSize: 20, marginBottom: 4, color: "#111827" }}>
+                            {editId ? "Edit Payment" : "Received Payments"}
+                        </h4>
+                        <ol style={{ display: "flex", gap: 6, alignItems: "center", listStyle: "none", margin: 0, padding: 0, fontSize: 13, color: "#6b7280" }}>
+                            <li>Home</li><li>›</li><li>Payments Received</li><li>›</li>
+                            <li style={{ color: "#111827", fontWeight: 500 }}>{editId ? "Edit" : "New"}</li>
+                        </ol>
                     </div>
+                    <button onClick={() => navigate(route.paymentReceivedList)}
+                        style={{ width: 36, height: 36, borderRadius: 4, background: "#fff", border: "1px solid #e5e9ef", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                        <i className="ti ti-x" style={{ fontSize: 16, color: "#374151" }} />
+                    </button>
+                </div>
 
-                    {/* Form Card */}
-                    <div className="card border-0 shadow-sm" style={{ borderRadius: 0 }}>
-                        <div className="card-body" style={{ padding: "32px 40px" }}>
+                {/* Page body */}
+                <div style={{ background: "#f8fafc" }}>
 
-                            {/* Customer Name */}
-                            <div className="pay-row">
-                                <label className="pay-lbl pay-lbl-req">Customer Name*</label>
-                                <div className="pay-field">
-                                    <div className="d-flex align-items-center gap-2">
-                                        <select className="form-select pay-ctrl fs-13"
-                                            style={{ height: 38, flex: 1, borderColor: errors.custName ? "#e41f07" : "#d1d5db" }}
-                                            value={custName}
-                                            onChange={e => { setCustName(e.target.value); setErrors({}); setShowPanel(false); }}>
-                                            <option value="">Select Customer</option>
-                                            {customers.map(c => (
-                                                <option key={c.id} value={c.name}>
-                                                    {c.name}{c.companyName && c.companyName !== c.name ? ` (${c.companyName})` : ""}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {custName && (
-                                            <button type="button" className="pay-detail-btn" onClick={() => setShowPanel(s => !s)}>
-                                                {custName}'s Details <i className="ti ti-chevron-right fs-12" />
-                                            </button>
-                                        )}
-                                    </div>
-                                    {errors.custName && <div className="pay-err">{errors.custName}</div>}
+                    {/* Document Paper */}
+                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+
+                        {/* Draft Error Banner */}
+                        {draftError && (
+                            <div style={{ background: "#fff1f0", borderBottom: "1px solid #ffa39e", color: "#434343", fontSize: 13, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                    <i className="ti ti-alert-circle" style={{ color: "#e41f07", fontSize: 14 }} />
+                                    {draftError}
+                                </div>
+                                <button onClick={() => setDraftError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 14 }}>×</button>
+                            </div>
+                        )}
+
+                        {/* Top Form Fields (Customer, Payment #, Date) */}
+                        <div style={{ padding: "20px 32px", borderBottom: "1px solid #e5e7eb" }}>
+                            <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Customer Name*</label>
+                                <div style={{ flex: 1, maxWidth: 520, display: "flex", alignItems: "center", gap: 10 }}>
+                                    <select value={custName} onChange={e => { setCustName(e.target.value); setErrors({}); setShowPanel(false); }}
+                                        style={{ flex: 1, height: 36, padding: "0 10px", fontSize: 13, border: `1px solid ${errors.custName ? "#e41f07" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none" }}>
+                                        <option value="">Select or add a customer</option>
+                                        {customers.map(c => (
+                                            <option key={c.id} value={c.name}>{c.name}{c.companyName && c.companyName !== c.name ? ` (${c.companyName})` : ""}</option>
+                                        ))}
+                                    </select>
                                     {custName && (
-                                        <div className="mt-1" style={{ fontSize: 12, color: "#374151" }}>
-                                            PAN:{" "}
-                                            <span onClick={() => setShowPanModal(true)} style={{ color: "#e41f07", cursor: "pointer", fontWeight: 500 }}>
-                                                {panValue || "Add PAN"}
-                                            </span>
-                                        </div>
+                                        <button type="button" className="pay-detail-btn" onClick={() => setShowPanel(s => !s)}>
+                                            {custName}'s Details <i className="ti ti-chevron-right fs-12" />
+                                        </button>
                                     )}
                                 </div>
                             </div>
+                            {errors.custName && <div style={{ color: "#e41f07", fontSize: 11, marginTop: 4, marginLeft: 200 }}>{errors.custName}</div>}
+                            {custName && cust && (
+                                <div style={{ marginTop: 12, marginLeft: 200, display: "flex", gap: 40, fontSize: 12, color: "#374151", lineHeight: 1.5 }}>
+                                    <div>
+                                        <div style={{ fontWeight: 600, marginBottom: 4, color: "#111827" }}>Billing Address</div>
+                                        {cust.billingAddress && (cust.billingAddress.street1 || cust.billingAddress.city) ? (
+                                            <>
+                                                {cust.billingAddress.attention && <div>{cust.billingAddress.attention}</div>}
+                                                {cust.billingAddress.street1 && <div>{cust.billingAddress.street1}</div>}
+                                                {cust.billingAddress.street2 && <div>{cust.billingAddress.street2}</div>}
+                                                <div>
+                                                    {cust.billingAddress.city}
+                                                    {cust.billingAddress.state ? `, ${cust.billingAddress.state}` : ""}
+                                                    {cust.billingAddress.zipCode ? ` ${cust.billingAddress.zipCode}` : ""}
+                                                </div>
+                                                {cust.billingAddress.country && <div>{cust.billingAddress.country}</div>}
+                                            </>
+                                        ) : (
+                                            <div style={{ color: "#9ca3af" }}>No billing address</div>
+                                        )}
+                                        <div style={{ marginTop: 6 }}>
+                                            PAN: <span onClick={() => setShowPanModal(true)} style={{ color: "#e41f07", cursor: "pointer", fontWeight: 500 }}>{panValue || "Add PAN"}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 600, marginBottom: 4, color: "#111827" }}>Shipping Address</div>
+                                        {cust.shippingAddress && (cust.shippingAddress.street1 || cust.shippingAddress.city) ? (
+                                            <>
+                                                {cust.shippingAddress.attention && <div>{cust.shippingAddress.attention}</div>}
+                                                {cust.shippingAddress.street1 && <div>{cust.shippingAddress.street1}</div>}
+                                                {cust.shippingAddress.street2 && <div>{cust.shippingAddress.street2}</div>}
+                                                <div>
+                                                    {cust.shippingAddress.city}
+                                                    {cust.shippingAddress.state ? `, ${cust.shippingAddress.state}` : ""}
+                                                    {cust.shippingAddress.zipCode ? ` ${cust.shippingAddress.zipCode}` : ""}
+                                                </div>
+                                                {cust.shippingAddress.country && <div>{cust.shippingAddress.country}</div>}
+                                            </>
+                                        ) : (
+                                            <div style={{ color: "#9ca3af" }}>No shipping address</div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
-                            {/* Revealed after customer selected */}
-                            {shown && (
-                                <div className="pay-reveal">
-                                    <div className="pay-divider" style={{ margin: "4px 0 20px" }} />
+                        {/* ── Conditional fields (shown after customer selected) ── */}
+                        {shown && (
+                            <>
+                                {/* Payment Details — invoice-style label-left rows */}
+                                <div style={{ padding: "20px 32px 8px", borderBottom: "1px solid #f1f5f9" }}>
+
+                                    {/* Payment # */}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment #*</label>
+                                        <div style={{ flex: 1, maxWidth: 200 }}>
+                                            <input value={payNum} onChange={e => setPayNum(e.target.value)}
+                                                style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, color: "#111827", border: `1px solid ${errors.payNum ? "#c0392b" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none", transition: "border-color 0.15s" }}
+                                                onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                                onBlur={e => e.target.style.borderColor = errors.payNum ? "#c0392b" : "#d0d5dd"} />
+                                        </div>
+                                    </div>
+
+                                    {/* Payment Date */}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Payment Date*</label>
+                                        <div style={{ flex: 1, maxWidth: 200 }}>
+                                            <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
+                                                style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, color: "#111827", border: `1px solid ${errors.payDate ? "#c0392b" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none", transition: "border-color 0.15s" }}
+                                                onFocus={e => e.target.style.borderColor = "#e41f07"}
+                                                onBlur={e => e.target.style.borderColor = errors.payDate ? "#c0392b" : "#d0d5dd"} />
+                                        </div>
+                                    </div>
 
                                     {/* Location */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-opt">Location</label>
-                                        <div className="pay-field">
-                                            <select className="form-select pay-ctrl fs-13" style={{ height: 38 }}
-                                                value={location} onChange={e => setLocation(e.target.value)}>
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Location</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <select value={location} onChange={e => setLocation(e.target.value)}
+                                                style={{ width: "100%", height: 36, padding: "0 10px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, background: "#fff", outline: "none" }}>
                                                 <option value="">Location</option>
                                                 {LOCS.map(l => <option key={l}>{l}</option>)}
                                             </select>
                                         </div>
                                     </div>
 
-                                    {/* Amount Received — INR prefix */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-req">Amount Received*</label>
-                                        <div className="pay-field">
-                                            <div className="input-group" style={{ maxWidth: 540 }}>
-                                                <span className="input-group-text fw-semibold">INR</span>
-                                                <input type="number" min="0" step="0.01" placeholder="0.00"
-                                                    className="form-control pay-ctrl fs-13"
-                                                    style={{ height: 38, borderColor: errors.amount ? "#e41f07" : "#d1d5db" }}
-                                                    value={amount} onChange={e => setAmount(e.target.value)} />
+                                    {/* Amount Received */}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Amount Received*</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <div style={{ display: "flex", height: 36, border: `1px solid ${errors.amount ? "#e41f07" : "#d0d5dd"}`, borderRadius: 4, overflow: "hidden" }}>
+                                                <span style={{ padding: "0 12px", background: "#f9fafb", borderRight: "1px solid #d0d5dd", display: "flex", alignItems: "center", fontSize: 13, fontWeight: 600, color: "#374151" }}>INR</span>
+                                                <input type="number" min="0" step="0.01" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)}
+                                                    style={{ flex: 1, border: "none", padding: "0 12px", fontSize: 13, outline: "none" }} />
                                             </div>
-                                            {errors.amount && <div className="pay-err">{errors.amount}</div>}
+                                            {errors.amount && <div style={{ color: "#e41f07", fontSize: 11, marginTop: 3 }}>{errors.amount}</div>}
                                         </div>
                                     </div>
 
                                     {/* Bank Charges */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-opt">Bank Charges (if any)</label>
-                                        <div className="pay-field">
-                                            <input type="number" min="0" step="0.01" placeholder="0.00"
-                                                className="form-control pay-ctrl fs-13" style={{ height: 38 }}
-                                                value={bankCharge} onChange={e => setBankCharge(e.target.value)} />
-                                        </div>
-                                    </div>
-
-                                    {/* Payment Date */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-req">Payment Date*</label>
-                                        <div className="pay-field">
-                                            <input type="date"
-                                                className="form-control pay-ctrl fs-13"
-                                                style={{ height: 38, borderColor: errors.payDate ? "#e41f07" : "#d1d5db" }}
-                                                value={payDate} onChange={e => setPayDate(e.target.value)} />
-                                            {errors.payDate && <div className="pay-err">{errors.payDate}</div>}
-                                        </div>
-                                    </div>
-
-                                    {/* Payment # — gear icon */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-req">Payment #*</label>
-                                        <div className="pay-field">
-                                            <input type="text"
-                                                className="form-control pay-ctrl fs-13"
-                                                style={{ height: 38, borderColor: errors.payNum ? "#e41f07" : "#d1d5db" }}
-                                                value={payNum} onChange={e => setPayNum(e.target.value)} />
-                                            {errors.payNum && <div className="pay-err">{errors.payNum}</div>}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Bank Charges (if any)</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <input type="number" min="0" step="0.01" placeholder="0.00" value={bankCharge} onChange={e => setBankCharge(e.target.value)}
+                                                style={{ width: "100%", height: 36, padding: "0 12px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, outline: "none" }} />
                                         </div>
                                     </div>
 
                                     {/* Payment Mode */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-opt">Payment Mode</label>
-                                        <div className="pay-field">
-                                            <SearchableDropdown
-                                                value={payMode}
-                                                placeholder="Choose the payment term or type to add"
-                                                options={customModes}
-                                                onChange={setPayMode}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Payment Mode</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <SearchableDropdown value={payMode} placeholder="Choose payment mode" options={customModes} onChange={setPayMode}
                                                 footer={
                                                     <div onClick={() => setShowModeModal(true)}
                                                         style={{ padding: "10px 14px", cursor: "pointer", color: "#e41f07", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}
@@ -827,240 +968,204 @@ const AddPayment: React.FC = () => {
                                     </div>
 
                                     {/* Deposit To */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-req">Deposit To*</label>
-                                        <div className="pay-field">
-                                            <SearchableDropdown
-                                                value={depositTo}
-                                                placeholder="Select an account"
-                                                groups={DEPOSIT_GROUPS}
-                                                onChange={setDepositTo}
-                                                error={!!errors.depositTo}
-                                            />
-                                            {errors.depositTo && <div className="pay-err">{errors.depositTo}</div>}
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Deposit To*</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <SearchableDropdown value={depositTo} placeholder="Select an account" groups={DEPOSIT_GROUPS} onChange={setDepositTo} error={!!errors.depositTo} />
+                                            {errors.depositTo && <div style={{ color: "#e41f07", fontSize: 11, marginTop: 3 }}>{errors.depositTo}</div>}
                                         </div>
                                     </div>
 
                                     {/* Reference # */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-opt">Reference#</label>
-                                        <div className="pay-field">
-                                            <input type="text" className="form-control pay-ctrl fs-13" style={{ height: 38 }}
-                                                value={reference} onChange={e => setReference(e.target.value)} />
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Reference #</label>
+                                        <div style={{ flex: 1, maxWidth: 420 }}>
+                                            <input type="text" value={reference} onChange={e => setReference(e.target.value)}
+                                                style={{ width: "100%", height: 36, padding: "0 12px", fontSize: 13, border: "1px solid #d0d5dd", borderRadius: 4, outline: "none" }} />
                                         </div>
                                     </div>
 
                                     {/* Tax Deducted */}
-                                    <div className="pay-row">
-                                        <label className="pay-lbl pay-lbl-opt">Tax deducted?</label>
-                                        <div className="pay-field d-flex align-items-center gap-4 pt-2">
-                                            <label className="pay-check">
-                                                <input type="radio" className="form-check-input mt-0" name="taxDed"
-                                                    checked={taxDed === "no"} onChange={() => setTaxDed("no")}
-                                                    style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
+                                    <div style={{ display: "flex", alignItems: "center", marginBottom: 18 }}>
+                                        <label style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#374151", flexShrink: 0 }}>Tax Deducted?</label>
+                                        <div style={{ flex: 1, display: "flex", gap: 24, paddingTop: 4 }}>
+                                            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                                <input type="radio" name="taxDed" checked={taxDed === "no"} onChange={() => setTaxDed("no")} style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
                                                 No Tax deducted
                                             </label>
-                                            <label className="pay-check">
-                                                <input type="radio" className="form-check-input mt-0" name="taxDed"
-                                                    checked={taxDed === "yes"} onChange={() => setTaxDed("yes")}
-                                                    style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
+                                            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer" }}>
+                                                <input type="radio" name="taxDed" checked={taxDed === "yes"} onChange={() => setTaxDed("yes")} style={{ accentColor: "#e41f07", width: 15, height: 15 }} />
                                                 Yes, TDS (Income Tax)
                                             </label>
                                         </div>
                                     </div>
 
-                                    {/* ── Unpaid Invoices ────────────────────────── */}
-                                    <div className="mt-4">
-                                        <div className="d-flex align-items-center justify-content-between mb-3">
-                                            <div className="d-flex align-items-center gap-2">
-                                                <span className="fw-bold fs-14 text-dark">Unpaid Invoices</span>
-                                                <button type="button" onClick={() => setShowDateFilter(true)}
-                                                    className="btn btn-white border shadow-none d-flex align-items-center gap-1 fs-12 px-2 py-1"
-                                                    style={{ borderRadius: 4, color: (filterFrom || filterTo) ? "#e41f07" : "#6b7280", borderColor: (filterFrom || filterTo) ? "#e41f07" : "#dee2e6" }}>
-                                                    <i className="ti ti-calendar fs-12" /> Filter by Date Range <i className={`ti ti-chevron-${showDateFilter ? "up" : "down"} fs-10`} />
-                                                </button>
-                                            </div>
-                                            {rows.some(r => parseFloat(r.paymentReceived) > 0) && (
-                                                <button type="button" onClick={clearApplied}
-                                                    className="btn btn-link p-0 shadow-none fs-12 fw-medium"
-                                                    style={{ color: "#e41f07", textDecoration: "none" }}>
-                                                    Clear Applied Amount
-                                                </button>
-                                            )}
+                                </div>
+
+                                {/* Unpaid Invoices */}
+                                <div style={{ padding: "20px 32px", borderBottom: "1px solid #f1f5f9" }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                            <span style={{ fontWeight: 700, fontSize: 13, color: "#111827" }}>Unpaid Invoices</span>
+                                            <button type="button" onClick={() => setShowDateFilter(true)}
+                                                style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", border: `1px solid ${(filterFrom || filterTo) ? "#e41f07" : "#dee2e6"}`, borderRadius: 4, background: "#fff", fontSize: 12, color: (filterFrom || filterTo) ? "#e41f07" : "#6b7280", cursor: "pointer" }}>
+                                                <i className="ti ti-calendar" style={{ fontSize: 12 }} /> Filter by Date Range
+                                            </button>
                                         </div>
-                                        <div className="table-responsive rounded-2" style={{ border: "1px solid #e5e7eb" }}>
-                                            <table className="pay-tbl w-100" style={{ borderCollapse: "collapse" }}>
-                                                <thead>
-                                                    <tr>
-                                                        {["Date", "Invoice Number", "Location", "Invoice Amount", "Amount Due", "Payment Received On", "Payment"].map(h => (
-                                                            <th key={h} style={{ textAlign: ["Invoice Amount", "Amount Due", "Payment"].includes(h) ? "right" : "left" }}>{h}</th>
-                                                        ))}
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {rows.length === 0 ? (
-                                                        <tr><td colSpan={7} className="text-center text-muted py-5 fs-13">No unpaid invoices for this customer</td></tr>
-                                                    ) : rows.map((r, i) => (
-                                                        <tr key={r.invoice.id}>
-                                                            <td className="text-dark">{r.invoice.date}</td>
-                                                            <td><span className="text-primary fw-medium">{r.invoice.invoiceNumber}</span></td>
-                                                            <td className="text-muted">{location || "—"}</td>
-                                                            <td className="text-end text-dark">{fmt(r.invoice.amount)}</td>
-                                                            <td className="text-end text-dark">{fmt(r.amountDue)}</td>
-                                                            <td className="text-muted">—</td>
-                                                            <td className="text-end">
-                                                                <input type="number" min="0" step="0.01" placeholder="0.00"
-                                                                    className="form-control pay-ctrl fs-12 text-end"
-                                                                    style={{ width: 110, height: 32, display: "inline-block" }}
-                                                                    value={r.paymentReceived}
-                                                                    onChange={e => applyRow(i, e.target.value)} />
-                                                            </td>
-                                                        </tr>
+                                        {rows.some(r => parseFloat(r.paymentReceived) > 0) && (
+                                            <button type="button" onClick={clearApplied} style={{ background: "none", border: "none", cursor: "pointer", color: "#e41f07", fontSize: 12, fontWeight: 500 }}>Clear Applied Amount</button>
+                                        )}
+                                    </div>
+                                    <div style={{ border: "1px solid #e5e7eb", borderRadius: 6, overflow: "hidden" }}>
+                                        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                            <thead>
+                                                <tr style={{ background: "#f9fafb", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb" }}>
+                                                    {["Date", "Invoice #", "Location", "Invoice Amount", "Amount Due", "Received On", "Payment"].map(h => (
+                                                        <th key={h} style={{ padding: "9px 12px", fontSize: 11, fontWeight: 700, color: "#374151", textAlign: ["Invoice Amount", "Amount Due", "Payment"].includes(h) ? "right" : "left", letterSpacing: "0.3px", textTransform: "uppercase" }}>{h}</th>
                                                     ))}
-                                                </tbody>
-                                                {rows.length > 0 && (
-                                                    <tfoot>
-                                                        <tr style={{ background: "#f8fafc", borderTop: "2px solid #e5e7eb" }}>
-                                                            <td colSpan={6} className="text-end fw-semibold fs-12 text-dark" style={{ padding: "10px 14px" }}>Amount applied to invoices</td>
-                                                            <td className="text-end fw-bold fs-13 text-dark" style={{ padding: "10px 14px" }}>{fmt(totalApplied)}</td>
-                                                        </tr>
-                                                        <tr style={{ background: "#f8fafc" }}>
-                                                            <td colSpan={6} className="text-end fw-semibold fs-12 text-dark" style={{ padding: "6px 14px" }}>Amount in excess</td>
-                                                            <td className="text-end fw-bold fs-13" style={{ padding: "6px 14px", color: excess > 0 ? "#059669" : "#111827" }}>{fmt(excess)}</td>
-                                                        </tr>
-                                                    </tfoot>
-                                                )}
-                                            </table>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {rows.length === 0 ? (
+                                                    <tr><td colSpan={7} style={{ textAlign: "center", color: "#9ca3af", padding: "28px 14px", fontSize: 13 }}>No unpaid invoices for this customer</td></tr>
+                                                ) : rows.map((r, i) => (
+                                                    <tr key={r.invoice.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                                        <td style={{ padding: "10px 12px", fontSize: 13, color: "#374151" }}>{r.invoice.date}</td>
+                                                        <td style={{ padding: "10px 12px" }}><span style={{ color: "#e41f07", fontWeight: 500, fontSize: 13 }}>{r.invoice.invoiceNumber}</span></td>
+                                                        <td style={{ padding: "10px 12px", fontSize: 13, color: "#6b7280" }}>{location || "—"}</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#374151" }}>{fmt(r.invoice.amount)}</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right", fontSize: 13, color: "#374151" }}>{fmt(r.amountDue)}</td>
+                                                        <td style={{ padding: "10px 12px", fontSize: 13, color: "#6b7280" }}>—</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right" }}>
+                                                            <input type="number" min="0" step="0.01" placeholder="0.00"
+                                                                style={{ width: 100, height: 30, border: "1px solid #e5e7eb", borderRadius: 4, padding: "0 8px", fontSize: 12, textAlign: "right", outline: "none" }}
+                                                                value={r.paymentReceived} onChange={e => applyRow(i, e.target.value)}
+                                                                onFocus={e => (e.target.style.borderColor = "#e41f07")}
+                                                                onBlur={e => (e.target.style.borderColor = "#e5e7eb")} />
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            {rows.length > 0 && (
+                                                <tfoot>
+                                                    <tr style={{ background: "#fafafa", borderTop: "2px solid #e5e7eb" }}>
+                                                        <td colSpan={6} style={{ padding: "10px 12px", textAlign: "right", fontWeight: 600, fontSize: 12, color: "#374151" }}>Amount applied to invoices</td>
+                                                        <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, fontSize: 13, color: "#374151" }}>{fmt(totalApplied)}</td>
+                                                    </tr>
+                                                    <tr style={{ background: "#fafafa" }}>
+                                                        <td colSpan={6} style={{ padding: "6px 12px", textAlign: "right", fontWeight: 600, fontSize: 12, color: "#374151" }}>Amount in excess</td>
+                                                        <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: 700, fontSize: 13, color: excess > 0 ? "#059669" : "#374151" }}>{fmt(excess)}</td>
+                                                    </tr>
+                                                </tfoot>
+                                            )}
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Amount Summary */}
+                                <div style={{ padding: "16px 32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end" }}>
+                                    <div style={{ minWidth: 320, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "16px 20px" }}>
+                                        {[{ label: "Amount Received", val: amtNum }, { label: "Amount used for Payments", val: totalApplied }, { label: "Amount Refunded", val: 0 }].map(({ label, val }) => (
+                                            <div key={label} style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                                <span style={{ color: "#6b7280", fontSize: 13 }}>{label} :</span>
+                                                <span style={{ color: "#374151", fontWeight: 500, fontSize: 13 }}>{val.toFixed(2)}</span>
+                                            </div>
+                                        ))}
+                                        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 10, marginTop: 4, display: "flex", justifyContent: "space-between" }}>
+                                            <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#6b7280" }}>
+                                                <i className="ti ti-alert-triangle" style={{ color: excess > 0 ? "#f59e0b" : "#9ca3af", fontSize: 15 }} /> Amount in Excess:
+                                            </span>
+                                            <span style={{ fontWeight: 700, fontSize: 14, color: excess > 0 ? "#f59e0b" : "#374151" }}>₹ {excess.toFixed(2)}</span>
                                         </div>
                                     </div>
+                                </div>
 
-                                    {/* ── Amount Summary ─────────────────────────── */}
-                                    <div className="d-flex justify-content-end mt-4">
-                                        <div style={{ minWidth: 340, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, padding: "16px 20px" }}>
-                                            {[
-                                                { label: "Amount Received",          val: amtNum },
-                                                { label: "Amount used for Payments", val: totalApplied },
-                                                { label: "Amount Refunded",          val: 0 },
-                                            ].map(({ label, val }) => (
-                                                <div key={label} className="pay-sum-row">
-                                                    <span style={{ color: "#6b7280", fontSize: 13 }}>{label} :</span>
-                                                    <span style={{ color: "#374151", fontWeight: 500, fontSize: 13 }}>{val.toFixed(2)}</span>
+                                {/* Notes */}
+                                <div style={{ padding: "16px 32px", borderBottom: "1px solid #f1f5f9" }}>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>
+                                        Notes <span style={{ color: "#9ca3af", fontStyle: "italic", fontWeight: 400 }}>(Internal use. Not visible to customer)</span>
+                                    </label>
+                                    <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)}
+                                        style={{ width: "100%", padding: "8px 12px", fontSize: 13, border: "1px solid #e5e7eb", borderRadius: 4, outline: "none", resize: "vertical", fontFamily: "inherit", lineHeight: 1.6 }}
+                                        onFocus={e => (e.target.style.borderColor = "#e41f07")}
+                                        onBlur={e => (e.target.style.borderColor = "#e5e7eb")} />
+                                </div>
+
+                                {/* Attachments */}
+                                <div style={{ padding: "16px 32px", borderBottom: "1px solid #f1f5f9" }}>
+                                    <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8, display: "block" }}>Attachments</label>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                                        <button type="button" onClick={() => fileRef.current?.click()}
+                                            style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 14px", border: "1px solid #d1d5db", borderRight: "none", borderRadius: "4px 0 0 4px", background: "#fff", cursor: "pointer", fontSize: 13, color: "#374151", fontWeight: 500 }}>
+                                            <i className="ti ti-upload" style={{ fontSize: 14 }} /> Upload File
+                                        </button>
+                                        <button type="button" style={{ padding: "7px 10px", border: "1px solid #d1d5db", borderRadius: "0 4px 4px 0", background: "#fff", cursor: "pointer", fontSize: 13, color: "#374151" }}>
+                                            <i className="ti ti-chevron-down" style={{ fontSize: 13 }} />
+                                        </button>
+                                    </div>
+                                    <input ref={fileRef} type="file" multiple style={{ display: "none" }}
+                                        onChange={e => { const f = Array.from(e.target.files || []); if (files.length + f.length <= 5) setFiles(p => [...p, ...f]); e.target.value = ""; }} />
+                                    <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 6, marginBottom: 0 }}>You can upload a maximum of 5 files, 5MB each</p>
+                                    {files.length > 0 && (
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                                            {files.map((f, i) => (
+                                                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", background: "#f3f4f6", borderRadius: 4, fontSize: 12, color: "#374151", border: "1px solid #e5e7eb" }}>
+                                                    <i className="ti ti-file" style={{ fontSize: 13 }} />{f.name}
+                                                    <button type="button" onClick={() => setFiles(p => p.filter((_, j) => j !== i))} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 12, padding: 0, marginLeft: 2 }}>
+                                                        <i className="ti ti-x" />
+                                                    </button>
                                                 </div>
                                             ))}
-                                            <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 10, marginTop: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#6b7280" }}>
-                                                    <i className="ti ti-alert-triangle" style={{ color: excess > 0 ? "#f59e0b" : "#9ca3af", fontSize: 15 }} />
-                                                    Amount in Excess:
-                                                </span>
-                                                <span style={{ fontWeight: 700, fontSize: 14, color: excess > 0 ? "#f59e0b" : "#374151" }}>
-                                                    ₹ {excess.toFixed(2)}
-                                                </span>
-                                            </div>
                                         </div>
-                                    </div>
+                                    )}
+                                </div>
 
-                                    {/* ── Notes ──────────────────────────────────── */}
-                                    <div className="mt-4">
-                                        <label className="fs-13 fw-medium text-dark mb-2 d-block">
-                                            Notes <span className="text-muted fst-italic fw-normal">(Internal use. Not visible to customer)</span>
-                                        </label>
-                                        <textarea className="form-control pay-ctrl fs-13" rows={3} style={{ resize: "vertical" }}
-                                            value={notes} onChange={e => setNotes(e.target.value)} />
-                                    </div>
-
-                                    {/* ── Attachments ────────────────────────────── */}
-                                    <div className="mt-4">
-                                        <label className="fs-13 fw-medium text-dark mb-2 d-block">Attachments</label>
-                                        <div className="d-inline-flex align-items-center border rounded" style={{ borderColor: "#d1d5db", overflow: "hidden" }}>
-                                            <button type="button" onClick={() => fileRef.current?.click()}
-                                                className="btn btn-white border-0 d-flex align-items-center gap-2 fs-13 fw-medium shadow-none"
-                                                style={{ borderRadius: 0, padding: "7px 14px" }}>
-                                                <i className="ti ti-upload fs-14" /> Upload File
-                                            </button>
-                                            <button type="button" className="btn btn-white border-0 border-start shadow-none"
-                                                style={{ borderRadius: 0, padding: "7px 10px", borderColor: "#d1d5db" }}>
-                                                <i className="ti ti-chevron-down fs-12 text-muted" />
-                                            </button>
+                                {/* Thank You Note */}
+                                <div style={{ padding: "16px 32px 24px" }}>
+                                    <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                                        <input type="checkbox" checked={thankYou} onChange={e => setThankYou(e.target.checked)} style={{ width: 15, height: 15, accentColor: "#e41f07" }} />
+                                        <span style={{ fontSize: 13, color: "#374151" }}>Send a "Thank you" note for this payment</span>
+                                    </label>
+                                    {thankYou && email && (
+                                        <div style={{ marginTop: 8, marginLeft: 23 }}>
+                                            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                                                <input type="checkbox" defaultChecked style={{ width: 14, height: 14, accentColor: "#e41f07" }} />
+                                                <span style={{ fontSize: 13, color: "#374151" }}>{custName} &lt;{email}&gt;</span>
+                                            </label>
                                         </div>
-                                        <input ref={fileRef} type="file" multiple style={{ display: "none" }}
-                                            onChange={e => {
-                                                const f = Array.from(e.target.files || []);
-                                                if (files.length + f.length <= 5) setFiles(p => [...p, ...f]);
-                                                e.target.value = "";
-                                            }} />
-                                        <p className="text-muted fs-12 mt-1 mb-0">You can upload a maximum of 5 files, 5MB each</p>
-                                        {files.length > 0 && (
-                                            <div className="d-flex flex-wrap gap-2 mt-2">
-                                                {files.map((f, i) => (
-                                                    <div key={i} className="d-flex align-items-center gap-2 px-3 py-1 rounded border fs-12 bg-light" style={{ borderColor: "#e5e7eb" }}>
-                                                        <i className="ti ti-file fs-13 text-muted" />
-                                                        <span className="text-dark">{f.name}</span>
-                                                        <button type="button" onClick={() => setFiles(p => p.filter((_, j) => j !== i))}
-                                                            className="btn btn-link p-0 shadow-none text-muted" style={{ lineHeight: 1 }}>
-                                                            <i className="ti ti-x fs-11" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                    )}
+                                    <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
+                                        <p style={{ fontSize: 13, color: "#9ca3af", marginBottom: 0 }}>
+                                            <strong style={{ color: "#374151" }}>Additional Fields:</strong>{" "}
+                                            Start adding custom fields for your payments received by going to <em>Settings → Sales → Payments Received.</em>
+                                        </p>
                                     </div>
 
-                                    <div className="pay-divider" />
-
-                                    {/* ── Thank You Note ─────────────────────────── */}
-                                    <div className="mb-3">
-                                        <label className="pay-check">
-                                            <input type="checkbox" className="form-check-input mt-0" checked={thankYou}
-                                                onChange={e => setThankYou(e.target.checked)}
-                                                style={{ width: 15, height: 15, accentColor: "#2563eb" }} />
-                                            <span className="fs-13 text-dark">Send a "Thank you" note for this payment</span>
-                                        </label>
-                                        {thankYou && email && (
-                                            <div className="mt-2 ms-4">
-                                                <label className="pay-check">
-                                                    <input type="checkbox" className="form-check-input mt-0" defaultChecked
-                                                        style={{ width: 14, height: 14, accentColor: "#2563eb" }} />
-                                                    <span className="fs-13 text-dark">{custName} &lt;{email}&gt;</span>
-                                                </label>
-                                            </div>
-                                        )}
+                                    {/* Action Buttons */}
+                                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 24, paddingTop: 20, borderTop: "1px solid #f1f5f9" }}>
+                                        <button type="button" disabled={saving} onClick={() => save("Draft")}
+                                            style={{ padding: "8px 20px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
+                                            Save as Draft
+                                        </button>
+                                        <button type="button" disabled={saving} onClick={() => save("Received")}
+                                            style={{ padding: "8px 20px", borderRadius: 4, border: "none", background: "#e41f07", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
+                                            {saving ? "Saving..." : editId ? "Update Payment" : "Save and Send"}
+                                        </button>
+                                        <button type="button" onClick={() => navigate(editId ? route.paymentReceivedView.replace(":id", editId) : route.paymentReceivedList)}
+                                            style={{ padding: "8px 20px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                                            Cancel
+                                        </button>
                                     </div>
 
-                                    <div className="pay-divider" />
-
-                                    {/* ── Additional Fields ──────────────────────── */}
-                                    <p className="fs-13 text-muted mb-0">
-                                        <strong className="text-dark">Additional Fields:</strong>{" "}
-                                        Start adding custom fields for your payments received by going to{" "}
-                                        <em>Settings → Sales → Payments Received.</em>
-                                    </p>
                                 </div>
-                            )}
-
-                            {/* Footer Buttons — inside card */}
-                            {shown && (
-                                <div className="pay-reveal" style={{ borderTop: "1px solid #e5e7eb", marginTop: 8, paddingTop: 24, display: "flex", alignItems: "center", gap: 12 }}>
-                                    <button type="button" disabled={saving} onClick={() => save("Received")}
-                                        className="btn fw-semibold shadow-none fs-13"
-                                        style={{ padding: "9px 22px", borderRadius: 4, border: "none", background: "#e41f07", color: "#fff" }}>
-                                        {saving ? "Saving..." : "Save and Send"}
-                                    </button>
-                                    <button type="button" disabled={saving} onClick={() => save("Draft")}
-                                        className="btn fw-semibold shadow-none fs-13"
-                                        style={{ padding: "9px 22px", borderRadius: 4, border: "none", background: "#f59e0b", color: "#fff" }}>
-                                        Save as Draft
-                                    </button>
-                                    <button type="button" onClick={() => navigate(route.paymentReceivedList)}
-                                        className="btn fw-medium shadow-none fs-13"
-                                        style={{ padding: "9px 22px", borderRadius: 4, border: "1px solid #d1d5db", background: "#fff", color: "#374151" }}>
-                                        Cancel
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+                            </>
+                        )}
                     </div>
                 </div>
-            </div>
+
+
+            </div>{/* content */}
+            </div>{/* page-wrapper */}
         </>
     );
 };

@@ -488,7 +488,7 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
         const overdueDays = daysOverdue(invoice.dueDate);
         const sc = SC[invoice.status];
         return (
-            <div style={{ position: "relative", border: "1px solid #d0d0d0", background: "#fff", maxWidth: 860, width: "100%", margin: "0 auto", padding: "48px 56px 56px", fontSize: 13, lineHeight: 1.5, overflow: "hidden" }}>
+            <div style={{ position: "relative", border: "1px solid #d0d0d0", background: "#fff", width: "100%", margin: "0 auto", padding: "48px 56px 56px", fontSize: 14, lineHeight: 1.5, overflow: "hidden" }}>
 
                 {/* Status ribbon */}
                 {invoice.status === "Paid" && (
@@ -538,24 +538,24 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
                 <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 24, border: "1px solid #ccc" }}>
                     <tbody>
                         <tr>
-                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", width: "30%", color: "#888", fontSize: 12 }}>#</td>
+                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", width: "30%", color: "#888", fontSize: 14 }}>#</td>
                             <td style={{ padding: "8px 12px", border: "1px solid #ccc", fontWeight: 600 }}>: {invoice.invoiceNumber}</td>
                         </tr>
                         <tr>
-                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 12 }}>Invoice Date</td>
+                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 14 }}>Invoice Date</td>
                             <td style={{ padding: "8px 12px", border: "1px solid #ccc", fontWeight: 600 }}>: {invoice.date}</td>
                         </tr>
                         <tr>
-                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 12 }}>Terms</td>
+                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 14 }}>Terms</td>
                             <td style={{ padding: "8px 12px", border: "1px solid #ccc" }}>: Due on Receipt</td>
                         </tr>
                         <tr>
-                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 12 }}>Due Date</td>
+                            <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 14 }}>Due Date</td>
                             <td style={{ padding: "8px 12px", border: "1px solid #ccc" }}>: {invoice.dueDate}</td>
                         </tr>
                         {invoice.orderNumber && (
                             <tr>
-                                <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 12 }}>P.O.#</td>
+                                <td style={{ padding: "8px 12px", border: "1px solid #ccc", color: "#888", fontSize: 14 }}>P.O.#</td>
                                 <td style={{ padding: "8px 12px", border: "1px solid #ccc" }}>: {invoice.orderNumber}</td>
                             </tr>
                         )}
@@ -564,8 +564,8 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
 
                 {/* Bill To */}
                 <div style={{ marginBottom: 28 }}>
-                    <div style={{ fontSize: 11, color: "#888", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Bill To</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a" }}>{invoice.customerName}</div>
+                    <div style={{ fontSize: 14, color: "#888", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Bill To</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>{invoice.customerName}</div>
                 </div>
 
                 {/* Line Items Table */}
@@ -573,21 +573,21 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
                     <thead>
                         <tr style={{ background: "#f5f5f5" }}>
                             {["#", "Item & Description", "Qty", "Rate", "Tax %", "Amount"].map((h, i) => (
-                                <th key={h} style={{ padding: "9px 10px", border: "1px solid #ddd", fontSize: 11, color: "#666", fontWeight: 700, textAlign: i > 1 ? "right" : "left", textTransform: "uppercase", letterSpacing: 0.3 }}>{h}</th>
+                                <th key={h} style={{ padding: "9px 10px", border: "1px solid #ddd", fontSize: 14, color: "#666", fontWeight: 700, textAlign: i > 1 ? "right" : "left", textTransform: "uppercase", letterSpacing: 0.3 }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {items.length === 0 ? (
-                            <tr><td colSpan={6} style={{ padding: 32, textAlign: "center", color: "#aaa", fontSize: 12, border: "1px solid #ddd" }}>No items added.</td></tr>
+                            <tr><td colSpan={6} style={{ padding: 32, textAlign: "center", color: "#aaa", fontSize: 14, border: "1px solid #ddd" }}>No items added.</td></tr>
                         ) : items.map((item, idx) => (
                             <tr key={idx}>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", color: "#999", fontSize: 12 }}>{idx + 1}</td>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", fontWeight: 500 }}>{item.itemName || item.description || "—"}</td>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right" }}>{item.qty}</td>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right" }}>{fmt(item.rate ?? 0)}</td>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right" }}>{item.tax ?? 0}%</td>
-                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right", fontWeight: 600 }}>{fmt(item.amount ?? 0)}</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", color: "#999", fontSize: 14 }}>{idx + 1}</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", fontWeight: 500, fontSize: 14 }}>{item.itemName || item.description || "—"}</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right", fontSize: 14 }}>{item.qty}</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right", fontSize: 14 }}>{fmt(item.rate ?? 0)}</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right", fontSize: 14 }}>{item.tax ?? 0}%</td>
+                                <td style={{ padding: "9px 10px", border: "1px solid #ddd", textAlign: "right", fontWeight: 600, fontSize: 14 }}>{fmt(item.amount ?? 0)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -600,8 +600,8 @@ const InvoiceDoc: React.FC<{ invoice: Invoice; items: LineItem[]; subtotal: numb
                             <tbody>
                                 {[["Subtotal", fmt(subtotal)], ["Total Tax", fmt(taxTotal)]].map(([l, v]) => (
                                     <tr key={l}>
-                                        <td style={{ padding: "10px 16px", color: "#666", fontSize: 13 }}>{l}</td>
-                                        <td style={{ padding: "10px 16px", textAlign: "right", fontSize: 13, color: "#333", fontWeight: 500 }}>{v}</td>
+                                        <td style={{ padding: "10px 16px", color: "#666", fontSize: 14 }}>{l}</td>
+                                        <td style={{ padding: "10px 16px", textAlign: "right", fontSize: 14, color: "#333", fontWeight: 500 }}>{v}</td>
                                     </tr>
                                 ))}
                                 <tr style={{ borderTop: "1px solid #eee" }}>

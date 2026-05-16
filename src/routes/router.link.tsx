@@ -230,6 +230,9 @@ const BillingInvoiceAdd = lazy(() => import("../feature-module/Pages/billing-app
 const PaymentReceivedList = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-recevied-list"));
 const AddPayment = lazy(() => import("../feature-module/Pages/billing-application/payment/add-payment"));
 const PaymentView = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-view"));
+const TransferOrderList = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-list"));
+const AddTransferOrder  = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-add"));
+const TransferOrderView = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-view"));
 
 const route = all_routes;
 
@@ -1820,6 +1823,27 @@ export const publicRoutes = [
     element: <PaymentView />,
     route: Route,
     meta_title: "Payment Receipt",
+  },
+  {
+    id: "225",
+    path: route.transferOrderList,
+    element: <TransferOrderList />,
+    route: Route,
+    meta_title: "Transfer Orders",
+  },
+  {
+    id: "226",
+    path: route.transferOrderAdd,
+    element: <AddTransferOrder />,
+    route: Route,
+    meta_title: "New Transfer Order",
+  },
+  {
+    id: "227",
+    path: route.transferOrderView,
+    element: <TransferOrderView />,
+    route: Route,
+    meta_title: "Transfer Order",
   },
   {
     id: "216",

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
@@ -13,6 +14,10 @@ export default defineConfig({
       port: 8001,
     },
     proxy: {
+      '/mailapi': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

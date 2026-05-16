@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import "./payment.scss";
 import Datatable from "../../../../components/dataTable";
 import PageHeader from "../../../../components/page-header/pageHeader";
 import PredefinedDatePicker from "../../../../components/common-dateRangePicker/PredefinedDatePicker";
@@ -62,13 +63,13 @@ const ReceivedPaymentsList: React.FC = () => {
     const route = all_routes;
 
     // ── State ─────────────────────────────────────────────────────────────────
-    const [payments, setPayments] = useState<ReceivedPayment[]>([]);
+    const [payments, setPayments] = useState<ReceivedPayment[]>(() => loadPayments());
     const [searchText, setSearchText] = useState("");
     const [searchFocused, setSearchFocused] = useState(false);
     const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [loading, setLoading] = useState(false);
     const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
-    const [selectedView, setSelectedView] = useState("Payment Received ");
+    const [selectedView, setSelectedView] = useState("All");
     const [showFilter, setShowFilter] = useState(false);
     const [filterModes, setFilterModes] = useState<string[]>([]);
     const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({
@@ -79,17 +80,14 @@ const ReceivedPaymentsList: React.FC = () => {
         "Invoice#": true,
         "Mode": true,
         "Amount": true,
-        "Unused Amount": true
+        "Unused Amount": true,
+        "Status": true
     });
     const [showManageCols, setShowManageCols] = useState(false);
     const [showExportMenu, setShowExportMenu] = useState(false);
 
     const refreshData = () => {
-        setLoading(true);
-        setTimeout(() => {
-            setPayments(loadPayments());
-            setLoading(false);
-        }, 500);
+        setPayments(loadPayments());
     };
 
     useEffect(() => {
@@ -291,6 +289,26 @@ const ReceivedPaymentsList: React.FC = () => {
             sorter: (a, b) => a.unusedAmount - b.unusedAmount,
         },
         {
+            title: "Status",
+            dataIndex: "status",
+            key: "Status",
+            width: 100,
+            render: (status: string) => {
+                let color = "#16a34a";
+                let bg = "#dcfce7";
+                const s = status || "Received";
+                if (s === "Draft") { color = "#ca8a04"; bg = "#fef9c3"; }
+                if (s === "Void") { color = "#e41f07"; bg = "#fee2e2"; }
+                if (s === "Refunded") { color = "#0284c7"; bg = "#e0f2fe"; }
+                return (
+                    <span className="badge rounded-pill px-2 py-1 fs-11 fw-bold" style={{ background: bg, color: color, textTransform: 'uppercase' }}>
+                        {s === "Received" ? "PAID" : s}
+                    </span>
+                );
+            },
+            sorter: (a, b) => (a.status || "").localeCompare(b.status || ""),
+        },
+        {
             title: "Action",
             key: "Action",
             width: 70,
@@ -341,7 +359,14 @@ const ReceivedPaymentsList: React.FC = () => {
             p.paymentNumber.toLowerCase().includes(searchText.toLowerCase()) ||
             p.invoiceNumber.toLowerCase().includes(searchText.toLowerCase());
         const matchesFilter = filterModes.length === 0 || filterModes.includes(p.mode);
-        return matchesSearch && matchesFilter;
+        
+        let matchesView = true;
+        if (selectedView === "Received") matchesView = (p.status === "Received" || !p.status);
+        else if (selectedView === "Draft") matchesView = (p.status === "Draft");
+        else if (selectedView === "Unused") matchesView = (p.unusedAmount > 0);
+        // "All" → matchesView stays true
+        
+        return matchesSearch && matchesFilter && matchesView;
     });
 
     if (sortBy === "oldest") {
@@ -354,19 +379,26 @@ const ReceivedPaymentsList: React.FC = () => {
     const titleDropdown = (
         <div className="dropdown custom-header-dropdown">
             <div className="d-flex align-items-center gap-2 cursor-pointer" data-bs-toggle="dropdown">
-                <h4 className="mb-0 fw-bold" style={{ fontSize: "18px", color: "#111" }}>{selectedView}</h4>
+                <h4 className="mb-0 fw-bold" style={{ fontSize: "18px", color: "#111" }}>
+                    {selectedView === "All" ? "Payment Received" : selectedView === "Received" ? "Payment Received" : selectedView === "Draft" ? "Draft Payments" : "Unused Credits"}
+                </h4>
                 <i className="ti ti-chevron-down text-primary fs-14" />
                 <span className="ms-2 d-flex align-items-center justify-content-center premium-count-badge-v2">{filteredData.length}</span>
             </div>
             <div className="dropdown-menu shadow-lg border-0 mt-2 py-0 overflow-hidden" style={{ minWidth: 260, borderRadius: 8 }}>
                 <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                    {["Received ", "Draft ", "Unused "].map((view) => (
+                    {[
+                        { id: "All",      label: "All Payments" },
+                        { id: "Received", label: "Payment Received" },
+                        { id: "Draft",    label: "Draft Payments" },
+                        { id: "Unused",   label: "Unused Credits" }
+                    ].map((v) => (
                         <div
-                            key={view}
-                            className={`dropdown-item px-3 py-2 d-flex align-items-center justify-content-between cursor-pointer ${selectedView === view ? "active" : ""}`}
-                            onClick={() => setSelectedView(view)}
+                            key={v.id}
+                            className={`dropdown-item px-3 py-2 d-flex align-items-center justify-content-between cursor-pointer ${selectedView === v.id ? "active" : ""}`}
+                            onClick={() => setSelectedView(v.id)}
                         >
-                            <span className="fs-14 fw-medium text-dark">{view}</span>
+                            <span className="fs-14 fw-medium text-dark">{v.label}</span>
                             <i className="ti ti-star text-muted fs-12" />
                         </div>
                     ))}
@@ -702,92 +734,7 @@ const ReceivedPaymentsList: React.FC = () => {
                 </div>
             </div>
 
-            <style>{`
-                .premium-count-badge-v2 {
-                    font-size: 12px;
-                    min-width: 18px;
-                    height: 25px;
-                    padding: 0 6px;
-                    border-radius: 7px;
-                    background: #fff1f0;
-                    color: #e41f07;
-                    font-weight: 500;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid #ffceceff;
-                    border-bottom: 2px solid #fe9595ff !important;
-                    line-height: 1;
-                }
-
-                .premium-outline-btn {
-                    border: 1px solid #ebe7e5ff !important;
-                    background: #fff !important;
-                    color: #333 !important;
-                    transition: all 0.2s ease !important;
-                }
-
-                .premium-outline-btn:hover {
-                    background-color: #fff0ee !important;
-                    color: #e41f07 !important;
-                    border-color: #fde0dd !important;
-                }
-
-                .premium-outline-btn:hover i {
-                    color: #e41f07 !important;
-                }
-
-                .btn-white { background: #fff; color: #334155; border-color: #e2e8f0; }
-                
-                /* Custom Red Switch */
-                .custom-switch-red .form-check-input:checked {
-                    background-color: #e41f07 !important;
-                    border-color: #e41f07 !important;
-                }
-                .custom-switch-red .form-check-input {
-                    cursor: pointer;
-                    width: 36px;
-                    height: 18px;
-                }
-
-                .invoice-table .ant-table-thead > tr > th {
-                    background: #f8fafc !important;
-                    font-weight: 600 !important;
-                    font-size: 13px !important;
-                    color: #475569 !important;
-                    padding: 12px 16px !important;
-                    border-bottom: 1px solid #e2e8f0 !important;
-                    text-transform: uppercase;
-                    letter-spacing: 0.3px;
-                }
-                .invoice-table .ant-table-tbody > tr > td {
-                    padding: 12px 16px !important;
-                    border-bottom: 1px solid #f1f5f9 !important;
-                }
-                .compact-table .ant-table-thead > tr > th,
-                .compact-table .ant-table-tbody > tr > td {
-                    padding: 10px 12px !important;
-                    height: 50px !important;
-                }
-                .invoice-table .ant-table-row:hover > td {
-                    background-color: #f8fafc !important;
-                }
-                .hover-shadow:hover {
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-                    transform: translateY(-2px);
-                }
-                .transition-all {
-                    transition: all 0.2s ease-in-out;
-                }
-                .custom-header-dropdown .dropdown-item.active {
-                    background-color: #fff1f0;
-                    color: #e41f07;
-                }
-                .custom-header-dropdown .dropdown-item.active .text-dark {
-                    color: #e41f07 !important;
-                }
-                .hover-text-primary:hover { color: #e41f07 !important; }
-            `}</style>
+           
         </div>
     );
 };
