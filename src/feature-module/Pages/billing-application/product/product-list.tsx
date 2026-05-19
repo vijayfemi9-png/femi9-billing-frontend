@@ -1286,8 +1286,8 @@ tbody td{padding:9px 12px;border-bottom:1px solid #f0f0f0;font-size:12px}
                                                             </div>
 
                                                             {/* Table */}
-                                                            <div className="table-responsive border rounded-3 overflow-hidden">
-                                                                <table className="table table-nowrap mb-0" style={{ fontSize: 13 }}>
+                                                            <div className="table-responsive border rounded-3 overflow-auto">
+                                                                <table className="table table-nowrap mb-0" style={{ fontSize: 13, minWidth: 600 }}>
                                                                     <thead>
                                                                         <tr style={{ background: "#f5f7fa" }}>
                                                                             <th className="py-2 px-3 fw-semibold border-0" style={{ fontSize: 11, color: "#e41f07", textTransform: "uppercase", letterSpacing: 0.5 }}>Location Name</th>

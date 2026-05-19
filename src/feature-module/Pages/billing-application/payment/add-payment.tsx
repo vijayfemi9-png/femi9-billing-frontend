@@ -42,7 +42,7 @@ const LOCS = ["Head Office", "Main Warehouse", "Branch A", "Branch B"];
 // ── SearchableDropdown ────────────────────────────────────────────────────────
 interface SDOption { label: string; group?: string; }
 const SearchableDropdown: React.FC<{
-    value: string; placeholder: string; options?: string[];
+    value: string; placeholder: string; options?: (string | { value: string; label: string })[];
     groups?: { group: string; options: string[] }[];
     onChange: (v: string) => void; error?: boolean;
     footer?: React.ReactNode;
@@ -58,8 +58,8 @@ const SearchableDropdown: React.FC<{
     }, []);
 
     const allOptions: SDOption[] = groups
-        ? groups.flatMap(g => g.options.map(o => ({ label: o, group: g.group })))
-        : (options || []).map(o => ({ label: o }));
+        ? groups.flatMap(g => g.options.map(o => ({ label: o, group: g.group, value: o })))
+        : (options || []).map(o => typeof o === "string" ? { label: o, value: o } : { label: o.label, value: o.value });
 
     const filtered = allOptions.filter(o => o.label.toLowerCase().includes(q.toLowerCase()));
 
@@ -71,9 +71,9 @@ const SearchableDropdown: React.FC<{
                 return (
                     <div key={g.group}>
                         <div style={{ padding: "6px 12px 4px", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>{g.group}</div>
-                        {opts.map(o => (
-                            <div key={o} onClick={() => { onChange(o); setOpen(false); setQ(""); }}
-                                style={{ padding: "9px 14px 9px 20px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === o ? "#2563eb" : "transparent", color: value === o ? "#fff" : "#111827" }}
+                        {opts.map((o, idx) => (
+                            <div key={`${o}-${idx}`} onClick={() => { onChange(o); setOpen(false); setQ(""); }}
+                                style={{ padding: "9px 14px 9px 20px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === o ? "#e41f07" : "transparent", color: value === o ? "#fff" : "#111827" }}
                                 onMouseEnter={e => { if (value !== o) (e.currentTarget as HTMLDivElement).style.background = "#f3f4f6"; }}
                                 onMouseLeave={e => { if (value !== o) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
                                 {o} {value === o && <i className="ti ti-check" style={{ fontSize: 13 }} />}
@@ -83,12 +83,12 @@ const SearchableDropdown: React.FC<{
                 );
             });
         }
-        return filtered.map(o => (
-            <div key={o.label} onClick={() => { onChange(o.label); setOpen(false); setQ(""); }}
-                style={{ padding: "9px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === o.label ? "#2563eb" : "transparent", color: value === o.label ? "#fff" : "#111827" }}
-                onMouseEnter={e => { if (value !== o.label) (e.currentTarget as HTMLDivElement).style.background = "#f3f4f6"; }}
-                onMouseLeave={e => { if (value !== o.label) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
-                {o.label} {value === o.label && <i className="ti ti-check" style={{ fontSize: 13 }} />}
+        return filtered.map((o, idx) => (
+            <div key={`${o.value}-${idx}`} onClick={() => { onChange(o.value); setOpen(false); setQ(""); }}
+                style={{ padding: "9px 14px", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", background: value === o.value ? "#e41f07" : "transparent", color: value === o.value ? "#fff" : "#111827" }}
+                onMouseEnter={e => { if (value !== o.value) (e.currentTarget as HTMLDivElement).style.background = "#f3f4f6"; }}
+                onMouseLeave={e => { if (value !== o.value) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
+                {o.label} {value === o.value && <i className="ti ti-check" style={{ fontSize: 13 }} />}
             </div>
         ));
     };
@@ -97,7 +97,9 @@ const SearchableDropdown: React.FC<{
         <div ref={ref} style={{ position: "relative", width: "100%" }}>
             <div onClick={() => setOpen(o => !o)}
                 style={{ height: 38, border: `1px solid ${error || open ? "#e41f07" : "#d1d5db"}`, borderRadius: 6, background: "#fff", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 12px", cursor: "pointer", fontSize: 13, color: value ? "#111827" : "#9ca3af", boxShadow: open ? "0 0 0 3px rgba(228,31,7,.08)" : "none", userSelect: "none" }}>
-                <span>{value || placeholder}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {value ? (allOptions.find(o => o.value === value)?.label || value) : placeholder}
+                </span>
                 <i className={`ti ${open ? "ti-chevron-up" : "ti-chevron-down"}`} style={{ fontSize: 12, color: "#6b7280" }} />
             </div>
             {open && (
@@ -810,11 +812,11 @@ const AddPayment: React.FC = () => {
                 <div style={{ background: "#f8fafc" }}>
 
                     {/* Document Paper */}
-                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+                    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 2px 12px rgba(0,0,0,0.06)", position: "relative" }}>
 
                         {/* Draft Error Banner */}
                         {draftError && (
-                            <div style={{ background: "#fff1f0", borderBottom: "1px solid #ffa39e", color: "#434343", fontSize: 13, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div style={{ background: "#fff1f0", borderBottom: "1px solid #ffa39e", color: "#434343", fontSize: 13, padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderTopLeftRadius: 8, borderTopRightRadius: 8 }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                                     <i className="ti ti-alert-circle" style={{ color: "#e41f07", fontSize: 14 }} />
                                     {draftError}
@@ -828,13 +830,18 @@ const AddPayment: React.FC = () => {
                             <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
                                 <label className="mb-1 mb-md-0" style={{ minWidth: 200, fontSize: 13, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>Customer Name*</label>
                                 <div className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center" style={{ flex: 1, maxWidth: 520, gap: 10 }}>
-                                    <select value={custName} onChange={e => { setCustName(e.target.value); setErrors({}); setShowPanel(false); }}
-                                        style={{ flex: 1, height: 36, padding: "0 10px", fontSize: 13, border: `1px solid ${errors.custName ? "#e41f07" : "#d0d5dd"}`, borderRadius: 4, background: "#fff", outline: "none" }}>
-                                        <option value="">Select or add a customer</option>
-                                        {customers.map(c => (
-                                            <option key={c.id} value={c.name}>{c.name}{c.companyName && c.companyName !== c.name ? ` (${c.companyName})` : ""}</option>
-                                        ))}
-                                    </select>
+                                    <div style={{ flex: 1 }}>
+                                        <SearchableDropdown 
+                                            value={custName} 
+                                            placeholder="Select or add a customer" 
+                                            options={customers.map(c => ({ 
+                                                value: c.name, 
+                                                label: c.companyName && c.companyName !== c.name ? `${c.name} (${c.companyName})` : c.name 
+                                            }))} 
+                                            onChange={v => { setCustName(v); setErrors({}); setShowPanel(false); }} 
+                                            error={!!errors.custName} 
+                                        />
+                                    </div>
                                     {custName && (
                                         <button type="button" className="pay-detail-btn" onClick={() => setShowPanel(s => !s)}>
                                             {custName}'s Details <i className="ti ti-chevron-right fs-12" />

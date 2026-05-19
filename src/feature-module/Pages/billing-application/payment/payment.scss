@@ -95,9 +95,9 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #1e293b;
-  color: #fff;
-  border: none;
+  background: #fff1f0;
+  color: #e41f07;
+  border: 1px solid #ffcece;
   border-radius: 4px;
   padding: 5px 10px;
   font-size: 12px;
@@ -105,7 +105,7 @@
   cursor: pointer;
   white-space: nowrap;
 
-  &:hover { background: #0f172a; }
+  &:hover { background: #fde0dd; }
 }
 
 .form-check-input:checked {

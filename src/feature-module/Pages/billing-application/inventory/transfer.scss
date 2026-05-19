@@ -1,0 +1,169 @@
+/* ─────────────────────────────────────────────────────────
+ * Transfer Order Styles
+ * ───────────────────────────────────────────────────────── */
+
+/* ── Common Utilities ── */
+.premium-count-badge-v2 {
+    font-size: 12px;
+    min-width: 18px;
+    height: 25px;
+    padding: 0 6px;
+    border-radius: 7px;
+    background: #fff1f0;
+    color: #e41f07;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ffcece;
+    border-bottom: 2px solid #fe9595 !important;
+    line-height: 1;
+}
+
+.premium-outline-btn {
+    border: 1px solid #ebe7e5ff !important;
+    background: #fff !important;
+    color: #333 !important;
+    transition: all 0.2s ease !important;
+}
+
+.premium-outline-btn:hover {
+    background-color: #fff0ee !important;
+    color: #e41f07 !important;
+    border-color: #fde0dd !important;
+}
+
+.premium-outline-btn:hover i {
+    color: #e41f07 !important;
+}
+
+.btn-white {
+    background: #fff;
+    color: #334155;
+    border-color: #e2e8f0;
+}
+
+.custom-switch-red .form-check-input:checked {
+    background-color: #e41f07 !important;
+    border-color: #e41f07 !important;
+}
+
+.custom-switch-red .form-check-input {
+    cursor: pointer;
+    width: 36px;
+    height: 18px;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+    transform: translateY(-2px);
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+.custom-header-dropdown .dropdown-item.active {
+    background-color: #fff1f0;
+    color: #e41f07;
+}
+
+.custom-header-dropdown .dropdown-item.active .text-dark {
+    color: #e41f07 !important;
+}
+
+.hover-text-primary:hover {
+    color: #e41f07 !important;
+}
+
+/* ── List Page (Datatable) ── */
+.invoice-table .ant-table-thead > tr > th {
+    background: #f8fafc !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    color: #475569 !important;
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.invoice-table .ant-table-tbody > tr > td {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.compact-table .ant-table-thead > tr > th,
+.compact-table .ant-table-tbody > tr > td {
+    padding: 10px 12px !important;
+    height: 50px !important;
+}
+
+.invoice-table .ant-table-row:hover > td {
+    background-color: #f8fafc !important;
+}
+
+/* ── View Page ── */
+.to-list-item:hover {
+    background: #f9fafb;
+}
+
+@media (max-width: 992px) {
+    .to-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+    }
+    .to-sidebar.selected-hidden {
+        display: none !important;
+    }
+    .to-sidebar:not(.selected-hidden) {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .to-header {
+        padding: 10px 15px !important;
+        flex-wrap: wrap;
+    }
+    .to-actionbar {
+        padding: 7px 12px !important;
+        overflow-x: auto;
+        white-space: nowrap;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+    }
+    .to-actionbar::-webkit-scrollbar {
+        height: 0;
+    }
+    .to-receipt {
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    .to-pdf-content {
+        padding: 20px !important;
+    }
+    .to-address-row {
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+    .to-address-row > div {
+        border-left: none !important;
+        padding-left: 0 !important;
+    }
+    .mobile-text-hide {
+        display: none;
+    }
+}
+
+@media print {
+    .to-sidebar,
+    .to-header,
+    .to-actionbar {
+        display: none !important;
+    }
+    .to-receipt {
+        box-shadow: none !important;
+    }
+}

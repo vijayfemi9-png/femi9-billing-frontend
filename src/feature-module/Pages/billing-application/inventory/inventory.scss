@@ -1,0 +1,180 @@
+/* ─────────────────────────────────────────────────────────
+ * Inventory Adjustment Styles
+ * ───────────────────────────────────────────────────────── */
+
+/* ── Common Utilities ── */
+.premium-count-badge-v2 {
+    font-size: 12px;
+    min-width: 18px;
+    height: 25px;
+    padding: 0 6px;
+    border-radius: 7px;
+    background: #fff1f0;
+    color: #e41f07;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ffcece;
+    border-bottom: 2px solid #fe9595 !important;
+    line-height: 1;
+}
+
+.premium-outline-btn {
+    border: 1px solid #ebe7e5 !important;
+    background: #fff !important;
+    color: #333 !important;
+    transition: all 0.2s ease !important;
+}
+
+.premium-outline-btn:hover {
+    background-color: #fff0ee !important;
+    color: #e41f07 !important;
+    border-color: #fde0dd !important;
+}
+
+.premium-primary-btn {
+    background-color: #e41f07 !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+.premium-primary-btn:hover {
+    background-color: #c01f07 !important;
+    color: #fff !important;
+}
+
+.premium-outline-btn:hover i {
+    color: #e41f07 !important;
+}
+
+.custom-switch-red .form-check-input:checked {
+    background-color: #e41f07 !important;
+    border-color: #e41f07 !important;
+}
+
+.custom-switch-red .form-check-input {
+    cursor: pointer;
+    width: 36px;
+    height: 18px;
+}
+
+.custom-header-dropdown .dropdown-item.active {
+    background-color: #fff1f0;
+    color: #e41f07;
+}
+
+.custom-header-dropdown .dropdown-item.active .text-dark {
+    color: #e41f07 !important;
+}
+
+/* ── List Page (Datatable) ── */
+.invoice-table .ant-table-thead>tr>th {
+    background: #f8fafc !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    color: #475569 !important;
+    padding: 6px 12px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    height: 38px !important;
+}
+
+.invoice-table .ant-table-tbody>tr>td {
+    padding: 6px 12px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    height: 38px !important;
+}
+
+.compact-table .ant-table-thead>tr>th,
+.compact-table .ant-table-tbody>tr>td {
+    padding: 6px 12px !important;
+    height: 38px !important;
+}
+
+.invoice-table .ant-table-row:hover>td {
+    background-color: #f8fafc !important;
+}
+
+/* ── View Page ── */
+.adj-sidebar {
+    width: 300px;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.2s ease;
+}
+
+.adj-list-item:hover {
+    background: #f9fafb;
+}
+
+@media (max-width: 992px) {
+    .adj-sidebar {
+        width: 100% !important;
+        border-right: none !important;
+    }
+
+    .adj-sidebar.selected-hidden {
+        display: none !important;
+    }
+
+    .adj-sidebar:not(.selected-hidden) {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .adj-header {
+        padding: 10px 15px !important;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .adj-actionbar {
+        padding: 7px 12px !important;
+        overflow-x: auto;
+        white-space: nowrap;
+        justify-content: flex-start !important;
+        gap: 8px !important;
+    }
+
+    .adj-actionbar::-webkit-scrollbar {
+        height: 0;
+    }
+
+    .adj-receipt {
+        padding: 0 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+
+    .adj-pdf-content {
+        padding: 20px !important;
+    }
+
+    .mobile-text-hide {
+        display: none;
+    }
+}
+
+@media print {
+
+    .adj-sidebar,
+    .adj-header,
+    .adj-actionbar {
+        display: none !important;
+    }
+
+    .adj-receipt {
+        box-shadow: none !important;
+    }
+}

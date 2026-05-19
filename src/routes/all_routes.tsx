@@ -325,4 +325,7 @@ export const all_routes = {
   transferOrderList: "/billing-application/transfer-orders",
   transferOrderAdd: "/billing-application/transfer-orders/new",
   transferOrderView: "/billing-application/transfer-orders/:id",
+  inventoryAdjustmentList: "/billing-application/inventory-adjustments",
+  inventoryAdjustmentAdd: "/billing-application/inventory-adjustments/new",
+  inventoryAdjustmentView: "/billing-application/inventory-adjustments/:id",
 };

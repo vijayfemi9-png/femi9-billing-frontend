@@ -230,7 +230,7 @@ const RecordPaymentModal: React.FC<{ invoice: Invoice; grandTotal: number; onClo
                             <div className="rp-row rp-row-3col" style={{ display: "grid", gridTemplateColumns: "160px 1fr auto", gap: 12, alignItems: "start", marginBottom: 20 }}>
                                 {lbl("Customer\nName", true)}
                                 {inp(form.customerName, v => set("customerName", v))}
-                                <button onClick={() => setShowCustDetail(true)} style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", borderRadius: 6, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
+                                <button onClick={() => setShowCustDetail(true)} style={{ background: "#fff1f0", color: "#e41f07", border: "1px solid #ffcece", borderRadius: 6, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                                     {form.customerName}'s Details <i className="ti ti-chevron-right" style={{ fontSize: 12 }} />
                                 </button>
                             </div>

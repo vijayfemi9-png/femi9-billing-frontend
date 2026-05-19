@@ -234,9 +234,10 @@ export const SidebarData = [
         base: "Inventory",
         materialicons: "start",
         dot: true,
-        relatedRoutes: [route.transferOrderList, route.transferOrderAdd, route.transferOrderView],
+        relatedRoutes: [route.transferOrderList, route.transferOrderAdd, route.transferOrderView, route.inventoryAdjustmentList, route.inventoryAdjustmentAdd, route.inventoryAdjustmentView],
         submenuItems: [
           { label: "Transfer Orders", link: route.transferOrderList },
+          { label: "Inventory Adjustments", link: route.inventoryAdjustmentList },
         ],
       },
     ],

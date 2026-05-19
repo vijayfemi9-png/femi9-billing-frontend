@@ -9,6 +9,7 @@ import { Dropdown } from "antd";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
+import "./transfer.scss";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface TransferOrder {
@@ -46,12 +47,20 @@ const SEED: TransferOrder[] = [
     },
 ];
 
+function normalizeStatus(status: string): string {
+    if (status === "Pending" || status === "In Transfer") return "Transferred";
+    return status;
+}
 function loadOrders(): TransferOrder[] {
     try {
         const s = localStorage.getItem(SK);
         if (s) {
             const p = JSON.parse(s) as TransferOrder[];
-            if (Array.isArray(p) && p.length) return p;
+            if (Array.isArray(p) && p.length) {
+                const normalized = p.map(r => ({ ...r, status: normalizeStatus(r.status) }));
+                localStorage.setItem(SK, JSON.stringify(normalized));
+                return normalized;
+            }
         }
     } catch { /**/ }
     try { localStorage.setItem(SK, JSON.stringify(SEED)); } catch { /**/ }
@@ -67,22 +76,22 @@ function nextTONum(): string {
 }
 
 const VIEWS = [
-    { id: "All",                  label: "All Transfer Orders" },
-    { id: "Transferred",          label: "Transferred" },
-    { id: "In Transit",           label: "In Transit" },
-    { id: "Draft",                label: "Draft" },
-    { id: "Partially Transferred",label: "Partially Transferred" },
-    { id: "Pending",              label: "Pending" },
-    { id: "Void",                 label: "Void" },
+    { id: "All", label: " Transfer Orders" },
+    { id: "Transferred", label: "Transferred" },
+    { id: "In Transit", label: "In Transit" },
+    { id: "Draft", label: "Draft" },
+    { id: "Partially Transferred", label: "Partially Transferred" },
+    { id: "Pending", label: "Pending" },
+    { id: "Void", label: "Void" },
 ];
-
+    
 const STATUS_STYLE: Record<string, { color: string; bg: string }> = {
-    "Draft":                 { color: "#b45309", bg: "#fef9c3" },
-    "Transferred":           { color: "#16a34a", bg: "#dcfce7" },
-    "In Transit":            { color: "#7c3aed", bg: "#f5f3ff" },
+    "Draft": { color: "#b45309", bg: "#fef9c3" },
+    "Transferred": { color: "#16a34a", bg: "#dcfce7" },
+    "In Transit": { color: "#7c3aed", bg: "#f5f3ff" },
     "Partially Transferred": { color: "#ea580c", bg: "#ffedd5" },
-    "Pending":               { color: "#6b7280", bg: "#f3f4f6" },
-    "Void":                  { color: "#e41f07", bg: "#fee2e2" },
+    "Pending": { color: "#6b7280", bg: "#f3f4f6" },
+    "Void": { color: "#e41f07", bg: "#fee2e2" },
 };
 
 const LOCATIONS = ["Head Office", "Main Warehouse", "Branch A", "Branch B"];
@@ -92,13 +101,13 @@ const TransferOrderList: React.FC = () => {
     const route = all_routes;
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [orders, setOrders]           = useState<TransferOrder[]>(() => loadOrders());
-    const [searchText, setSearchText]   = useState("");
+    const [orders, setOrders] = useState<TransferOrder[]>(() => loadOrders());
+    const [searchText, setSearchText] = useState("");
     const [searchFocused, setSearchFocused] = useState(false);
-    const [viewMode, setViewMode]       = useState<"list" | "grid">("list");
-    const [sortBy, setSortBy]           = useState<"newest" | "oldest">("newest");
+    const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+    const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
     const [selectedView, setSelectedView] = useState("All");
-    const [showFilter, setShowFilter]   = useState(false);
+    const [showFilter, setShowFilter] = useState(false);
     const [filterStatus, setFilterStatus] = useState<string[]>([]);
     const [showManageCols, setShowManageCols] = useState(false);
     const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({
@@ -401,7 +410,7 @@ const TransferOrderList: React.FC = () => {
             o.sourceLocation.toLowerCase().includes(q) ||
             o.destinationLocation.toLowerCase().includes(q);
         const matchesFilter = filterStatus.length === 0 || filterStatus.includes(o.status);
-        const matchesView   = selectedView === "All" || o.status === selectedView;
+        const matchesView = selectedView === "All" || o.status === selectedView;
         return matchesSearch && matchesFilter && matchesView;
     });
 
@@ -517,7 +526,7 @@ const TransferOrderList: React.FC = () => {
                                 className="btn text-white d-flex align-items-center fw-bold"
                                 style={{ background: "#e41f07", border: "none", borderRadius: 4, padding: "0 15px", height: 36, fontSize: 13 }}
                             >
-                                <i className="ti ti-plus me-2 fs-14" /> New
+                                <i className="ti ti-plus me-2 fs-14" /> New Transfer
                             </Link>
                         </div>
                     </div>
@@ -594,38 +603,37 @@ const TransferOrderList: React.FC = () => {
 
                                 {/* Manage Columns */}
                                 {viewMode === "list" && (
-                                    <div style={{ position: "relative" }} onMouseEnter={() => setShowManageCols(true)} onMouseLeave={() => setShowManageCols(false)}>
+                                    <div className="dropdown" style={{ position: "relative" }}>
                                         <button
                                             className="btn px-3 d-flex align-items-center gap-2 shadow-none fw-semibold"
-                                            style={{ height: 38, fontSize: 13, borderRadius: 6, background: "#f0f4ff", color: "#6366f1", border: "1px solid #e0e7ff" }}
+                                            style={{ height: 38, fontSize: 13, borderRadius: 6, background: "#eef2ff", color: "#4f46e5", border: "1px solid #e0e7ff" }}
+                                            data-bs-toggle="dropdown"
+                                            data-bs-auto-close="outside"
                                         >
                                             <i className="ti ti-columns-3 fs-14" /> Manage Columns
                                         </button>
-                                        {showManageCols && (
-                                            <div className="shadow-lg border-0 bg-white" style={{ position: "absolute", right: 0, top: "100%", zIndex: 1050, borderRadius: 12, minWidth: 240, overflow: "hidden", marginTop: 4 }}>
-                                                <div className="p-3">
-                                                    <ul className="list-unstyled mb-0">
-                                                        {Object.keys(visibleCols).map(col => (
-                                                            <li className="mb-3 d-flex align-items-center justify-content-between" key={col}>
-                                                                <div className="d-flex align-items-center gap-2">
-                                                                    <i className="ti ti-grip-vertical text-muted fs-12" />
-                                                                    <span className="fs-14 fw-medium text-dark">{col}</span>
-                                                                </div>
-                                                                <div className="form-check form-switch custom-switch-red">
+                                        <div className="dropdown-menu shadow-lg border-0 bg-white p-0" style={{ right: 0, left: "auto", top: "100%", zIndex: 1050, borderRadius: 12, minWidth: 240, marginTop: 4 }}>
+                                            <div className="p-2" style={{ maxHeight: 350, overflowY: "auto" }}>
+                                                <ul className="list-unstyled mb-0">
+                                                    {Object.keys(visibleCols).map(col => (
+                                                        <li key={col}>
+                                                            <label className="dropdown-item d-flex align-items-center justify-content-between py-2 px-3 rounded-2 cursor-pointer mb-1" style={{ transition: "0.2s" }}>
+                                                                <span className="fs-14 fw-medium text-dark">{col}</span>
+                                                                <div className="form-check form-switch custom-switch-red mb-0">
                                                                     <input
-                                                                        className="form-check-input"
+                                                                        className="form-check-input cursor-pointer"
                                                                         type="checkbox"
                                                                         role="switch"
                                                                         checked={visibleCols[col]}
                                                                         onChange={() => setVisibleCols(prev => ({ ...prev, [col]: !prev[col] }))}
                                                                     />
                                                                 </div>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
+                                                            </label>
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 )}
 
@@ -680,133 +688,78 @@ const TransferOrderList: React.FC = () => {
                                                 <div key={o.id} className="col-xxl-3 col-xl-4 col-lg-4 col-md-6 col-sm-12">
                                                     <div
                                                         onClick={() => navigate(route.transferOrderView?.replace(":id", String(o.id)) || "#")}
-                                                        style={{ background: "#fff", borderRadius: 6, overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.09)", cursor: "pointer", display: "flex", flexDirection: "column", transition: "box-shadow 0.2s, transform 0.2s", border: "1px solid #f1f5f9" }}
-                                                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(228,31,7,0.13)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; }}
-                                                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.09)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; }}
+                                                        style={{ background: "#fff", borderRadius: 8, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.04)", border: "1px solid #e5e7eb", cursor: "pointer", display: "flex", flexDirection: "column", height: "100%", transition: "all 0.2s", position: "relative" }}
+                                                        onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; }}
+                                                        onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; }}
                                                     >
-                                                        {/* ── Document Header ── */}
-                                                        <div style={{ background: "#e41f07", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                                                                <i className="ti ti-transfer" style={{ fontSize: 16, color: "#fff" }} />
-                                                                <span style={{ fontSize: 12, fontWeight: 800, color: "#fff", letterSpacing: "1px" }}>TRANSFER ORDER</span>
+                                                        {/* Header */}
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+                                                            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                                                                <div style={{ width: 42, height: 42, borderRadius: "50%", background: "#1e293b", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                                    <i className="ti ti-transfer" style={{ fontSize: 20 }} />
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ fontSize: 16, fontWeight: 500, color: "#111827", marginBottom: 2 }}>{o.transferOrderNumber}</div>
+                                                                    <div style={{ fontSize: 13, color: "#6b7280" }}>{o.date}</div>
+                                                                </div>
                                                             </div>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                                                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 3, background: "rgba(255,255,255,0.22)", color: "#fff", textTransform: "uppercase", letterSpacing: "0.4px" }}>{o.status}</span>
-                                                                <div onClick={e => e.stopPropagation()} className="dropdown">
-                                                                    <button className="btn p-0 border-0 shadow-none d-flex align-items-center" style={{ background: "transparent", color: "rgba(255,255,255,0.85)" }} data-bs-toggle="dropdown">
-                                                                        <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
+                                                            <div onClick={e => e.stopPropagation()} className="dropdown">
+                                                                <button className="btn p-0 shadow-none d-flex align-items-center justify-content-center" style={{ width: 32, height: 32, border: "1px solid #e5e7eb", borderRadius: 6, background: "#fff", color: "#6b7280" }} data-bs-toggle="dropdown">
+                                                                    <i className="ti ti-dots-vertical" style={{ fontSize: 16 }} />
+                                                                </button>
+                                                                <div className="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" style={{ borderRadius: 8, minWidth: 140 }}>
+                                                                    <button className="dropdown-item fs-13 py-2" onClick={() => navigate(route.transferOrderAdd + "?edit=" + o.id)}>
+                                                                        <i className="ti ti-edit me-2" /> Edit
                                                                     </button>
-                                                                    <div className="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2" style={{ borderRadius: 8, minWidth: 140 }}>
-                                                                        <button className="dropdown-item fs-13 py-2" onClick={() => navigate(route.transferOrderAdd + "?edit=" + o.id)}>
-                                                                            <i className="ti ti-edit me-2" /> Edit
-                                                                        </button>
-                                                                        <button className="dropdown-item fs-13 py-2 text-danger" onClick={() => handleDelete(o.id)}>
-                                                                            <i className="ti ti-trash me-2" /> Delete
-                                                                        </button>
-                                                                    </div>
+                                                                    <button className="dropdown-item fs-13 py-2 text-danger" onClick={() => handleDelete(o.id)}>
+                                                                        <i className="ti ti-trash me-2" /> Delete
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        {/* ── TO# + Date row ── */}
-                                                        <div style={{ padding: "12px 14px 8px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid #f3f4f6" }}>
-                                                            <div>
-                                                                <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>
-                                                                    <Link to={route.transferOrderView?.replace(":id", String(o.id)) || "#"}
-                                                                        onClick={e => e.stopPropagation()}
-                                                                        style={{ color: "#e41f07", textDecoration: "none" }}>
-                                                                        {o.transferOrderNumber}
-                                                                    </Link>
-                                                                </div>
-                                                                <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{o.date}</div>
+                                                        <div style={{ height: 1, background: "#f3f4f6", margin: "0 -20px 20px" }} />
+
+                                                        {/* Middle Details */}
+                                                        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20, flex: 1 }}>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                                <i className="ti ti-building-warehouse" style={{ fontSize: 16, color: "#6b7280", width: 16, textAlign: "center" }} />
+                                                                <div style={{ fontSize: 14, color: "#4b5563" }}>{o.sourceLocation || "—"}</div>
                                                             </div>
-                                                            <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 4, background: st.bg, color: st.color, textTransform: "uppercase", letterSpacing: "0.4px", whiteSpace: "nowrap", marginTop: 2 }}>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                                <i className="ti ti-map-pin" style={{ fontSize: 16, color: "#6b7280", width: 16, textAlign: "center" }} />
+                                                                <div style={{ fontSize: 14, color: "#4b5563" }}>{o.destinationLocation || "—"}</div>
+                                                            </div>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                                <i className="ti ti-box" style={{ fontSize: 16, color: "#6b7280", width: 16, textAlign: "center" }} />
+                                                                <div style={{ fontSize: 14, color: "#4b5563" }}>Qty: {o.quantity.toFixed(2)}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Tags */}
+                                                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+                                                            <span style={{ fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 6, background: st.bg, color: st.color, border: `1px solid ${st.bg}` }}>
                                                                 {o.status}
                                                             </span>
-                                                        </div>
-
-                                                        {/* ── Source → Destination ── */}
-                                                        <div style={{ padding: "10px 14px", borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: 6 }}>
-                                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                                <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>From</div>
-                                                                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.sourceLocation || "—"}</div>
-                                                            </div>
-                                                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#fff1f0", border: "1.5px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                                <i className="ti ti-arrow-right" style={{ fontSize: 13, color: "#e41f07" }} />
-                                                            </div>
-                                                            <div style={{ flex: 1, minWidth: 0, textAlign: "right" }}>
-                                                                <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 2 }}>To</div>
-                                                                <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.destinationLocation || "—"}</div>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* ── Mini item table ── */}
-                                                        <div style={{ padding: "8px 14px", borderBottom: "1px solid #f3f4f6" }}>
-                                                            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                                                                <thead>
-                                                                    <tr style={{ background: "#fafafa" }}>
-                                                                        <th style={{ padding: "5px 8px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.4px", textAlign: "left", borderBottom: "1px solid #f1f5f9" }}>Item</th>
-                                                                        <th style={{ padding: "5px 8px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.4px", textAlign: "right", borderBottom: "1px solid #f1f5f9" }}>Qty</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {o.items && o.items.length > 0 ? (
-                                                                        o.items.slice(0, 3).map((item, idx) => (
-                                                                            <tr key={idx}>
-                                                                                <td style={{ padding: "4px 8px", fontSize: 12, color: "#374151", maxWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                                                    {item.product || <span style={{ color: "#d1d5db", fontStyle: "italic" }}>—</span>}
-                                                                                </td>
-                                                                                <td style={{ padding: "4px 8px", fontSize: 12, fontWeight: 600, color: "#111827", textAlign: "right" }}>
-                                                                                    {parseFloat(item.qty || "0").toFixed(2)}
-                                                                                </td>
-                                                                            </tr>
-                                                                        ))
-                                                                    ) : (
-                                                                        <tr>
-                                                                            <td colSpan={2} style={{ padding: "6px 8px", fontSize: 11, color: "#d1d5db", fontStyle: "italic" }}>No items</td>
-                                                                        </tr>
-                                                                    )}
-                                                                    {o.items && o.items.length > 3 && (
-                                                                        <tr>
-                                                                            <td colSpan={2} style={{ padding: "3px 8px", fontSize: 11, color: "#9ca3af" }}>+{o.items.length - 3} more item(s)</td>
-                                                                        </tr>
-                                                                    )}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-
-                                                        {/* ── Reason ── */}
-                                                        {o.reason && (
-                                                            <div style={{ padding: "7px 14px", borderBottom: "1px solid #f3f4f6", fontSize: 11, color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                                <i className="ti ti-notes me-1" style={{ fontSize: 11 }} />{o.reason}
-                                                            </div>
-                                                        )}
-
-                                                        {/* ── Footer ── */}
-                                                        <div style={{ padding: "9px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fafafa", borderTop: "1px solid #f1f5f9", marginTop: "auto" }}>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                                                                <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#fff1f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                                    <i className="ti ti-user" style={{ fontSize: 11, color: "#e41f07" }} />
-                                                                </div>
-                                                                <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}>{o.createdBy}</span>
-                                                            </div>
-                                                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                                <span style={{ fontSize: 12, fontWeight: 700, color: "#e41f07" }}>
-                                                                    Qty: {o.quantity.toFixed(2)}
+                                                            {o.items && o.items.length > 0 && (
+                                                                <span style={{ fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 6, background: "#fff9e6", color: "#b45309", border: "1px solid #ffedd5" }}>
+                                                                    {o.items.length} Items
                                                                 </span>
-                                                                <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 4 }}>
-                                                                    <button onClick={() => navigate(route.transferOrderAdd + "?edit=" + o.id)}
-                                                                        style={{ width: 26, height: 26, borderRadius: 4, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>
-                                                                        <i className="ti ti-edit" style={{ fontSize: 12 }} />
-                                                                    </button>
-                                                                    <button onClick={() => handleDelete(o.id)}
-                                                                        style={{ width: 26, height: 26, borderRadius: 4, border: "1px solid #fee2e2", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#e41f07" }}>
-                                                                        <i className="ti ti-trash" style={{ fontSize: 12 }} />
-                                                                    </button>
-                                                                </div>
-                                                            </div>
+                                                            )}
                                                         </div>
 
+                                                        {/* Footer Icons */}
+                                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+                                                            <div style={{ display: "flex", gap: 16, color: "#6b7280" }} onClick={e => e.stopPropagation()}>
+                                                                <i className="ti ti-mail cursor-pointer" style={{ fontSize: 18 }} title="Email" />
+                                                                <i className="ti ti-phone cursor-pointer" style={{ fontSize: 18 }} title="Call" />
+                                                                <i className="ti ti-refresh cursor-pointer" style={{ fontSize: 18 }} title="Sync" />
+                                                                <i className="ti ti-brand-facebook cursor-pointer" style={{ fontSize: 18 }} title="Social" />
+                                                            </div>
+                                                            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: 7, fontWeight: 500, whiteSpace: "nowrap", letterSpacing: "0.2px" }}>
+                                                                300x300
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
@@ -825,81 +778,7 @@ const TransferOrderList: React.FC = () => {
                 </div>
             </div>
 
-            <style>{`
-                .premium-count-badge-v2 {
-                    font-size: 12px;
-                    min-width: 18px;
-                    height: 25px;
-                    padding: 0 6px;
-                    border-radius: 7px;
-                    background: #fff1f0;
-                    color: #e41f07;
-                    font-weight: 500;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    border: 1px solid #ffceceff;
-                    border-bottom: 2px solid #fe9595ff !important;
-                    line-height: 1;
-                }
-                .premium-outline-btn {
-                    border: 1px solid #ebe7e5ff !important;
-                    background: #fff !important;
-                    color: #333 !important;
-                    transition: all 0.2s ease !important;
-                }
-                .premium-outline-btn:hover {
-                    background-color: #fff0ee !important;
-                    color: #e41f07 !important;
-                    border-color: #fde0dd !important;
-                }
-                .premium-outline-btn:hover i { color: #e41f07 !important; }
-                .btn-white { background: #fff; color: #334155; border-color: #e2e8f0; }
-                .custom-switch-red .form-check-input:checked {
-                    background-color: #e41f07 !important;
-                    border-color: #e41f07 !important;
-                }
-                .custom-switch-red .form-check-input {
-                    cursor: pointer;
-                    width: 36px;
-                    height: 18px;
-                }
-                .invoice-table .ant-table-thead > tr > th {
-                    background: #f8fafc !important;
-                    font-weight: 600 !important;
-                    font-size: 13px !important;
-                    color: #475569 !important;
-                    padding: 12px 16px !important;
-                    border-bottom: 1px solid #e2e8f0 !important;
-                    text-transform: uppercase;
-                    letter-spacing: 0.3px;
-                }
-                .invoice-table .ant-table-tbody > tr > td {
-                    padding: 12px 16px !important;
-                    border-bottom: 1px solid #f1f5f9 !important;
-                }
-                .compact-table .ant-table-thead > tr > th,
-                .compact-table .ant-table-tbody > tr > td {
-                    padding: 10px 12px !important;
-                    height: 50px !important;
-                }
-                .invoice-table .ant-table-row:hover > td {
-                    background-color: #f8fafc !important;
-                }
-                .hover-shadow:hover {
-                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
-                    transform: translateY(-2px);
-                }
-                .transition-all { transition: all 0.2s ease-in-out; }
-                .custom-header-dropdown .dropdown-item.active {
-                    background-color: #fff1f0;
-                    color: #e41f07;
-                }
-                .custom-header-dropdown .dropdown-item.active .text-dark {
-                    color: #e41f07 !important;
-                }
-                .hover-text-primary:hover { color: #e41f07 !important; }
-            `}</style>
+
         </div>
     );
 };

@@ -230,9 +230,12 @@ const BillingInvoiceAdd = lazy(() => import("../feature-module/Pages/billing-app
 const PaymentReceivedList = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-recevied-list"));
 const AddPayment = lazy(() => import("../feature-module/Pages/billing-application/payment/add-payment"));
 const PaymentView = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-view"));
-const TransferOrderList = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-list"));
-const AddTransferOrder  = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-add"));
-const TransferOrderView = lazy(() => import("../feature-module/Pages/billing-application/transferorder/transferorder-view"));
+const TransferOrderList = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-list"));
+const AddTransferOrder  = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-add"));
+const TransferOrderView = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-view"));
+const InventoryAdjustmentList = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-list"));
+const InventoryAdjustmentAdd = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-add"));
+const InventoryAdjustmentView = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-view"));
 
 const route = all_routes;
 
@@ -1844,6 +1847,27 @@ export const publicRoutes = [
     element: <TransferOrderView />,
     route: Route,
     meta_title: "Transfer Order",
+  },
+  {
+    id: "228",
+    path: route.inventoryAdjustmentList,
+    element: <InventoryAdjustmentList />,
+    route: Route,
+    meta_title: "Inventory Adjustments",
+  },
+  {
+    id: "229",
+    path: route.inventoryAdjustmentAdd,
+    element: <InventoryAdjustmentAdd />,
+    route: Route,
+    meta_title: "New Adjustment",
+  },
+  {
+    id: "230",
+    path: route.inventoryAdjustmentView,
+    element: <InventoryAdjustmentView />,
+    route: Route,
+    meta_title: "Adjustment Details",
   },
   {
     id: "216",
