@@ -328,4 +328,8 @@ export const all_routes = {
   inventoryAdjustmentList: "/billing-application/inventory-adjustments",
   inventoryAdjustmentAdd: "/billing-application/inventory-adjustments/new",
   inventoryAdjustmentView: "/billing-application/inventory-adjustments/:id",
+  creditNoteList: "/billing-application/credit-notes",
+  creditNoteAdd: "/billing-application/credit-notes/new",
+  creditNoteView: "/billing-application/credit-notes/:id",
+  creditNoteSetting: "/billing-application/credit-note-setting",
 };

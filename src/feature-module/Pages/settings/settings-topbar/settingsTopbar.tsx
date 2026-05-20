@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Link, useLocation } from "react-router";
 import { all_routes } from "../../../../routes/all_routes";
 
@@ -60,7 +61,7 @@ const SettingsTopbar = () => {
                 }`}
             >
               <i className="ti ti-box me-2" />
-              Product
+              Product Settings
             </Link>
           </li>
           <li className="nav-item me-3">
@@ -70,7 +71,27 @@ const SettingsTopbar = () => {
                 }`}
             >
               <i className="ti ti-users me-2" />
-              Customers & Vendors
+              Customer Settings
+            </Link>
+          </li>
+          <li className="nav-item me-3">
+            <Link
+              to={all_routes.billingInvoiceSetting}
+              className={`nav-link p-2${isActive(all_routes.billingInvoiceSetting) ? " active" : ""
+                }`}
+            >
+              <i className="ti ti-file-invoice me-2" />
+              Invoice Setting
+            </Link>
+          </li>
+          <li className="nav-item me-3">
+            <Link
+              to={all_routes.creditNoteSetting}
+              className={`nav-link p-2${isActive(all_routes.creditNoteSetting) ? " active" : ""
+                }`}
+            >
+              <i className="ti ti-file-minus me-2" />
+              Credit Note Setting
             </Link>
           </li>
           <li className="nav-item me-3">

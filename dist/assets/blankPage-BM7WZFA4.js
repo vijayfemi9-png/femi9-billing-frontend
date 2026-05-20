@@ -1,1 +1,0 @@
-import{j as e,a1 as s}from"./index-B40txc1e.js";import{P as a}from"./pageHeader-C7aEMIzc.js";const r=()=>e.jsx(e.Fragment,{children:e.jsxs("div",{className:"page-wrapper",children:[e.jsx("div",{className:"content",children:e.jsx(a,{title:"Blank Page",showModuleTile:!1,showExport:!1})}),e.jsx(s,{})]})});export{r as default};

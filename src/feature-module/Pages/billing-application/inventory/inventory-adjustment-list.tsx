@@ -67,7 +67,7 @@ const STATUS_CLASS: Record<string, string> = {
 const PERIOD_OPTIONS = ["All", "Today", "This Week", "This Month", "This Quarter", "This Year"];
 
 const VIEWS = [
-    { id: "All",      label: "All Adjustments" },
+    { id: "All",      label: "Adjustments" },
     { id: "Adjusted", label: "Adjusted" },
     { id: "Draft",    label: "Draft" },
 ];
@@ -285,8 +285,8 @@ const InventoryAdjustmentList: React.FC = () => {
             sorter: (a, b) => a.location.localeCompare(b.location),
         },
         {
-            title: <i className="ti ti-search fs-14 text-muted" />,
-            key: "action", width: 56, align: "center" as const,
+            title: "ACTION",
+            key: "action", width: 80, align: "center" as const,
             render: (_: any, record: InventoryAdjustment) => (
                 <Dropdown
                     placement="bottomLeft"
@@ -332,7 +332,7 @@ const InventoryAdjustmentList: React.FC = () => {
         <div className="dropdown custom-header-dropdown">
             <div className="d-flex align-items-center gap-2 cursor-pointer" data-bs-toggle="dropdown">
                 <h4 className="mb-0 fw-bold" style={{ fontSize: "18px", color: "#111" }}>
-                    {VIEWS.find(v => v.id === selectedView)?.label || "All Adjustments"}
+                    {VIEWS.find(v => v.id === selectedView)?.label || "Adjustments"}
                 </h4>
                 <i className="ti ti-chevron-down text-primary fs-14" />
                 <span className="ms-2 d-flex align-items-center justify-content-center premium-count-badge-v2">
@@ -436,7 +436,7 @@ const InventoryAdjustmentList: React.FC = () => {
                                 className="btn text-white d-flex align-items-center fw-bold"
                                 style={{ background: "#e41f07", border: "none", borderRadius: 4, padding: "0 15px", height: 36, fontSize: 13, whiteSpace: "nowrap" }}
                             >
-                                <i className="ti ti-plus me-2 fs-14" /> New
+                                <i className="ti ti-plus me-2 fs-14" /> New Inventory
                             </Link>
                         </div>
                     </div>

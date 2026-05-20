@@ -227,15 +227,19 @@ const BillingInvoiceSetting = lazy(() => import("../feature-module/Pages/billing
 const BillingInvoiceList = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-list"));
 const BillingInvoiceView = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-view"));
 const BillingInvoiceAdd = lazy(() => import("../feature-module/Pages/billing-application/invoice/add-invoice"));
-const PaymentReceivedList = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-recevied-list"));
-const AddPayment = lazy(() => import("../feature-module/Pages/billing-application/payment/add-payment"));
-const PaymentView = lazy(() => import("../feature-module/Pages/billing-application/payment/payment-view"));
-const TransferOrderList = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-list"));
-const AddTransferOrder  = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-add"));
-const TransferOrderView = lazy(() => import("../feature-module/Pages/billing-application/inventory/transferorder-view"));
+const PaymentReceivedList = lazy(() => import("../feature-module/Pages/billing-application/invoice/payment/payment-recevied-list"));
+const AddPayment = lazy(() => import("../feature-module/Pages/billing-application/invoice/payment/add-payment"));
+const PaymentView = lazy(() => import("../feature-module/Pages/billing-application/invoice/payment/payment-view"));
+const TransferOrderList = lazy(() => import("../feature-module/Pages/billing-application/inventory/transfer-order/transferorder-list"));
+const AddTransferOrder = lazy(() => import("../feature-module/Pages/billing-application/inventory/transfer-order/transferorder-add"));
+const TransferOrderView = lazy(() => import("../feature-module/Pages/billing-application/inventory/transfer-order/transferorder-view"));
 const InventoryAdjustmentList = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-list"));
 const InventoryAdjustmentAdd = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-add"));
 const InventoryAdjustmentView = lazy(() => import("../feature-module/Pages/billing-application/inventory/inventory-adjustment-view"));
+const CreditNoteList = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-list"));
+const CreditNoteAdd = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-add"));
+const CreditNoteView = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-view"));
+const CreditNoteSetting = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-settings"));
 
 const route = all_routes;
 
@@ -1868,6 +1872,34 @@ export const publicRoutes = [
     element: <InventoryAdjustmentView />,
     route: Route,
     meta_title: "Adjustment Details",
+  },
+  {
+    id: "231",
+    path: route.creditNoteList,
+    element: <CreditNoteList />,
+    route: Route,
+    meta_title: "Credit Notes",
+  },
+  {
+    id: "232",
+    path: route.creditNoteAdd,
+    element: <CreditNoteAdd />,
+    route: Route,
+    meta_title: "New Credit Note",
+  },
+  {
+    id: "233",
+    path: route.creditNoteView,
+    element: <CreditNoteView />,
+    route: Route,
+    meta_title: "Credit Note Details",
+  },
+  {
+    id: "234",
+    path: route.creditNoteSetting,
+    element: <CreditNoteSetting />,
+    route: Route,
+    meta_title: "Credit Note Setting",
   },
   {
     id: "216",

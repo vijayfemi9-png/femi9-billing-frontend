@@ -1,0 +1,937 @@
+// ── Credit Note — Shared Variables ───────────────────────────────────────────
+$red:        #e41f07;
+$red-light:  #fff5f5;
+$red-border: #fca5a5;
+$gray-50:    #f9fafb;
+$gray-100:   #f3f4f6;
+$gray-200:   #e5e7eb;
+$gray-300:   #d1d5db;
+$gray-500:   #6b7280;
+$gray-700:   #374151;
+$gray-900:   #111827;
+$border-r:   4px;
+$shadow-sm:  0 1px 8px rgba(0,0,0,0.06);
+$shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+
+// ── Credit Add Page ───────────────────────────────────────────────────────────
+.credit-add-page {
+  background: #f5f6fa;
+  min-height: 100vh;
+
+  .credit-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: $shadow-sm;
+  }
+
+  // Form fields section
+  .credit-form-section {
+    padding: 24px 32px 16px;
+    border-bottom: 1px solid $gray-200;
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: $gray-700;
+      min-width: 200px;
+    }
+
+    .form-label.required {
+      color: $red;
+    }
+
+    input.form-control,
+    select.form-select,
+    textarea.form-control {
+      font-size: 14px;
+      border: 1px solid $gray-300;
+      border-radius: $border-r;
+      color: $gray-900;
+      background: #fff;
+      transition: border-color 0.15s;
+      box-shadow: none !important;
+
+      &:focus {
+        border-color: $red;
+        outline: none;
+        box-shadow: none !important;
+      }
+    }
+  }
+
+  // Item table
+  .invoice-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar { display: none; }
+
+    @media (min-width: 768px) {
+      overflow: visible !important;
+    }
+  }
+
+  .credit-item-table {
+    font-size: 14px;
+    min-width: 900px;
+    margin-bottom: 0;
+
+    thead th {
+      background: $gray-50;
+      font-size: 13px;
+      font-weight: 700;
+      color: $gray-500;
+      border-top: none;
+      border-bottom: 1px solid $gray-200;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid $gray-100;
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+
+    tbody td {
+      border: none;
+      vertical-align: middle;
+      padding: 10px 8px;
+    }
+
+    // Discount input group
+    .discount-group {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+
+      .discount-wrapper {
+        display: flex;
+        border: 1px solid $gray-200;
+        border-radius: $border-r;
+        overflow: visible;
+        background: #fff;
+        transition: border-color 0.15s;
+
+        &.focused {
+          border-color: $red;
+        }
+
+        input {
+          border: none;
+          outline: none;
+          width: 48px;
+          padding: 4px 6px;
+          text-align: center;
+          background: transparent;
+          font-size: 14px;
+        }
+
+        .disc-type-btn {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          padding: 0 7px;
+          background: $red;
+          border: none;
+          border-left: 1px solid $gray-200;
+          cursor: pointer;
+          color: #fff;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          border-radius: 0 $border-r $border-r 0;
+        }
+      }
+    }
+  }
+
+  // Discount & Reporting Tags bar
+  .credit-toggle-bar {
+    padding: 10px 16px;
+    border-top: 1px solid $gray-200;
+    border-bottom: 1px solid $gray-200;
+    background: $gray-50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .toggle-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      padding: 4px 10px;
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: $border-r;
+      color: $gray-700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+
+      &:hover {
+        background: $gray-100;
+      }
+    }
+  }
+
+  // Add Row / Bulk row
+  .credit-add-row-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 16px;
+    background: #fcfdfe;
+
+    .add-row-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      color: $red;
+      font-weight: 500;
+      padding: 0;
+
+      &:hover { opacity: 0.8; }
+    }
+  }
+
+  // Totals box
+  .credit-totals-box {
+    width: 460px;
+    margin-left: auto;
+    border: 1px solid $gray-200;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+
+    @media (max-width: 600px) {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid $gray-200;
+
+      &:last-child { border-bottom: none; }
+
+      .totals-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: $gray-900;
+      }
+
+      .totals-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: $gray-900;
+        width: 80px;
+        text-align: right;
+      }
+
+      select.form-select {
+        font-size: 13px;
+        border: 1px solid $gray-300;
+        border-radius: $border-r;
+        height: 32px;
+        min-width: 130px;
+        box-shadow: none !important;
+
+        &:focus { border-color: $red; }
+      }
+    }
+  }
+
+  // Notes & Terms
+  .credit-notes-section {
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    border-top: 1px solid $gray-200;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+
+    textarea {
+      width: 100%;
+      font-size: 13px;
+      border: 1px solid $gray-300;
+      border-radius: $border-r;
+      padding: 8px 10px;
+      resize: vertical;
+      line-height: 1.6;
+      color: $gray-700;
+      transition: border-color 0.15s;
+
+      &:focus {
+        border-color: $red;
+        outline: none;
+      }
+    }
+  }
+
+  // Attach file
+  .credit-attach-section {
+    padding: 0 24px 22px;
+
+    .attach-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: $gray-700;
+      margin-bottom: 10px;
+    }
+
+    .upload-btn-group {
+      display: flex;
+      align-items: center;
+
+      .upload-main {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: #fff;
+        border: 1px solid $gray-300;
+        border-right: none;
+        border-radius: $border-r 0 0 $border-r;
+        padding: 6px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        color: $gray-700;
+        font-weight: 500;
+        transition: background 0.15s;
+
+        &:hover { background: $gray-50; }
+      }
+
+      .upload-arrow {
+        height: 34px;
+        width: 32px;
+        background: #fff;
+        border: 1px solid $gray-300;
+        border-radius: 0 $border-r $border-r 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+
+        &:hover { background: $gray-50; }
+      }
+    }
+
+    .attached-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: $gray-50;
+      border: 1px solid $gray-200;
+      border-radius: $border-r;
+      font-size: 13px;
+
+      .file-name {
+        flex: 1;
+        color: $gray-700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .file-size { color: $gray-500; font-size: 11px; }
+
+      .file-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: $red;
+        padding: 0;
+        font-size: 14px;
+        line-height: 1;
+      }
+    }
+  }
+
+  // Bottom action bar
+  .credit-action-bar {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    border-top: 1px solid $gray-200;
+    background: #fff;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+
+    .btn-save {
+      background: $red;
+      border: 1px solid $red;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      height: 38px;
+      padding: 0 24px;
+      border-radius: $border-r;
+      cursor: pointer;
+      transition: opacity 0.15s;
+
+      &:hover { opacity: 0.88; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-draft {
+      background: #e79111;
+      border: 1px solid #e79111;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      height: 38px;
+      padding: 0 24px;
+      border-radius: $border-r;
+      cursor: pointer;
+      transition: opacity 0.15s;
+
+      &:hover { opacity: 0.88; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+
+    .btn-cancel {
+      background: #fff;
+      border: 1px solid #d0d5dd;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 700;
+      height: 38px;
+      padding: 0 24px;
+      border-radius: $border-r;
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &:hover { background: $gray-50; }
+    }
+  }
+}
+
+// ── Credit List Page ──────────────────────────────────────────────────────────
+.credit-list-page {
+  .credit-list-card {
+    background: #fff;
+    border: 1px solid $gray-200;
+    border-radius: 6px;
+    box-shadow: $shadow-sm;
+    overflow: hidden;
+  }
+
+  .credit-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid $gray-200;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: $gray-900;
+      margin: 0;
+    }
+
+    .btn-new-cn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: $red;
+      border: 1px solid $red;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: $border-r;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+
+      &:hover { opacity: 0.88; color: #fff; }
+    }
+  }
+
+  .credit-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border-bottom: 1px solid $gray-100;
+    flex-wrap: wrap;
+
+    input.search-input {
+      height: 36px;
+      border: 1px solid $gray-300;
+      border-radius: $border-r;
+      padding: 0 10px 0 32px;
+      font-size: 13px;
+      color: $gray-900;
+      background: #fff;
+      min-width: 200px;
+      transition: border-color 0.15s;
+
+      &:focus {
+        border-color: $red;
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 36px;
+      padding: 0 14px;
+      border: 1px solid $gray-300;
+      border-radius: $border-r;
+      background: #fff;
+      font-size: 13px;
+      color: $gray-700;
+      cursor: pointer;
+      transition: background 0.15s;
+
+      &:hover { background: $gray-50; }
+    }
+  }
+
+  // Status badges
+  .cn-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.open    { background: #dcfce7; color: #15803d; }
+    &.draft   { background: #fef9c3; color: #854d0e; }
+    &.void    { background: #fee2e2; color: #dc2626; }
+    &.closed  { background: #f1f5f9; color: #475569; }
+  }
+
+  // Table
+  .credit-list-table {
+    width: 100%;
+    font-size: 13px;
+
+    thead th {
+      background: $gray-50;
+      font-size: 12px;
+      font-weight: 700;
+      color: $gray-500;
+      padding: 10px 12px;
+      border-bottom: 1px solid $gray-200;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid $gray-100;
+      transition: background 0.12s;
+
+      &:hover { background: $gray-50; }
+      &:last-child { border-bottom: none; }
+    }
+
+    tbody td {
+      padding: 10px 12px;
+      color: $gray-700;
+      vertical-align: middle;
+    }
+
+    .cn-number-link {
+      color: $red;
+      font-weight: 600;
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+
+    .action-icons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      a, button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: $gray-500;
+        font-size: 16px;
+        padding: 0;
+        transition: color 0.12s;
+
+        &:hover { color: $red; }
+      }
+    }
+  }
+
+  // Pagination
+  .credit-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid $gray-100;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .page-info { font-size: 13px; color: $gray-500; }
+
+    .page-btns {
+      display: flex;
+      gap: 4px;
+
+      button {
+        min-width: 32px;
+        height: 32px;
+        border: 1px solid $gray-200;
+        border-radius: $border-r;
+        background: #fff;
+        font-size: 13px;
+        cursor: pointer;
+        color: $gray-700;
+        transition: background 0.12s, border-color 0.12s;
+
+        &:hover { background: $gray-50; }
+        &.active { background: $red; color: #fff; border-color: $red; }
+        &:disabled { opacity: 0.4; cursor: not-allowed; }
+      }
+    }
+  }
+}
+
+// ── Credit View Page ──────────────────────────────────────────────────────────
+.credit-view-page {
+  background: #f5f6fa;
+  min-height: 100vh;
+
+  .view-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: $shadow-sm;
+  }
+
+  // Top bar
+  .view-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid $gray-200;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .view-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: $gray-900;
+    }
+
+    .view-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .btn-edit {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: $red;
+        border: 1px solid $red;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: $border-r;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity 0.15s;
+
+        &:hover { opacity: 0.88; color: #fff; }
+      }
+
+      .btn-outline {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: #fff;
+        border: 1px solid $gray-300;
+        color: $gray-700;
+        font-size: 13px;
+        padding: 6px 14px;
+        border-radius: $border-r;
+        cursor: pointer;
+        transition: background 0.15s;
+
+        &:hover { background: $gray-50; }
+      }
+    }
+  }
+
+  // Info grid
+  .view-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 20px 24px;
+    border-bottom: 1px solid $gray-200;
+
+    @media (max-width: 600px) { grid-template-columns: 1fr; }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+
+      .info-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: $gray-500;
+        min-width: 140px;
+        flex-shrink: 0;
+      }
+
+      .info-value {
+        font-size: 13px;
+        color: $gray-900;
+      }
+    }
+  }
+
+  // Status badge
+  .view-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+
+    &.open    { background: #dcfce7; color: #15803d; }
+    &.draft   { background: #fef9c3; color: #854d0e; }
+    &.void    { background: #fee2e2; color: #dc2626; }
+    &.closed  { background: #f1f5f9; color: #475569; }
+  }
+
+  // Line items table
+  .view-items-table {
+    width: 100%;
+    font-size: 13px;
+    border-collapse: collapse;
+
+    thead th {
+      background: $gray-50;
+      font-size: 12px;
+      font-weight: 700;
+      color: $gray-500;
+      padding: 10px 14px;
+      border-bottom: 1px solid $gray-200;
+      text-transform: uppercase;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid $gray-100;
+
+      &:last-child td { border-bottom: none; }
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      color: $gray-700;
+      vertical-align: middle;
+    }
+  }
+
+  // Totals panel
+  .view-totals {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px;
+
+    .view-totals-box {
+      width: 320px;
+      border: 1px solid $gray-200;
+      border-radius: 6px;
+      overflow: hidden;
+
+      @media (max-width: 500px) { width: 100%; }
+
+      .totals-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid $gray-100;
+        font-size: 14px;
+        color: $gray-700;
+
+        &:last-child {
+          border-bottom: none;
+          font-weight: 700;
+          font-size: 15px;
+          color: $gray-900;
+          background: $gray-50;
+        }
+      }
+    }
+  }
+
+  // Comments / activity
+  .view-comments {
+    padding: 20px 24px;
+    border-top: 1px solid $gray-200;
+
+    .comment-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: $gray-900;
+      margin-bottom: 12px;
+    }
+
+    .comment-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+
+      .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: $red-light;
+        border: 1px solid $red-border;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: $red;
+        flex-shrink: 0;
+      }
+
+      .comment-body {
+        flex: 1;
+        background: $gray-50;
+        border: 1px solid $gray-200;
+        border-radius: 6px;
+        padding: 8px 12px;
+
+        .comment-meta {
+          font-size: 12px;
+          color: $gray-500;
+          margin-bottom: 4px;
+        }
+
+        .comment-text {
+          font-size: 13px;
+          color: $gray-700;
+          line-height: 1.5;
+        }
+      }
+    }
+
+    .comment-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+
+      textarea {
+        flex: 1;
+        border: 1px solid $gray-300;
+        border-radius: $border-r;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: $gray-700;
+        resize: none;
+        transition: border-color 0.15s;
+
+        &:focus {
+          border-color: $red;
+          outline: none;
+        }
+      }
+
+      .btn-comment {
+        background: $red;
+        border: 1px solid $red;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 16px;
+        border-radius: $border-r;
+        cursor: pointer;
+        transition: opacity 0.15s;
+
+        &:hover { opacity: 0.88; }
+      }
+    }
+  }
+}
+
+// ── Shared: Fixed Dropdown / Panel ───────────────────────────────────────────
+.credit-dropdown-fixed {
+  position: fixed;
+  background: #fff;
+  border: 1px solid $gray-200;
+  border-radius: 6px;
+  box-shadow: $shadow-md;
+  z-index: 9999;
+
+  .dropdown-search {
+    padding: 8px 10px;
+    border-bottom: 1px solid $gray-100;
+
+    input {
+      width: 100%;
+      border: 1px solid $red;
+      border-radius: $border-r;
+      padding: 5px 8px 5px 26px;
+      font-size: 13px;
+      outline: none;
+    }
+  }
+
+  .dropdown-group-label {
+    padding: 6px 12px 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: $gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .dropdown-item-row {
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: $gray-900;
+    transition: background 0.1s;
+
+    &:hover { background: $gray-100; }
+    &.selected { background: $red; color: #fff; }
+  }
+}

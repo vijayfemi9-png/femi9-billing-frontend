@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Dropdown } from "antd";
 import { all_routes } from "../../../../routes/all_routes";
 import "./inventory.scss";
 
@@ -66,7 +67,11 @@ const InventoryAdjustmentView: React.FC = () => {
     const [showComments,  setShowComments]  = useState(false);
     const [showAttach,    setShowAttach]    = useState(false);
     const [commentText,   setCommentText]   = useState("");
+    const [isPdfLoading,  setIsPdfLoading]  = useState(false);
+    const [searchFocused, setSearchFocused] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const pdfRef    = useRef<HTMLDivElement>(null);
+    const printIframeRef = useRef<HTMLIFrameElement>(null);
 
     useEffect(() => {
         const all  = loadAll();
@@ -101,6 +106,97 @@ const InventoryAdjustmentView: React.FC = () => {
         saveAll(updated);
         setRecords(updated);
         setSelected(s => s ? { ...s, status: newStatus } : s);
+    };
+
+    const buildDocHtml = () => {
+        if (!selected) return '';
+        const statusStyle = STATUS_STYLE[selected.status] || { color: "#6b7280", bg: "#f3f4f6" };
+        const itemsHtml = (selected.items || []).map((item, idx) => `
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:9px 12px;text-align:center;color:#6b7280;">${idx + 1}</td>
+                <td style="padding:9px 12px;color:#111827;">${item.productName || '\u2014'}</td>
+                <td style="padding:9px 12px;color:#6b7280;">${item.sku || '\u2014'}</td>
+                <td style="padding:9px 12px;text-align:right;color:#374151;">${item.currentQty}</td>
+                <td style="padding:9px 12px;text-align:right;color:${parseFloat(item.qtyAdjusted) < 0 ? '#dc2626' : '#16a34a'};">${parseFloat(item.qtyAdjusted) > 0 ? '+' : ''}${item.qtyAdjusted}</td>
+                <td style="padding:9px 12px;text-align:right;font-weight:600;color:#111827;">${item.newQty}</td>
+            </tr>`).join('');
+        return `<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>Inventory Adjustment - ${selected.referenceNumber || selected.id}</title>
+</head>
+<body>
+<div class="red-bar"></div>
+<div class="header-row">
+  <div>
+    <h1>INVENTORY ADJUSTMENT</h1>
+    <div class="company-block">Reference# <strong style="color:#111827">${selected.referenceNumber || '\u2014'}</strong> &nbsp; <span class="badge">${selected.status}</span></div>
+  </div>
+  <table class="meta-table"><tbody>
+    <tr><td>Date</td><td>${selected.date}</td></tr>
+    <tr><td>Type</td><td>${selected.type}</td></tr>
+    <tr><td>Location</td><td>${selected.location}</td></tr>
+  </tbody></table>
+</div>
+<div class="info-grid">
+  <div class="info-col"><div class="info-label">Reason</div><div class="info-val">${selected.reason || '\u2014'}</div></div>
+  <div class="info-col"><div class="info-label">Created By</div><div class="info-val">${selected.createdBy}<br/><span style="color:#9ca3af;font-size:11px;">${selected.createdTime}</span></div></div>
+  <div class="info-col"><div class="info-label">Last Modified By</div><div class="info-val">${selected.lastModifiedBy}<br/><span style="color:#9ca3af;font-size:11px;">${selected.lastModifiedTime}</span></div></div>
+</div>
+${selected.items && selected.items.length > 0 ? `
+<table class="items"><thead><tr>
+  <th style="text-align:center;width:40px;">#</th>
+  <th style="text-align:left;">Product</th>
+  <th style="text-align:left;width:110px;">SKU</th>
+  <th style="text-align:right;width:110px;">Current Qty</th>
+  <th style="text-align:right;width:120px;">Qty Adjusted</th>
+  <th style="text-align:right;width:100px;">New Qty</th>
+</tr></thead><tbody>${itemsHtml}</tbody></table>` : ''}
+${selected.description ? `<div style="margin-top:16px;"><div class="info-label" style="margin-bottom:6px;">Description</div><div style="font-size:12px;color:#374151;">${selected.description}</div></div>` : ''}
+<div class="footer">Generated on ${new Date().toLocaleString()}</div>
+</body></html>`;
+    };
+
+
+    const handleDownloadPdf = () => {
+        if (!selected) return;
+        setIsPdfLoading(true);
+        try {
+            const html = buildDocHtml();
+            const blob = new Blob([html], { type: 'text/html' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `Inventory-Adjustment-${selected.referenceNumber || selected.id}.html`;
+            a.click();
+            // Also open for PDF preview / print
+            const win = window.open(url, '_blank');
+            if (win) {
+                win.addEventListener('load', () => {
+                    setTimeout(() => { win.print(); }, 400);
+                });
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        } catch(e) {
+            console.error('PDF error', e);
+        } finally {
+            setTimeout(() => setIsPdfLoading(false), 800);
+        }
+    };
+
+    const handlePrint = () => {
+        const html = buildDocHtml();
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;border:none;';
+        document.body.appendChild(iframe);
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+        doc.open();
+        doc.write(html);
+        doc.close();
+        iframe.contentWindow?.focus();
+        setTimeout(() => {
+            iframe.contentWindow?.print();
+            setTimeout(() => document.body.removeChild(iframe), 1000);
+        }, 500);
     };
 
     const addComment = () => {
@@ -141,11 +237,13 @@ const InventoryAdjustmentView: React.FC = () => {
 
                         {/* Sidebar search */}
                         <div style={{ padding: "8px 12px", borderBottom: "1px solid #f3f4f6" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 5, padding: "5px 10px" }}>
-                                <i className="ti ti-search" style={{ fontSize: 13, color: "#9ca3af" }} />
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f9fafb", border: `1px solid ${searchFocused ? "#e41f07" : "#e5e7eb"}`, borderRadius: 5, padding: "5px 10px", transition: "border-color 0.2s", boxShadow: searchFocused ? "0 0 0 3px rgba(228,31,7,0.08)" : "none" }}>
+                                <i className="ti ti-search" style={{ fontSize: 13, color: searchFocused ? "#e41f07" : "#9ca3af", transition: "color 0.2s" }} />
                                 <input
                                     value={listSearch}
                                     onChange={e => setListSearch(e.target.value)}
+                                    onFocus={() => setSearchFocused(true)}
+                                    onBlur={() => setSearchFocused(false)}
                                     placeholder="Search..."
                                     style={{ border: "none", background: "transparent", outline: "none", fontSize: 12, flex: 1, color: "#374151" }}
                                 />
@@ -286,49 +384,62 @@ const InventoryAdjustmentView: React.FC = () => {
                                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                                     {/* Edit */}
                                     <button onClick={() => navigate((route.inventoryAdjustmentAdd || "#") + "?edit=" + selected.id)}
-                                        style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
+                                        className="premium-outline-btn d-flex align-items-center"
+                                        style={{ gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
                                         <i className="ti ti-edit" style={{ fontSize: 13 }} /> Edit
                                     </button>
                                     <div style={{ height: 18, width: 1, background: "#e5e7eb", margin: "0 2px" }} />
 
-                                    {/* PDF / Print */}
-                                    <div style={{ position: "relative" }}>
-                                        <button onClick={() => setShowPdfMenu(!showPdfMenu)} onBlur={() => setTimeout(() => setShowPdfMenu(false), 200)}
-                                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
-                                            <i className="ti ti-file-type-pdf" style={{ fontSize: 14 }} /> PDF/Print <i className="ti ti-chevron-down" style={{ fontSize: 12 }} />
-                                        </button>
-                                        {showPdfMenu && (
-                                            <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 6, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 100, minWidth: 150, padding: "4px 0" }}>
-                                                <div onClick={() => window.print()} style={{ padding: "8px 16px", fontSize: 13, color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                                                    <i className="ti ti-printer" /> Print
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    {/* PDF Download */}
+                                    <button onClick={handleDownloadPdf} disabled={isPdfLoading}
+                                        className="premium-outline-btn d-flex align-items-center"
+                                        style={{ gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: isPdfLoading ? "#9ca3af" : "#374151", cursor: isPdfLoading ? "wait" : "pointer", fontWeight: 500 }}>
+                                        <i className={isPdfLoading ? "ti ti-loader-2" : "ti ti-file-type-pdf"} style={{ fontSize: 14, animation: isPdfLoading ? "spin 1s linear infinite" : "none" }} />
+                                        {isPdfLoading ? "Generating..." : "PDF"}
+                                    </button>
+                                    <div style={{ height: 18, width: 1, background: "#e5e7eb", margin: "0 2px" }} />
+
+                                    {/* Print */}
+                                    <button onClick={handlePrint}
+                                        className="premium-outline-btn d-flex align-items-center"
+                                        style={{ gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
+                                        <i className="ti ti-printer" style={{ fontSize: 14 }} /> Print
+                                    </button>
                                     <div style={{ height: 18, width: 1, background: "#e5e7eb", margin: "0 2px" }} />
 
                                     {/* Toggle Status */}
                                     <button onClick={toggleStatus}
-                                        style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
+                                        className="premium-outline-btn d-flex align-items-center"
+                                        style={{ gap: 5, padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", fontSize: 13, color: "#374151", cursor: "pointer", fontWeight: 500 }}>
                                         <i className="ti ti-refresh" style={{ fontSize: 13 }} />
                                         {selected.status === "Adjusted" ? "Convert to Draft" : "Mark as Adjusted"}
                                     </button>
                                     <div style={{ height: 18, width: 1, background: "#e5e7eb", margin: "0 2px" }} />
 
-                                    {/* More */}
-                                    <div style={{ position: "relative" }}>
-                                        <button onClick={() => setShowMoreMenu(!showMoreMenu)} onBlur={() => setTimeout(() => setShowMoreMenu(false), 200)}
-                                            style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 28, border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", color: "#374151", cursor: "pointer" }}>
+                                    {/* More (using premium Antd Dropdown!) */}
+                                    <Dropdown
+                                        placement="bottomLeft"
+                                        trigger={["click"]}
+                                        menu={{
+                                            items: [
+                                                {
+                                                    key: "delete",
+                                                    label: <div className="d-flex align-items-center gap-2 text-danger"><i className="ti ti-trash fs-14" /><span>Delete</span></div>,
+                                                    onClick: () => deleteRecord(),
+                                                }
+                                            ],
+                                            className: "shadow-lg border-0 py-1 rounded-3",
+                                            style: { minWidth: 120 }
+                                        }}
+                                    >
+                                        <button
+                                            className="premium-outline-btn d-flex align-items-center justify-content-center"
+                                            style={{ width: 32, height: 28, border: "1px solid #e5e7eb", borderRadius: 5, background: "#fff", color: "#374151", cursor: "pointer" }}
+                                            onClick={e => e.preventDefault()}
+                                        >
                                             <i className="ti ti-dots" style={{ fontSize: 16 }} />
                                         </button>
-                                        {showMoreMenu && (
-                                            <div style={{ position: "absolute", top: "100%", left: 0, marginTop: 4, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 6, boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 100, minWidth: 120, padding: "4px 0" }}>
-                                                <div onClick={deleteRecord} style={{ padding: "8px 16px", fontSize: 13, color: "#dc2626", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-                                                    <i className="ti ti-trash" /> Delete
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    </Dropdown>
                                 </div>
 
                                 {/* PDF view toggle */}
