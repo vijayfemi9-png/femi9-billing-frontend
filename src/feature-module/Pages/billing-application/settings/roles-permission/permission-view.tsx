@@ -39,7 +39,7 @@ function nowDatetime() {
 }
 function normPerm(v: any): string {
     if (typeof v === "boolean") return v ? "yes" : "no";
-    return ["no", "own", "team", "yes"].includes(v) ? v : "no";
+    return ["no", "own", "team", "yes", "all"].includes(v) ? v : "no";
 }
 function hasAccess(v: any): boolean { return normPerm(v) !== "no"; }
 function countGranted(perms: Record<string, any> | undefined) {
@@ -56,6 +56,7 @@ const PERM_BADGE: Record<string, { color: string; bg: string; border: string }> 
     own:  { color: "#2F80ED", bg: "#eaf2fd", border: "#b3d4f8" },
     team: { color: "#0E9384", bg: "#EBF2F1", border: "#9dd1cc" },
     yes:  { color: "#1ABE17", bg: "#e8f9e8", border: "#a3e4a1" },
+    all:  { color: "#6941C6", bg: "#f4f0fd", border: "#d6bbfb" },
 };
 
 const PERM_TEXT: Record<string, string> = {
@@ -63,6 +64,7 @@ const PERM_TEXT: Record<string, string> = {
     own:  "#d97706",
     team: "#0e9384",
     yes:  "#16a34a",
+    all:  "#6941C6",
 };
 
 const PermBadge = ({ value }: { value: any }) => {

@@ -22,23 +22,24 @@ interface PermissionSet {
 }
 
 const PERM_STYLE: Record<PermValue, { color: string; bg: string; border: string }> = {
-    no:   { color: "#EF1E1E", bg: "#fde9e9", border: "#f5c6c6" },
-    own:  { color: "#2F80ED", bg: "#eaf2fd", border: "#b3d4f8" },
+    no: { color: "#EF1E1E", bg: "#fde9e9", border: "#f5c6c6" },
+    own: { color: "#2F80ED", bg: "#eaf2fd", border: "#b3d4f8" },
     team: { color: "#0E9384", bg: "#EBF2F1", border: "#9dd1cc" },
-    yes:  { color: "#1ABE17", bg: "#e8f9e8", border: "#a3e4a1" },
-    all:  { color: "#6941C6", bg: "#f4f0fd", border: "#d6bbfb" },
+    yes: { color: "#1ABE17", bg: "#e8f9e8", border: "#a3e4a1" },
+    all: { color: "#6941C6", bg: "#f4f0fd", border: "#d6bbfb" },
 };
 
 const PERM_OPTIONS: { value: PermValue; label: string }[] = [
-    { value: "no",   label: "No" },
-    { value: "own",  label: "Own" },
+    { value: "no", label: "No" },
+    { value: "own", label: "Own" },
     { value: "team", label: "Team" },
-    { value: "yes",  label: "Yes" },
+    { value: "yes", label: "Yes" },
+    { value: "all", label: "All" },
 ];
 
 function normPerm(v: any): PermValue {
     if (typeof v === "boolean") return v ? "yes" : "no";
-    if (["no", "own", "team", "yes"].includes(v)) return v as PermValue;
+    if (["no", "own", "team", "yes", "all"].includes(v)) return v as PermValue;
     return "no";
 }
 
@@ -63,9 +64,9 @@ function saveJSON(key: string, data: any) {
 }
 
 const ACTIONS: { key: string; label: string; color: string }[] = [
-    { key: "view",   label: "View",   color: "#0891b2" },
+    { key: "view", label: "View", color: "#0891b2" },
     { key: "create", label: "Create", color: "#16a34a" },
-    { key: "edit",   label: "Edit",   color: "#d97706" },
+    { key: "edit", label: "Edit", color: "#d97706" },
     { key: "delete", label: "Delete", color: "#dc2626" },
 ];
 
