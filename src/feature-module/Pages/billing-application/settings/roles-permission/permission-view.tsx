@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Dropdown } from "antd";
 import { all_routes } from "../../../../../routes/all_routes";
+import "./permission.scss";
 
 const SK = "billing_roles_permissions";
 const RED = "#e41f07";

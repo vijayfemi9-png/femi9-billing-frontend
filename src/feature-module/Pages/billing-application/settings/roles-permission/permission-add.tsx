@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { all_routes } from "../../../../../routes/all_routes";
 import { Bold } from "react-feather";
+import "./permission.scss";
 
 const SK = "billing_roles_permissions";
 const MODULES = [

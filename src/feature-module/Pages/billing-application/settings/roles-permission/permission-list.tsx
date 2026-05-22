@@ -9,6 +9,7 @@ import { Dropdown } from "antd";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
+import "./permission.scss";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PermissionSet { view: boolean; create: boolean; edit: boolean; delete: boolean; }
@@ -266,7 +267,7 @@ const PermissionList: React.FC = () => {
         {
             title: th("Users Count"), dataIndex: "usersCount", key: "Users Count", width: 120, align: "center" as const,
             render: (val: number) => (
-                <span style={{ fontSize: 13, fontWeight: 600, background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "2px 10px", borderRadius: 20, display: "inline-block" }}>{val}</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>{val}</span>
             ),
             sorter: (a: Role, b: Role) => a.usersCount - b.usersCount,
         },
@@ -529,8 +530,8 @@ const PermissionList: React.FC = () => {
                                                             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{r.createdTime}</div>
                                                         </div>
                                                         <div className="dropdown" style={{ flexShrink: 0, marginLeft: 8 }}>
-                                                            <button className="btn btn-icon btn-sm shadow-none" data-bs-toggle="dropdown" onClick={e => e.stopPropagation()} style={{ width: 28, height: 28, borderRadius: 6, background: "#fff", border: "1px solid #e5e7eb", color: "#6b7280", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                                                <i className="ti ti-dots-vertical" style={{ fontSize: 14 }} />
+                                                            <button className="btn btn-icon btn-sm shadow-none" data-bs-toggle="dropdown" onClick={e => e.stopPropagation()} style={{ width: 28, height: 28, borderRadius: 6, background: "#fff", border: "1px solid #e5e7eb", color: "#9ca3af", padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                                <i className="ti ti-dots-vertical" style={{ fontSize: 14, color: "#9ca3af" }} />
                                                             </button>
                                                             <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-1" style={{ minWidth: 150, borderRadius: 8 }}>
                                                                 <li><Link to="#" className="dropdown-item px-3 py-2 text-dark fs-14" onClick={e => { e.preventDefault(); navigate((route.settingsRoleView || "#").replace(":id", String(r.id))); }}><i className="ti ti-eye text-muted me-2" />View</Link></li>
