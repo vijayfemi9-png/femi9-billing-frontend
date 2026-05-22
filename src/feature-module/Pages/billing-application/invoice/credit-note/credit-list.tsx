@@ -1,4 +1,4 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import React, { useState, useEffect, useRef } from "react";
 import "./credit.scss";
 import { Link, useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ interface CreditNote {
     referenceNumber: string;
     customerName: string;
     invoiceNumber: string;
-    status: "Open" | "Draft" | "Void" | "Closed";
+    status: "Open" | "Draft" | "Void" | "Closed" | "Paid";
     amount: number;
     createdBy: string;
     createdTime: string;
@@ -61,12 +61,24 @@ function loadCreditNotes(): CreditNote[] {
     return SEED;
 }
 
-const STATUS_CLASS: Record<string, string> = {
-    "Open": "badge-soft-danger",
-    "Draft": "badge-soft-warning",
-    "Void": "badge-soft-danger",
-    "Closed": "badge-soft-secondary",
+const STATUS_STYLE: Record<string, React.CSSProperties> = {
+    "Open":   { background: "#fff3e0", color: "#e65100", border: "1px solid #ffcc80" },
+    "Draft":  { background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db" },
+    "Paid":   { background: "#dcfce7", color: "#15803d", border: "1px solid #86efac" },
+    "Void":   { background: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5" },
+    "Closed": { background: "#e0f2fe", color: "#0369a1", border: "1px solid #7dd3fc" },
 };
+const defaultStatusStyle: React.CSSProperties = { background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db" };
+
+function saveCreditNotes(data: CreditNote[]) {
+    try { localStorage.setItem(SK, JSON.stringify(data)); } catch { /**/ }
+}
+function updateCNStatus(id: number, status: CreditNote["status"]): CreditNote[] {
+    const all = loadCreditNotes();
+    const updated = all.map(c => c.id === id ? { ...c, status } : c);
+    saveCreditNotes(updated);
+    return updated;
+}
 
 const DeleteConfirm = ({ creditNoteNumber, onConfirm, onCancel }: { creditNoteNumber: string, onConfirm: () => void, onCancel: () => void }) => (
     <>
@@ -330,7 +342,7 @@ const CreditNoteList: React.FC = () => {
                     style={{ textDecoration: "none" }}
                     onClick={e => e.stopPropagation()}
                 >
-                    <span className={`badge fs-11 fw-semibold text-uppercase ${STATUS_CLASS[status] || "badge-soft-secondary"}`}>
+                    <span style={{ ...( STATUS_STYLE[status] || defaultStatusStyle), fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.4px", display: "inline-block" }}>
                         {status}
                     </span>
                 </Link>
@@ -385,12 +397,38 @@ const CreditNoteList: React.FC = () => {
                                 onClick: ({ domEvent }) => { domEvent.stopPropagation(); navigate((route.creditNoteAdd || "#") + "?edit=" + record.id); },
                             },
                             {
+                                key: "mark", label: "Mark as", icon: <i className="ti ti-tag" />,
+                                children: [
+                                    ...(record.status !== "Open" ? [{
+                                        key: "mark-open", label: <span style={{ color: "#e41f07", fontWeight: 500 }}>Open</span>,
+                                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setCreditNotes(updateCNStatus(record.id, "Open")); },
+                                    }] : []),
+                                    ...(record.status !== "Draft" ? [{
+                                        key: "mark-draft", label: <span style={{ color: "#d97706", fontWeight: 500 }}>Draft</span>,
+                                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setCreditNotes(updateCNStatus(record.id, "Draft")); },
+                                    }] : []),
+                                    ...(record.status !== "Paid" ? [{
+                                        key: "mark-paid", label: <span style={{ color: "#16a34a", fontWeight: 500 }}>Paid</span>,
+                                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setCreditNotes(updateCNStatus(record.id, "Paid")); },
+                                    }] : []),
+                                    ...(record.status !== "Void" ? [{
+                                        key: "mark-void", label: <span style={{ color: "#6b7280", fontWeight: 500 }}>Void</span>,
+                                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setCreditNotes(updateCNStatus(record.id, "Void")); },
+                                    }] : []),
+                                    ...(record.status !== "Closed" ? [{
+                                        key: "mark-closed", label: <span style={{ color: "#6b7280", fontWeight: 500 }}>Closed</span>,
+                                        onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setCreditNotes(updateCNStatus(record.id, "Closed")); },
+                                    }] : []),
+                                ],
+                            },
+                            { type: "divider" as const },
+                            {
                                 key: "delete", label: "Delete", danger: true, icon: <i className="ti ti-trash" />,
-                                onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleDelete(record.id); },
+                                onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleDeleteClick(record.creditNoteNumber, record.id); },
                             },
                         ],
                         className: "shadow-lg border-0 py-2 rounded-3",
-                        style: { minWidth: 140 },
+                        style: { minWidth: 160 },
                     }}
                 >
                     <button
@@ -532,15 +570,16 @@ const CreditNoteList: React.FC = () => {
                             />
                         </div>
                         {/* Right: New */}
-                        <div className="d-flex align-items-center gap-2">
-                            <Link
-                                to={route.creditNoteAdd || "#"}
+                        {/* <div className="d-flex align-items-center gap-2">
+                            <button
+                                type="button"
                                 className="btn text-white d-flex align-items-center fw-bold"
                                 style={{ background: "#e41f07", border: "none", borderRadius: 4, padding: "0 15px", height: 32, fontSize: 13, whiteSpace: "nowrap" }}
+                                onClick={() => navigate(route.creditNoteAdd || "/billing-application/credit-notes/new")}
                             >
                                 <i className="ti ti-plus me-2 fs-14" /> New Credit Note
-                            </Link>
-                        </div>
+                            </button>
+                        </div> */}
                     </div>
 
                     {/* Toolbar */}
@@ -728,7 +767,7 @@ const CreditNoteList: React.FC = () => {
                             <div className="py-4 px-3 px-sm-4" style={{ minHeight: "100%", backgroundColor: "#f4f7fa" }}>
                                 <div className="row g-3">
                                     {filteredData.map(c => {
-                                        const stCls = STATUS_CLASS[c.status] || "badge-soft-secondary";
+                                        const stStyle = STATUS_STYLE[c.status] || defaultStatusStyle;
                                         return (
                                             <div key={c.id} className="col-xxl-3 col-xl-4 col-lg-4 col-md-6 col-sm-12">
                                                 <div
@@ -784,7 +823,10 @@ const CreditNoteList: React.FC = () => {
                                                     </div>
                                                     {/* Card Footer */}
                                                     <div style={{ padding: "10px 16px", borderTop: "1px solid #f3f4f6", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                                        <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>₹{c.amount.toFixed(2)}</span>
+                                                        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                                            <span style={{ fontSize: 15, fontWeight: 700, color: "#111827" }}>₹{c.amount.toFixed(2)}</span>
+                                                            <span style={{ ...stStyle, fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 20, textTransform: "uppercase" as const, letterSpacing: "0.4px", display: "inline-block", width: "fit-content" }}>{c.status}</span>
+                                                        </div>
                                                         <div style={{ display: "flex", gap: 6 }}>
                                                             <button
                                                                 onClick={e => { e.stopPropagation(); navigate(route.creditNoteView?.replace(":id", String(c.id)) || "#"); }}
@@ -817,9 +859,6 @@ const CreditNoteList: React.FC = () => {
                                         <div className="col-12 text-center py-5">
                                             <i className="ti ti-receipt-refund fs-48 text-muted opacity-25 d-block mb-2" />
                                             <p className="text-muted fs-14">No credit notes found</p>
-                                            <Link to={route.creditNoteAdd || "#"} className="btn btn-danger mt-2">
-                                                <i className="ti ti-plus me-2" /> New Credit Note
-                                            </Link>
                                         </div>
                                     )}
                                 </div>

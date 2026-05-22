@@ -332,4 +332,9 @@ export const all_routes = {
   creditNoteAdd: "/billing-application/credit-notes/new",
   creditNoteView: "/billing-application/credit-notes/:id",
   creditNoteSetting: "/billing-application/credit-note-setting",
+
+  // ── Settings — Roles & Permissions ──────────────────────────────────────────
+  settingsRoleList: "/billing-application/settings/roles-permissions",
+  settingsRoleAdd: "/billing-application/settings/roles-permissions/new",
+  settingsRoleView: "/billing-application/settings/roles-permissions/:id",
 };

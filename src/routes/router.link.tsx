@@ -223,7 +223,7 @@ const CustomerList = lazy(() => import("../feature-module/Pages/billing-applicat
 const CustomerAdd = lazy(() => import("../feature-module/Pages/billing-application/customer/customer-add"));
 const CustomerView = lazy(() => import("../feature-module/Pages/billing-application/customer/customer-view"));
 const CustomerSetting = lazy(() => import("../feature-module/Pages/billing-application/settings/customer-preference"));
-const BillingInvoiceSetting = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-setting"));
+const BillingInvoiceSetting = lazy(() => import("../feature-module/Pages/billing-application/settings/invoice-setting"));
 const BillingInvoiceList = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-list"));
 const BillingInvoiceView = lazy(() => import("../feature-module/Pages/billing-application/invoice/invoice-view"));
 const BillingInvoiceAdd = lazy(() => import("../feature-module/Pages/billing-application/invoice/add-invoice"));
@@ -240,6 +240,9 @@ const CreditNoteList = lazy(() => import("../feature-module/Pages/billing-applic
 const CreditNoteAdd = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-add"));
 const CreditNoteView = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-view"));
 const CreditNoteSetting = lazy(() => import("../feature-module/Pages/billing-application/invoice/credit-note/credit-settings"));
+const SettingsRoleList = lazy(() => import("../feature-module/Pages/billing-application/settings/roles-permission/permission-list"));
+const SettingsRoleAdd = lazy(() => import("../feature-module/Pages/billing-application/settings/roles-permission/permission-add"));
+const SettingsRoleView = lazy(() => import("../feature-module/Pages/billing-application/settings/roles-permission/permission-view"));
 
 const route = all_routes;
 
@@ -1900,6 +1903,27 @@ export const publicRoutes = [
     element: <CreditNoteSetting />,
     route: Route,
     meta_title: "Credit Note Setting",
+  },
+  {
+    id: "240",
+    path: route.settingsRoleList,
+    element: <SettingsRoleList />,
+    route: Route,
+    meta_title: "Roles & Permissions",
+  },
+  {
+    id: "241",
+    path: route.settingsRoleAdd,
+    element: <SettingsRoleAdd />,
+    route: Route,
+    meta_title: "New Role",
+  },
+  {
+    id: "242",
+    path: route.settingsRoleView,
+    element: <SettingsRoleView />,
+    route: Route,
+    meta_title: "Role Details",
   },
   {
     id: "216",

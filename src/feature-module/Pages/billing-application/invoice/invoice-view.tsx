@@ -891,8 +891,8 @@ const InvoiceView: React.FC = () => {
                 .zinv-more-item {
                     display: flex !important;
                     align-items: center !important;
-                    gap: 12px !important;
-                    padding: 8px 16px !important;
+                    gap: 10px !important;
+                    padding: 6px 12px !important;
                     font-size: 14px !important;
                     font-weight: 500 !important;
                     color: #374151 !important;
@@ -908,8 +908,19 @@ const InvoiceView: React.FC = () => {
                     background-color: #e41f07 !important;
                     color: #fff !important;
                 }
-                .zinv-more-item:hover i {
+                .zinv-more-item:hover span {
+                    background: rgba(255,255,255,0.18) !important;
+                }
+                .zinv-more-item:hover span i {
                     color: #fff !important;
+                }
+                .zinv-more-item:focus,
+                .zinv-more-item:focus-visible,
+                .zinv-more-item:active {
+                    outline: none !important;
+                    background-color: transparent !important;
+                    color: #374151 !important;
+                    box-shadow: none !important;
                 }
                 .zinv-more-item i {
                     font-size: 18px !important;
@@ -1108,20 +1119,42 @@ const InvoiceView: React.FC = () => {
                                             <i className="ti ti-dots" style={{ fontSize: 16 }} />
                                         </button>
                                         <div className="dropdown-menu dropdown-menu-end shadow border-0 zinv-more-dropdown">
-                                            {(invoice.status === "Draft" || invoice.status === "Void" || invoice.status === "Overdue") && (
-                                                <button className="zinv-more-item" onClick={() => updateStatus("Sent")}>
-                                                    <i className="ti ti-refresh" style={{ color: "#16a34a" }} /> Re-open Invoice
-                                                </button>
-                                            )}
-                                            <button className="zinv-more-item" onClick={() => updateStatus("Void")} disabled={invoice.status === "Void" || invoice.status === "Paid"}>
-                                                <i className="ti ti-ban" /> Mark as Void
+                                            <button className="zinv-more-item"
+                                                onClick={() => {
+                                                    const params = new URLSearchParams({
+                                                        invoiceNumber: invoice.invoiceNumber || "",
+                                                        customer: invoice.customerName || "",
+                                                        invoiceId: String(invoice.id),
+                                                    });
+                                                    navigate(`${route.creditNoteAdd}?${params.toString()}`);
+                                                }}>
+                                                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "#f3f4f6" }}>
+                                                    <i className="ti ti-file-invoice" style={{ fontSize: 15, color: "#374151" }} />
+                                                </span>
+                                                Create Credit Note
                                             </button>
-                                            <button className="zinv-more-item" onClick={() => updateStatus("Void")} disabled={invoice.status === "Void" || invoice.status === "Paid"}>
-                                                <i className="ti ti-file-off" /> Write Off
+                                            <button className="zinv-more-item" onClick={() => {
+                                                const all = getAllRaw();
+                                                const clone = { ...invoice, id: Date.now(), invoiceNumber: invoice.invoiceNumber + "-COPY", status: "Draft" };
+                                                saveAll([...all, clone]);
+                                                navigate(route.billingInvoiceList);
+                                            }}>
+                                                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "#f3f4f6" }}>
+                                                    <i className="ti ti-copy" style={{ fontSize: 15, color: "#374151" }} />
+                                                </span>
+                                                Clone
                                             </button>
-                                            <div className="dropdown-divider" style={{ margin: '8px 0' }} />
-                                            <button className="zinv-more-item text-danger" onClick={() => setShowDel(true)}>
-                                                <i className="ti ti-trash" style={{ color: '#e41f07' }} /> Delete Invoice
+                                            <button className="zinv-more-item" onClick={() => setShowDel(true)}>
+                                                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "#fff0f0" }}>
+                                                    <i className="ti ti-trash" style={{ fontSize: 15, color: "#e41f07" }} />
+                                                </span>
+                                                Delete
+                                            </button>
+                                            <button className="zinv-more-item" onClick={() => navigate(route.invoiceSetting || "#")}>
+                                                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, borderRadius: 6, background: "#f3f4f6" }}>
+                                                    <i className="ti ti-settings" style={{ fontSize: 15, color: "#374151" }} />
+                                                </span>
+                                                Invoice Preferences
                                             </button>
                                         </div>
                                     </div>

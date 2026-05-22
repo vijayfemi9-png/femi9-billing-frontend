@@ -196,6 +196,11 @@ export const SidebarData = [
           { label: "Customer Preference", link: route.customerPreference },
           { label: "Invoice Setting", link: route.billingInvoiceSetting },
           { label: "Credit Note Setting", link: route.creditNoteSetting },
+          {
+            label: "Roles & Permissions",
+            link: route.settingsRoleList,
+            relatedRoutes: [route.settingsRoleList, route.settingsRoleAdd, route.settingsRoleView],
+          },
         ],
       },
       {

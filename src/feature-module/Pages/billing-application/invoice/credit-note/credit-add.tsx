@@ -427,6 +427,9 @@ const CreditNoteAdd: React.FC = () => {
     const route = all_routes;
     const [searchParams] = useSearchParams();
     const editId = searchParams.get("edit");
+    const fromInvoiceNumber = searchParams.get("invoiceNumber") || "";
+    const fromCustomer = searchParams.get("customer") || "";
+    const fromInvoiceId = searchParams.get("invoiceId") || "";
 
     const [customers, setCustomers] = useState<string[]>([]);
     const [invoices, setInvoices] = useState<string[]>([]);
@@ -558,6 +561,37 @@ const CreditNoteAdd: React.FC = () => {
             } else {
                 setCnNumber("");
             }
+            if (fromInvoiceNumber) setInvoiceRef(fromInvoiceNumber);
+            if (fromCustomer) setCustomer(fromCustomer);
+            if (fromInvoiceId) {
+                try {
+                    const invItems = JSON.parse(localStorage.getItem(`billing_invoice_items_${fromInvoiceId}`) || "[]");
+                    if (Array.isArray(invItems) && invItems.length > 0) {
+                        const mapped: LineItem[] = invItems.map((it: any) => {
+                            const rate = it.rate ?? it.price ?? 0;
+                            const qty = it.qty ?? it.quantity ?? 1;
+                            const taxPercent = it.tax ?? it.taxPercent ?? 0;
+                            const nl: LineItem = {
+                                id: Date.now() + Math.random(),
+                                productId: it.id ?? "",
+                                productName: it.itemName ?? it.productName ?? it.name ?? "",
+                                sku: it.sku ?? "",
+                                account: it.account ?? "",
+                                quantity: qty,
+                                rate,
+                                discount: it.discount ?? 0,
+                                discountType: it.discountType ?? "%",
+                                taxPercent,
+                                amount: 0,
+                                reportingTag: "",
+                            };
+                            nl.amount = calcAmount(nl);
+                            return nl;
+                        });
+                        setItems(mapped.length > 0 ? mapped : [emptyLine()]);
+                    }
+                } catch { /* ignore */ }
+            }
         }
     }, [editId]);
 
@@ -608,23 +642,38 @@ const CreditNoteAdd: React.FC = () => {
     };
 
     const selectProduct = (rowId: number, product: any) => {
-        setItems(prev => prev.map(item => {
-            if (item.id !== rowId) return item;
-            const updated = { ...item, productId: product.id, productName: product.name, sku: product.sku || "", rate: product.selling_price ?? product.costPrice ?? 0 };
-            updated.amount = calcAmount(updated);
-            return updated;
-        }));
+        setItems(prev => {
+            const rate = product.selling_price ?? product.costPrice ?? product.price ?? product.mrp ?? product.unit_price ?? 0;
+            const mapped = prev.map(item => {
+                if (item.id !== rowId) return item;
+                const updated = { ...item, productId: product.id, productName: product.name, sku: product.sku || "", rate };
+                updated.amount = calcAmount(updated);
+                return updated;
+            });
+            // Auto-add a new empty row if selecting from the last row
+            const isLast = prev[prev.length - 1]?.id === rowId;
+            return isLast ? [...mapped, emptyLine()] : mapped;
+        });
         setOpenRow(null);
         setRowSearch("");
+        setDropdownPos(null);
     };
 
     const addLine = () => setItems(p => [...p, emptyLine()]);
-    const removeLine = (id: number) => setItems(p => p.length > 1 ? p.filter(i => i.id !== id) : p);
+    const removeLine = (id: number) => setItems(p => {
+        const next = p.filter(i => i.id !== id);
+        return next.length > 0 ? next : [emptyLine()];
+    });
 
-    const subTotal = items.reduce((s, i) => s + i.quantity * i.rate * (1 - i.discount / 100), 0);
+    const subTotal = items.reduce((s, i) => {
+        const gross = i.quantity * i.rate;
+        const disc = i.discountType === "%" ? (gross * i.discount / 100) : i.discount;
+        return s + (gross - disc);
+    }, 0);
     const taxTotal = items.reduce((s, i) => {
-        const base = i.quantity * i.rate * (1 - i.discount / 100);
-        return s + base * i.taxPercent / 100;
+        const gross = i.quantity * i.rate;
+        const disc = i.discountType === "%" ? (gross * i.discount / 100) : i.discount;
+        return s + (gross - disc) * i.taxPercent / 100;
     }, 0);
     const grandTotal = subTotal + taxTotal;
 
@@ -646,8 +695,7 @@ const CreditNoteAdd: React.FC = () => {
 
     const validate = () => {
         const e: Record<string, string> = {};
-        if (!customer) e.customer = "Required";
-        if (!location) e.location = "Required";
+        if (!customer) e.customer = "Customer is required";
         setErrors(e);
         return Object.keys(e).length === 0;
     };
@@ -655,18 +703,27 @@ const CreditNoteAdd: React.FC = () => {
     const save = (saveStatus: "Open" | "Draft") => {
         if (!validate()) return;
         setSaving(true);
-        let idToNav = editId;
+        let idToNav: string | null = editId;
         try {
             const existing = loadJSON(SK);
             const now = nowDatetime();
+            const totalAmount = items.reduce((s, i) => s + calcAmount(i), 0);
+            const chargesTotal = charges.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
             const record = {
-                date: isoToDisplay(cnDate), creditNoteNumber: cnNumber, customerName: customer,
-                invoiceNumber: invoiceRef, referenceNumber: refNumber,
-                location, reason, notes, terms, status: saveStatus,
+                date: isoToDisplay(cnDate),
+                creditNoteNumber: cnNumber || `CN-${Date.now()}`,
+                customerName: customer,
+                invoiceNumber: invoiceRef,
+                referenceNumber: refNumber,
+                location, reason, notes, terms,
+                status: saveStatus,
                 salesperson,
-                amount: grandTotal, items,
-                createdBy: "vickyyfemi9", createdTime: now,
-                lastModifiedBy: "vickyyfemi9", lastModifiedTime: now,
+                taxType, selectedTax,
+                charges,
+                amount: totalAmount + chargesTotal,
+                items,
+                lastModifiedBy: "vickyyfemi9",
+                lastModifiedTime: now,
             };
             let saved: any[];
             if (editId) {
@@ -676,27 +733,26 @@ const CreditNoteAdd: React.FC = () => {
                         : o
                 );
             } else {
-                const id = existing.length ? Math.max(...existing.map((o: any) => o.id)) + 1 : 1;
+                const id = existing.length ? Math.max(...existing.map((o: any) => Number(o.id) || 0)) + 1 : 1;
                 idToNav = String(id);
-                saved = [...existing, { id, ...record }];
-
-                // If auto-generating, increment the sequence number and save preferences!
+                saved = [...existing, { id, ...record, createdBy: "vickyyfemi9", createdTime: now }];
                 if (autoGenerate) {
                     const nextNum = parseInt(nextCnNum) + 1;
                     const padded = String(nextNum).padStart(5, "0");
                     localStorage.setItem("credit_note_preferences", JSON.stringify({
-                        autoGenerate,
-                        prefix: cnPrefix,
-                        nextNumber: padded,
-                        restartNumbering
+                        autoGenerate, prefix: cnPrefix, nextNumber: padded, restartNumbering
                     }));
                 }
             }
             localStorage.setItem(SK, JSON.stringify(saved));
-        } catch (err) { console.error(err); }
+        } catch (err) {
+            console.error(err);
+            setSaving(false);
+            return;
+        }
         setSaving(false);
         if (idToNav && route.creditNoteView) {
-            navigate(route.creditNoteView.replace(":id", idToNav));
+            navigate(route.creditNoteView.replace(":id", String(idToNav)));
         } else {
             navigate(route.creditNoteList);
         }
@@ -842,14 +898,12 @@ const CreditNoteAdd: React.FC = () => {
 
                         {/* Location */}
                         <div className="d-flex flex-column flex-md-row align-items-md-center mb-3">
-                            <label style={{ minWidth: 200, fontSize: 14, fontWeight: 500, color: "#e41f07", flexShrink: 0 }}>
-                                Location <span style={{ color: "#dc2626" }}>*</span>
+                            <label style={{ minWidth: 200, fontSize: 14, fontWeight: 500, color: "#374151", flexShrink: 0 }}>
+                                Location
                             </label>
                             <div style={{ flex: 1, maxWidth: 380 }}>
                                 <SD value={location} placeholder="Select location" options={LOCATIONS}
-                                    onChange={v => { setLocation(v); setErrors(p => ({ ...p, location: "" })); }}
-                                    error={!!errors.location} />
-                                {errors.location && <div style={{ fontSize: 11, color: "#dc2626", marginTop: 3 }}>{errors.location}</div>}
+                                    onChange={v => setLocation(v)} />
                             </div>
                         </div>
 
@@ -1046,8 +1100,8 @@ const CreditNoteAdd: React.FC = () => {
                                                     <button
                                                         type="button"
                                                         className="btn btn-sm p-0 border-0 shadow-none"
-                                                        style={{ color: items.length > 1 ? "#ef4444" : "#9ca3af", cursor: items.length > 1 ? "pointer" : "default" }}
-                                                        onClick={() => { if (items.length > 1) removeLine(item.id); }}
+                                                        style={{ color: "#ef4444", cursor: "pointer" }}
+                                                        onClick={() => removeLine(item.id)}
                                                         title="Delete row"
                                                     >
                                                         <i className="ti ti-trash fs-16" />

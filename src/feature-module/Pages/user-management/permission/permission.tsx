@@ -8,13 +8,13 @@ const Permission = () => {
     {
       title: "Modules",
       dataIndex: "Modules",
-      sorter: (a: any, b: any) => a.Name.length - b.Name.length,
+      sorter: (a: any, b: any) => a.Modules.length - b.Modules.length,
     },
     {
       title: "sub Modules",
       dataIndex: "sub_Modules",
 
-      sorter: (a: any, b: any) => a.sub_Modules.length - b.sub_Modules.length,
+      sorter: (a: any, b: any) => a.Sub_Modules.length - b.Sub_Modules.length,
     },
     {
       title: "Create",
@@ -22,7 +22,7 @@ const Permission = () => {
       render: () => (
         <input className="form-check-input" type="checkbox"></input>
       ),
-      sorter: (a: any, b: any) => a.Email.length - b.Email.length,
+      sorter: (a: any, b: any) => a.Create.length - b.Create.length,
     },
     {
       title: "Edit",
