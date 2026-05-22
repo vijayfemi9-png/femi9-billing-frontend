@@ -28,7 +28,7 @@ interface Role {
 
 // ── Storage / Seed ─────────────────────────────────────────────────────────────
 const SK = "billing_roles_permissions";
-const MODULES = ["Dashboard","Customers","Products","Price Lists","Composite Items","Invoices","Payments Received","Credit Notes","Transfer Orders","Inventory Adjustments","Reports","Settings"];
+const MODULES = ["Dashboard", "Customers", "Products", "Price Lists", "Composite Items", "Invoices", "Payments Received", "Credit Notes", "Transfer Orders", "Inventory Adjustments", "Reports", "Settings"];
 
 function allPerms(): Record<string, PermissionSet> {
     return Object.fromEntries(MODULES.map(m => [m, { view: true, create: true, edit: true, delete: true }]));
@@ -83,7 +83,7 @@ function updateStatus(id: number, status: Role["status"]): Role[] {
 }
 
 const STATUS_STYLE: Record<string, React.CSSProperties> = {
-    "Active":   { background: "#dcfce7", color: "#15803d", border: "1px solid #86efac" },
+    "Active": { background: "#dcfce7", color: "#15803d", border: "1px solid #86efac" },
     "Inactive": { background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db" },
 };
 
@@ -185,14 +185,14 @@ const PermissionList: React.FC = () => {
         if (filterStatus.length > 0) data = data.filter(r => filterStatus.includes(r.status));
         return [...data].sort((a, b) => {
             switch (sortBy) {
-                case "name-asc":  return a.roleName.localeCompare(b.roleName);
+                case "name-asc": return a.roleName.localeCompare(b.roleName);
                 case "name-desc": return b.roleName.localeCompare(a.roleName);
-                case "status-asc":  return a.status.localeCompare(b.status);
+                case "status-asc": return a.status.localeCompare(b.status);
                 case "status-desc": return b.status.localeCompare(a.status);
-                case "users-asc":  return a.usersCount - b.usersCount;
+                case "users-asc": return a.usersCount - b.usersCount;
                 case "users-desc": return b.usersCount - a.usersCount;
-                case "date-asc":  return a.createdTime.localeCompare(b.createdTime);
-                default:          return b.createdTime.localeCompare(a.createdTime);
+                case "date-asc": return a.createdTime.localeCompare(b.createdTime);
+                default: return b.createdTime.localeCompare(a.createdTime);
             }
         });
     })();
@@ -303,24 +303,24 @@ const PermissionList: React.FC = () => {
                     trigger={["click"]}
                     menu={{
                         items: [
-                            { key: "view", label: "View", icon: <i className="ti ti-eye" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); navigate((route.settingsRoleView || "#").replace(":id", String(record.id))); } },
-                            { key: "edit", label: "Edit", icon: <i className="ti ti-edit" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); navigate((route.settingsRoleAdd || "#") + "?edit=" + record.id); } },
+                            { key: "view", label: "View", icon: <i className="ti ti-eye text-muted fs-14" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); navigate((route.settingsRoleView || "#").replace(":id", String(record.id))); } },
+                            { key: "edit", label: "Edit", icon: <i className="ti ti-edit text-muted fs-14" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); navigate((route.settingsRoleAdd || "#") + "?edit=" + record.id); } },
                             {
-                                key: "mark", label: "Mark as", icon: <i className="ti ti-tag" />,
+                                key: "mark", label: "Mark as", icon: <i className="ti ti-tag text-muted fs-14" />,
                                 children: [
                                     ...(record.status !== "Active" ? [{ key: "mark-active", label: <span style={{ color: "#15803d", fontWeight: 500 }}>Active</span>, onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setRoles(updateStatus(record.id, "Active")); } }] : []),
                                     ...(record.status !== "Inactive" ? [{ key: "mark-inactive", label: <span style={{ color: "#374151", fontWeight: 500 }}>Inactive</span>, onClick: ({ domEvent }: any) => { domEvent.stopPropagation(); setRoles(updateStatus(record.id, "Inactive")); } }] : []),
                                 ],
                             },
                             { type: "divider" as const },
-                            { key: "delete", label: "Delete", danger: true, icon: <i className="ti ti-trash" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleDeleteClick(record.roleName, record.id); } },
+                            { key: "delete", label: "Delete", danger: true, icon: <i className="ti ti-trash fs-14" />, onClick: ({ domEvent }) => { domEvent.stopPropagation(); handleDeleteClick(record.roleName, record.id); } },
                         ],
                         className: "shadow-lg border-0 py-2 rounded-3",
                         style: { minWidth: 160 },
                     }}
                 >
                     <button onClick={e => e.stopPropagation()} className="d-inline-flex align-items-center justify-content-center" style={{ width: 28, height: 28, borderRadius: 6, border: "1px solid #dee2e6", background: "#fff", cursor: "pointer" }}>
-                        <i className="ti ti-dots-vertical" style={{ fontSize: 16, color: "#212529" }} />
+                        <i className="ti ti-dots-vertical text-muted" style={{ fontSize: 16 }} />
                     </button>
                 </Dropdown>
             ),
@@ -373,8 +373,8 @@ const PermissionList: React.FC = () => {
 
     const moreButton = (
         <Dropdown menu={exportMenuItems} trigger={["click"]} placement="bottomRight">
-            <button className="btn btn-white d-flex align-items-center justify-content-center px-3 shadow-none border export-btn premium-outline-btn" style={{ height: 38, borderRadius: 4, background: "#fff", color: "#333", fontSize: 13, fontWeight: 500 }} onClick={e => e.preventDefault()}>
-                <i className="ti ti-package-export me-2" /> Export <i className="ti ti-chevron-down ms-1 fs-12" />
+            <button className="dropdown-toggle btn btn-outline-light px-2 shadow d-flex align-items-center" onClick={e => e.preventDefault()}>
+                <i className="ti ti-package-export me-2" /> Export
             </button>
         </Dropdown>
     );
@@ -382,7 +382,9 @@ const PermissionList: React.FC = () => {
     return (
         <div className="page-wrapper" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#f8fafc" }}>
             <div className="content pb-0 flex-grow-1 d-flex flex-column">
-                <PageHeader title="Roles & Permissions" titleDropdown={titleDropdown} showModuleTile={false} moduleLink="#" exportComponent={moreButton} onRefresh={refreshData} />
+                <div className="custom-page-header-wrap">
+                    <PageHeader title="Roles & Permissions" titleDropdown={titleDropdown} showModuleTile={false} moduleLink="#" exportComponent={moreButton} onRefresh={refreshData} />
+                </div>
 
                 <div className={`card border-0 rounded-0 flex-grow-1 mb-4 d-flex flex-column ${viewMode === "list" ? "shadow-sm bg-white" : "bg-transparent shadow-none"}`}>
 
@@ -404,8 +406,8 @@ const PermissionList: React.FC = () => {
                         <div className="d-flex align-items-center gap-2 flex-wrap">
                             {/* Sort By */}
                             <div data-sortby-dropdown style={{ position: "relative" }}>
-                                <button className={`btn btn-white px-3 border shadow-none fs-13 d-flex align-items-center gap-2 rounded-1 premium-outline-btn ${sortBy !== "date-desc" ? "border-danger text-danger" : ""}`} style={{ height: 36 }} onClick={() => { setShowSortBy(!showSortBy); setShowFilter(false); }}>
-                                    <i className="ti ti-arrows-sort" /> Sort By <i className="ti ti-chevron-down fs-13 ms-1" />
+                                <button className={`dropdown-toggle btn btn-outline-light px-2 shadow d-flex align-items-center ${sortBy !== "date-desc" ? "border-danger text-danger" : ""}`} onClick={() => { setShowSortBy(!showSortBy); setShowFilter(false); }}>
+                                    <i className="ti ti-arrows-sort me-2" /> Sort By
                                 </button>
                                 {showSortBy && (
                                     <div className="dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: "absolute", left: 0, top: "100%", minWidth: 230, zIndex: 1060, borderRadius: 8 }}>
@@ -417,13 +419,13 @@ const PermissionList: React.FC = () => {
                                         </div>
                                         <div className="p-2">
                                             {[
-                                                { value: "name-asc",   label: "Role Name (A → Z)",      icon: "ti-sort-ascending-letters" },
-                                                { value: "name-desc",  label: "Role Name (Z → A)",      icon: "ti-sort-descending-letters" },
-                                                { value: "status-asc", label: "Status (A → Z)",         icon: "ti-sort-ascending-letters" },
-                                                { value: "users-desc", label: "Users (High → Low)",     icon: "ti-sort-descending-numbers" },
-                                                { value: "users-asc",  label: "Users (Low → High)",     icon: "ti-sort-ascending-numbers" },
-                                                { value: "date-desc",  label: "Date (Newest First)",    icon: "ti-calendar-down" },
-                                                { value: "date-asc",   label: "Date (Oldest First)",    icon: "ti-calendar-up" },
+                                                { value: "name-asc", label: "Role Name (A → Z)", icon: "ti-sort-ascending-letters" },
+                                                { value: "name-desc", label: "Role Name (Z → A)", icon: "ti-sort-descending-letters" },
+                                                { value: "status-asc", label: "Status (A → Z)", icon: "ti-sort-ascending-letters" },
+                                                { value: "users-desc", label: "Users (High → Low)", icon: "ti-sort-descending-numbers" },
+                                                { value: "users-asc", label: "Users (Low → High)", icon: "ti-sort-ascending-numbers" },
+                                                { value: "date-desc", label: "Date (Newest First)", icon: "ti-calendar-down" },
+                                                { value: "date-asc", label: "Date (Oldest First)", icon: "ti-calendar-up" },
                                             ].map(opt => (
                                                 <button key={opt.value} className={`dropdown-item d-flex align-items-center gap-2 px-3 py-2 rounded-2 mb-1 fs-13 ${sortBy === opt.value ? "active text-danger fw-bold" : "text-dark"}`} style={{ background: sortBy === opt.value ? "#fff1f0" : "transparent", border: "none", width: "100%", textAlign: "left" }} onClick={() => { setSortBy(opt.value); setShowSortBy(false); }}>
                                                     <i className={`ti ${opt.icon} fs-14`} style={{ color: sortBy === opt.value ? "#e41f07" : "#6c757d" }} />
@@ -444,10 +446,9 @@ const PermissionList: React.FC = () => {
                         <div className="d-flex align-items-center gap-3 flex-wrap">
                             {/* Filter */}
                             <div data-filter-dropdown style={{ position: "relative" }}>
-                                <button className={`btn btn-white px-3 border shadow-none fs-13 d-flex align-items-center gap-2 rounded-1 premium-outline-btn ${filterStatus.length > 0 ? "border-danger text-danger" : ""}`} style={{ height: 38 }} onClick={() => setShowFilter(!showFilter)}>
-                                    <i className="ti ti-filter" /> Filter
-                                    {filterStatus.length > 0 && <span className="premium-count-badge-v2 ms-2">{filterStatus.length}</span>}
-                                    <i className="ti ti-chevron-down fs-13 ms-1" />
+                                <button className={`dropdown-toggle btn btn-outline-light px-2 shadow d-flex align-items-center ${filterStatus.length > 0 ? "border-danger text-danger" : ""}`} onClick={() => setShowFilter(!showFilter)}>
+                                    <i className="ti ti-filter me-2" /> Filter
+                                    {filterStatus.length > 0 && <span className="premium-count-badge-v2 mx-2">{filterStatus.length}</span>}
                                 </button>
                                 {showFilter && (
                                     <div className="dropdown-menu show shadow-lg border-0 p-0 mt-2" style={{ position: "absolute", right: 0, top: "100%", minWidth: 200, zIndex: 1060, borderRadius: 8 }}>
@@ -476,8 +477,8 @@ const PermissionList: React.FC = () => {
                             {/* Manage Columns */}
                             {viewMode === "list" && (
                                 <div className="dropdown">
-                                    <button className="btn px-3 d-flex align-items-center gap-2 shadow-none fw-semibold" style={{ height: 38, fontSize: 13, borderRadius: 6, background: "#eef2ff", color: "#4f46e5", border: "1px solid #e0e7ff" }} data-bs-toggle="dropdown" data-bs-auto-close="outside">
-                                        <i className="ti ti-columns-3 fs-14" /> Manage Columns
+                                    <button className="btn bg-soft-indigo px-2 border-0 d-flex align-items-center" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                        <i className="ti ti-columns-3 me-2" /> Manage Columns
                                     </button>
                                     <div className="dropdown-menu shadow-lg border-0 bg-white p-0" style={{ right: 0, left: "auto", zIndex: 1050, borderRadius: 12, minWidth: 240, marginTop: 4 }}>
                                         <div className="p-2" style={{ maxHeight: 350, overflowY: "auto" }}>

@@ -823,3 +823,19 @@ $bg-white:     #fff;
     }
   }
 }
+
+.custom-page-header-wrap {
+  .btn-outline-light:focus, 
+  .btn-outline-light:active, 
+  .btn-outline-light.show, 
+  .btn-outline-light.ant-dropdown-open,
+  .btn-outline-light[aria-expanded="true"] {
+    background-color: transparent !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+    box-shadow: none !important;
+    i {
+      color: #374151 !important;
+    }
+  }
+}
